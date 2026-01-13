@@ -34,7 +34,7 @@ func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string) ht
 
 		r.Route("/students", func(r chi.Router) {
 			r.Get("/", h.StudentsIndex)
-			r.Get("/preview", h.StudentsPreview)
+			r.With(httpmw.RequireHTMX).Get("/preview", h.StudentsPreview)
 		})
 
 		r.Route("/plans", func(r chi.Router) {
