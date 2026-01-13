@@ -16,23 +16,23 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOOS=linux \
     go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server
 
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS debug
-WORKDIR /src
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS dev
+WORKDIR /app
 
 RUN apk add --no-cache ca-certificates tzdata
+ENV PATH="/go/bin:${PATH}"
+
+RUN go install github.com/air-verse/air@v1.52.3
+RUN go install github.com/a-h/templ/cmd/templ@v0.3.977
+RUN go install github.com/go-delve/delve/cmd/dlv@v1.26.0
 
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 COPY . .
-RUN go install github.com/go-delve/delve/cmd/dlv@v1.23.1
-
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux \
-    go build -gcflags="all=-N -l" -o /out/server ./cmd/server
 
 EXPOSE 8080 40000
-CMD ["/go/bin/dlv", "exec", "/out/server", "--headless", "--listen=:40000", "--api-version=2", "--accept-multiclient", "--log"]
+CMD ["air", "-c", ".air.toml"]
 
 FROM alpine:${ALPINE_VERSION} AS runtime
 WORKDIR /app

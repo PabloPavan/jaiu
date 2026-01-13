@@ -51,9 +51,25 @@ Acesse: `http://localhost:8080`
 
 ## Docker
 
+Base (db + redis):
+
 ```bash
-docker compose up --build
+docker compose up
 ```
+
+Prod (binario gerado):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+```
+
+Dev (air + templ + debug):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+O dev expoe o debug do delve em `localhost:40000`.
 
 ## Tailwind
 
@@ -95,7 +111,7 @@ docker run --rm -v "$PWD":/workspace -w /workspace ghcr.io/a-h/templ:latest gene
 ## Migrations
 
 ```bash
-docker compose --profile migrate run --rm migrate
+docker compose -f docker-compose.yml --profile migrate run --rm migrate
 ```
 
 ## sqlc

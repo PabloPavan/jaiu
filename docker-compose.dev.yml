@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "8080:8080"
+      - "40000:40000"
+    environment:
+      ADDR: ":8080"
+      DATABASE_URL: "postgres://jaiu:${POSTGRES_PASSWORD}@db:5432/jaiu?sslmode=disable"
+      REDIS_ADDR: "redis:6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - ./:/app
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  go-mod-cache:
+  go-build-cache:
