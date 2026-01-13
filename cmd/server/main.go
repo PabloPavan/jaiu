@@ -11,13 +11,15 @@ import (
 
 func main() {
 	cfg := app.Config{
-		Addr: envOr("ADDR", ":8080"),
+		Addr:        envOr("ADDR", ":8080"),
+		DatabaseURL: os.Getenv("DATABASE_URL"),
 	}
 
 	application, err := app.New(cfg)
 	if err != nil {
 		log.Fatalf("failed to start: %v", err)
 	}
+	defer application.Close()
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,
