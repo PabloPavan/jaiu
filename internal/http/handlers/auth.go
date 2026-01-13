@@ -15,7 +15,7 @@ type loginViewData struct {
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	h.renderPage(w, page("Entrar", "page/auth/login", loginViewData{}))
+	h.renderPage(w, r, page("Entrar", "page/auth/login", loginViewData{}))
 }
 
 func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +39,7 @@ func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 
 	if email == "" || password == "" {
 		viewData.Error = "Informe email e senha."
-		h.renderPage(w, page("Entrar", "page/auth/login", viewData))
+		h.renderPage(w, r, page("Entrar", "page/auth/login", viewData))
 		return
 	}
 
@@ -47,7 +47,7 @@ func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, ports.ErrUnauthorized) || errors.Is(err, ports.ErrNotFound) {
 			viewData.Error = "Credenciais invalidas."
-			h.renderPage(w, page("Entrar", "page/auth/login", viewData))
+			h.renderPage(w, r, page("Entrar", "page/auth/login", viewData))
 			return
 		}
 		http.Error(w, "erro ao autenticar", http.StatusInternalServerError)
@@ -56,6 +56,7 @@ func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 
 	session := ports.Session{
 		UserID:    user.ID,
+		Name:      user.Name,
 		Role:      user.Role,
 		ExpiresAt: time.Now().Add(h.config.TTL),
 	}

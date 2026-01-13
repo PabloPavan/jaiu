@@ -9,6 +9,7 @@ import (
 
 type Session struct {
 	UserID    string
+	Name      string
 	Role      domain.UserRole
 	ExpiresAt time.Time
 }

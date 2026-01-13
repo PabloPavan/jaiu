@@ -18,6 +18,12 @@ type PageData struct {
 	ContentTemplate string
 	Data            any
 	Now             time.Time
+	CurrentUser     *UserInfo
+}
+
+type UserInfo struct {
+	Name string
+	Role string
 }
 
 func NewRenderer() (*Renderer, error) {

@@ -11,7 +11,14 @@
       <a class="hover:text-emerald-200" href="/subscriptions">Assinaturas</a>
       <a class="hover:text-emerald-200" href="/payments">Pagamentos</a>
       <a class="hover:text-emerald-200" href="/reports">Relatórios</a>
-      <a class="rounded-full border border-emerald-400/60 px-3 py-1 text-emerald-200 hover:bg-emerald-400/10" href="/auth/login">Entrar</a>
+      {{ if .CurrentUser }}
+        <span class="text-slate-300">Ola, {{ if .CurrentUser.Name }}{{ .CurrentUser.Name }}{{ else }}Usuario{{ end }}</span>
+        <form method="post" action="/auth/logout">
+          <button class="rounded-full border border-emerald-400/60 px-3 py-1 text-emerald-200 hover:bg-emerald-400/10" type="submit">Sair</button>
+        </form>
+      {{ else }}
+        <a class="rounded-full border border-emerald-400/60 px-3 py-1 text-emerald-200 hover:bg-emerald-400/10" href="/auth/login">Entrar</a>
+      {{ end }}
     </nav>
   </div>
 </header>

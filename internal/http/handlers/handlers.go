@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
+	httpmw "github.com/PabloPavan/jaiu/internal/http/middleware"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/view"
 )
@@ -42,8 +43,14 @@ func New(renderer *view.Renderer, auth AuthService, sessions ports.SessionStore,
 	return &Handler{renderer: renderer, auth: auth, sessions: sessions, config: config}
 }
 
-func (h *Handler) renderPage(w http.ResponseWriter, data view.PageData) {
+func (h *Handler) renderPage(w http.ResponseWriter, r *http.Request, data view.PageData) {
 	data.Now = time.Now()
+	if session, ok := httpmw.SessionFromContext(r.Context()); ok {
+		data.CurrentUser = &view.UserInfo{
+			Name: session.Name,
+			Role: string(session.Role),
+		}
+	}
 	if err := h.renderer.Render(w, data); err != nil {
 		log.Printf("render error: %v", err)
 	}

@@ -7,7 +7,7 @@ type studentPreviewData struct {
 }
 
 func (h *Handler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
-	h.renderPage(w, page("Alunos", "page/students/index", nil))
+	h.renderPage(w, r, page("Alunos", "page/students/index", nil))
 }
 
 func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
