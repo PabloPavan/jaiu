@@ -15,12 +15,17 @@ import (
 type Handler struct {
 	renderer *view.Renderer
 	auth     AuthService
+	plans    PlanService
 	sessions ports.SessionStore
 	config   SessionConfig
 }
 
 type AuthService interface {
 	Authenticate(ctx context.Context, email, password string) (domain.User, error)
+}
+
+type PlanService interface {
+	ListActive(ctx context.Context) ([]domain.Plan, error)
 }
 
 type SessionConfig struct {
@@ -30,7 +35,7 @@ type SessionConfig struct {
 	SameSite   http.SameSite
 }
 
-func New(renderer *view.Renderer, auth AuthService, sessions ports.SessionStore, config SessionConfig) *Handler {
+func New(renderer *view.Renderer, auth AuthService, plans PlanService, sessions ports.SessionStore, config SessionConfig) *Handler {
 	if config.CookieName == "" {
 		config.CookieName = "jaiu_session"
 	}
@@ -40,7 +45,7 @@ func New(renderer *view.Renderer, auth AuthService, sessions ports.SessionStore,
 	if config.SameSite == 0 {
 		config.SameSite = http.SameSiteLaxMode
 	}
-	return &Handler{renderer: renderer, auth: auth, sessions: sessions, config: config}
+	return &Handler{renderer: renderer, auth: auth, plans: plans, sessions: sessions, config: config}
 }
 
 func (h *Handler) renderPage(w http.ResponseWriter, r *http.Request, data view.PageData) {

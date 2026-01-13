@@ -69,6 +69,7 @@ func New(cfg Config) (*App, error) {
 	}
 
 	var authService handlers.AuthService
+	var planService handlers.PlanService
 	var sessionStore ports.SessionStore
 	sessionConfig := handlers.SessionConfig{
 		CookieName: cfg.SessionCookieName,
@@ -88,13 +89,16 @@ func New(cfg Config) (*App, error) {
 	if pool != nil {
 		userRepo := postgres.NewUserRepository(pool)
 		authService = service.NewAuthService(userRepo)
+
+		planRepo := postgres.NewPlanRepository(pool)
+		planService = service.NewPlanService(planRepo)
 	}
 
 	if redisClient != nil {
 		sessionStore = redisadapter.NewSessionStore(redisClient)
 	}
 
-	h := handlers.New(renderer, authService, sessionStore, sessionConfig)
+	h := handlers.New(renderer, authService, planService, sessionStore, sessionConfig)
 
 	return &App{
 		Router: router.New(h, sessionStore, sessionConfig.CookieName),

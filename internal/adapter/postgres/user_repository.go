@@ -3,14 +3,11 @@ package postgres
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/PabloPavan/jaiu/internal/adapter/postgres/sqlc"
 	"github.com/PabloPavan/jaiu/internal/domain"
 	"github.com/PabloPavan/jaiu/internal/ports"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -62,22 +59,4 @@ func mapUser(user sqlc.User) domain.User {
 		CreatedAt:    timeFrom(user.CreatedAt),
 		UpdatedAt:    timeFrom(user.UpdatedAt),
 	}
-}
-
-func uuidToString(id pgtype.UUID) string {
-	if !id.Valid {
-		return ""
-	}
-	parsed, err := uuid.FromBytes(id.Bytes[:])
-	if err != nil {
-		return ""
-	}
-	return parsed.String()
-}
-
-func timeFrom(value pgtype.Timestamptz) time.Time {
-	if !value.Valid {
-		return time.Time{}
-	}
-	return value.Time
 }
