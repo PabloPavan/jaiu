@@ -14,10 +14,14 @@ import (
 )
 
 type Handler struct {
-	auth     AuthService
-	plans    PlanService
+	services Services
 	sessions ports.SessionStore
 	config   SessionConfig
+}
+
+type Services struct {
+	Auth  AuthService
+	Plans PlanService
 }
 
 type AuthService interface {
@@ -26,6 +30,10 @@ type AuthService interface {
 
 type PlanService interface {
 	ListActive(ctx context.Context) ([]domain.Plan, error)
+	FindByID(ctx context.Context, id string) (domain.Plan, error)
+	Create(ctx context.Context, plan domain.Plan) (domain.Plan, error)
+	Update(ctx context.Context, plan domain.Plan) (domain.Plan, error)
+	Deactivate(ctx context.Context, planID string) (domain.Plan, error)
 }
 
 type SessionConfig struct {
@@ -35,7 +43,7 @@ type SessionConfig struct {
 	SameSite   http.SameSite
 }
 
-func New(auth AuthService, plans PlanService, sessions ports.SessionStore, config SessionConfig) *Handler {
+func New(services Services, sessions ports.SessionStore, config SessionConfig) *Handler {
 	if config.CookieName == "" {
 		config.CookieName = "jaiu_session"
 	}
@@ -45,7 +53,7 @@ func New(auth AuthService, plans PlanService, sessions ports.SessionStore, confi
 	if config.SameSite == 0 {
 		config.SameSite = http.SameSiteLaxMode
 	}
-	return &Handler{auth: auth, plans: plans, sessions: sessions, config: config}
+	return &Handler{services: services, sessions: sessions, config: config}
 }
 
 func (h *Handler) renderPage(w http.ResponseWriter, r *http.Request, page view.Page) {

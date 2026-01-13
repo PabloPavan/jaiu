@@ -39,6 +39,11 @@ func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string) ht
 
 		r.Route("/plans", func(r chi.Router) {
 			r.Get("/", h.PlansIndex)
+			r.Get("/new", h.PlansNew)
+			r.Post("/", h.PlansCreate)
+			r.Get("/{planID}/edit", h.PlansEdit)
+			r.Post("/{planID}", h.PlansUpdate)
+			r.Post("/{planID}/delete", h.PlansDelete)
 		})
 
 		r.Route("/subscriptions", func(r chi.Router) {

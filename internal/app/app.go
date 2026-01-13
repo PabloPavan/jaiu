@@ -92,7 +92,10 @@ func New(cfg Config) (*App, error) {
 		sessionStore = redisadapter.NewSessionStore(redisClient)
 	}
 
-	h := handlers.New(authService, planService, sessionStore, sessionConfig)
+	h := handlers.New(handlers.Services{
+		Auth:  authService,
+		Plans: planService,
+	}, sessionStore, sessionConfig)
 
 	return &App{
 		Router: router.New(h, sessionStore, sessionConfig.CookieName),

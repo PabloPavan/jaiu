@@ -14,12 +14,13 @@ type Page struct {
 }
 
 type UserInfo struct {
-	Name         string
-	DisplayName  string
-	Role         string
+	Name        string
+	DisplayName string
+	Role        string
 }
 
 type PlanItem struct {
+	ID           string
 	Name         string
 	DurationDays int
 	Price        string
@@ -28,6 +29,20 @@ type PlanItem struct {
 
 type PlansPageData struct {
 	Items []PlanItem
+}
+
+type PlanFormData struct {
+	Title        string
+	Action       string
+	SubmitLabel  string
+	DeleteAction string
+	ShowDelete   bool
+	Name         string
+	DurationDays string
+	Price        string
+	Description  string
+	Active       bool
+	Error        string
 }
 
 type StudentsPreviewData struct {

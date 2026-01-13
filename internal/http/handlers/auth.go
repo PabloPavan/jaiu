@@ -15,7 +15,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
-	if h.auth == nil {
+	if h.services.Auth == nil {
 		http.Error(w, "auth not configured", http.StatusNotImplemented)
 		return
 	}
@@ -39,7 +39,7 @@ func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.auth.Authenticate(r.Context(), email, password)
+	user, err := h.services.Auth.Authenticate(r.Context(), email, password)
 	if err != nil {
 		if errors.Is(err, ports.ErrUnauthorized) || errors.Is(err, ports.ErrNotFound) {
 			viewData.Error = "Credenciais invalidas."

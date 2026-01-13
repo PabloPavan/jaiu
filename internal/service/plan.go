@@ -18,10 +18,6 @@ func NewPlanService(repo ports.PlanRepository) *PlanService {
 }
 
 func (s *PlanService) Create(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
-	if plan.Active == false {
-		plan.Active = true
-	}
-
 	now := s.now()
 	plan.CreatedAt = now
 	plan.UpdatedAt = now
@@ -44,6 +40,10 @@ func (s *PlanService) Deactivate(ctx context.Context, planID string) (domain.Pla
 	plan.UpdatedAt = s.now()
 
 	return s.repo.Update(ctx, plan)
+}
+
+func (s *PlanService) FindByID(ctx context.Context, planID string) (domain.Plan, error) {
+	return s.repo.FindByID(ctx, planID)
 }
 
 func (s *PlanService) ListActive(ctx context.Context) ([]domain.Plan, error) {

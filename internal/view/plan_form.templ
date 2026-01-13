@@ -1,0 +1,49 @@
+package view
+
+templ PlanFormPage(data PlanFormData) {
+	<section class="mx-auto grid max-w-2xl gap-6">
+		<div class="flex flex-wrap items-center justify-between gap-4">
+			<div>
+				<h1 class="text-2xl font-semibold">{data.Title}</h1>
+				<p class="mt-1 text-sm text-slate-300">Defina duracao, preco e status do plano.</p>
+			</div>
+			<a class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-emerald-400/40" href="/plans">Voltar</a>
+		</div>
+
+		<form class="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" method="post" action={data.Action}>
+			if data.Error != "" {
+				<div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">{data.Error}</div>
+			}
+			<label class="grid gap-2 text-sm text-slate-200">
+				Nome do plano
+				<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="name" placeholder="Mensal" value={data.Name} required/>
+			</label>
+			<div class="grid gap-4 md:grid-cols-2">
+				<label class="grid gap-2 text-sm text-slate-200">
+					Duracao (dias)
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="number" name="duration_days" min="1" placeholder="30" value={data.DurationDays} required/>
+				</label>
+				<label class="grid gap-2 text-sm text-slate-200">
+					Preco (R$)
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="number" name="price" min="0" step="0.01" placeholder="149.90" value={data.Price} required/>
+				</label>
+			</div>
+			<label class="grid gap-2 text-sm text-slate-200">
+				Descricao
+				<textarea class="min-h-[110px] rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="description" placeholder="Opcional">{data.Description}</textarea>
+			</label>
+			<label class="flex items-center gap-2 text-sm text-slate-200">
+				<input class="h-4 w-4 rounded border-slate-600 bg-slate-950/60" type="checkbox" name="active" checked?={data.Active}/>
+				Plano ativo
+			</label>
+			<div class="flex flex-wrap items-center gap-3">
+				<button class="rounded-full bg-emerald-400/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/30" type="submit">{data.SubmitLabel}</button>
+			</div>
+		</form>
+		if data.ShowDelete {
+			<form method="post" action={data.DeleteAction}>
+				<button class="rounded-full border border-rose-400/60 px-4 py-2 text-sm text-rose-200 hover:bg-rose-400/10" type="submit">Excluir</button>
+			</form>
+		}
+	</section>
+}
