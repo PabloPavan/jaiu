@@ -15,28 +15,14 @@ import (
 )
 
 func (h *Handler) PlansIndex(w http.ResponseWriter, r *http.Request) {
-	data := view.PlansPageData{}
-
-	if h.services.Plans != nil {
-		plans, err := h.services.Plans.ListActive(r.Context())
-		if err != nil {
-			log.Printf("list plans: %v", err)
-		} else {
-			data.Items = make([]view.PlanItem, 0, len(plans))
-			for _, plan := range plans {
-				item := view.PlanItem{
-					ID:           plan.ID,
-					Name:         plan.Name,
-					DurationDays: plan.DurationDays,
-					Price:        formatCents(plan.PriceCents),
-					Description:  plan.Description,
-				}
-				data.Items = append(data.Items, item)
-			}
-		}
-	}
+	data := h.buildPlansData(r)
 
 	h.renderPage(w, r, page("Planos", view.PlansPage(data)))
+}
+
+func (h *Handler) PlansList(w http.ResponseWriter, r *http.Request) {
+	data := h.buildPlansData(r)
+	h.renderComponent(w, r, view.PlansList(data))
 }
 
 func (h *Handler) PlansNew(w http.ResponseWriter, r *http.Request) {
@@ -49,19 +35,37 @@ func (h *Handler) PlansCreate(w http.ResponseWriter, r *http.Request) {
 	plan, err := parsePlanForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.PlanFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
 		return
 	}
 
 	if h.services.Plans == nil {
 		data.Error = "Servico de planos indisponivel."
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.PlanFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
 		return
 	}
 
 	if _, err := h.services.Plans.Create(r.Context(), plan); err != nil {
 		data.Error = "Nao foi possivel salvar o plano."
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.PlanFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
+		return
+	}
+
+	if isHTMX(r) {
+		w.Header().Set("HX-Redirect", "/plans")
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
@@ -96,12 +100,20 @@ func (h *Handler) PlansUpdate(w http.ResponseWriter, r *http.Request) {
 	plan, err := parsePlanForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.PlanFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
 		return
 	}
 
 	if h.services.Plans == nil {
 		data.Error = "Servico de planos indisponivel."
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.PlanFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
 		return
 	}
@@ -109,7 +121,17 @@ func (h *Handler) PlansUpdate(w http.ResponseWriter, r *http.Request) {
 	plan.ID = planID
 	if _, err := h.services.Plans.Update(r.Context(), plan); err != nil {
 		data.Error = "Nao foi possivel atualizar o plano."
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.PlanFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
+		return
+	}
+
+	if isHTMX(r) {
+		w.Header().Set("HX-Redirect", "/plans")
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
@@ -133,15 +155,27 @@ func (h *Handler) PlansDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if isHTMX(r) {
+		data := h.buildPlansData(r)
+		h.renderComponent(w, r, view.PlansList(data))
+		return
+	}
+
 	http.Redirect(w, r, "/plans", http.StatusSeeOther)
 }
 
 func formatCents(cents int64) string {
-	return fmt.Sprintf("R$ %.2f", float64(cents)/100)
+	return formatBRL(cents)
 }
 
 func formatCentsInput(cents int64) string {
 	return fmt.Sprintf("%.2f", float64(cents)/100)
+}
+
+func formatBRL(cents int64) string {
+	value := fmt.Sprintf("%.2f", float64(cents)/100)
+	value = strings.ReplaceAll(value, ".", ",")
+	return "R$ " + value
 }
 
 func planFormCreateData() view.PlanFormData {
@@ -221,4 +255,29 @@ func parsePriceCents(value string) (int64, error) {
 	}
 
 	return int64(parsed*100 + 0.5), nil
+}
+
+func (h *Handler) buildPlansData(r *http.Request) view.PlansPageData {
+	data := view.PlansPageData{}
+
+	if h.services.Plans != nil {
+		plans, err := h.services.Plans.ListActive(r.Context())
+		if err != nil {
+			log.Printf("list plans: %v", err)
+		} else {
+			data.Items = make([]view.PlanItem, 0, len(plans))
+			for _, plan := range plans {
+				item := view.PlanItem{
+					ID:           plan.ID,
+					Name:         plan.Name,
+					DurationDays: plan.DurationDays,
+					Price:        formatCents(plan.PriceCents),
+					Description:  plan.Description,
+				}
+				data.Items = append(data.Items, item)
+			}
+		}
+	}
+
+	return data
 }

@@ -11,7 +11,7 @@ templ StudentsPage(data StudentsPageData) {
 		</div>
 
 		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-			<form class="flex flex-wrap items-center gap-3" method="get" action="/students">
+			<form class="flex flex-wrap items-center gap-3" method="get" action="/students" hx-get="/students" hx-target="#students-list" hx-swap="outerHTML" hx-push-url="true">
 				<input class="w-full flex-1 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100" name="q" placeholder="Buscar por nome, telefone ou CPF" type="search" value={data.Query}/>
 				<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100" name="status">
 					<option value="active" selected?={data.Status == "" || data.Status == "active"}>Ativos</option>
@@ -21,32 +21,42 @@ templ StudentsPage(data StudentsPageData) {
 				</select>
 				<button class="rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:border-emerald-400/40" type="submit">Filtrar</button>
 			</form>
-
-			if len(data.Items) == 0 {
-				<div class="mt-6 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 p-6 text-sm text-slate-400">Nenhum aluno encontrado.</div>
-			} else {
-				<div class="mt-6 grid gap-3">
-					for _, item := range data.Items {
-						<div class="rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3">
-							<div class="flex flex-wrap items-center justify-between gap-3">
-								<div>
-									<p class="text-sm text-slate-100">{item.FullName}</p>
-									<p class="mt-1 text-xs text-slate-400">{item.Phone} {item.Email}</p>
-								</div>
-								<div class="flex items-center gap-2 text-xs">
-									<span class={item.StatusClass}>{item.StatusLabel}</span>
-									<a class="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:border-emerald-400/40" href={"/students/" + item.ID + "/edit"}>Editar</a>
-									<form method="post" action={"/students/" + item.ID + "/delete"}>
-										<button class="rounded-full border border-rose-400/60 px-3 py-1 text-rose-200 hover:bg-rose-400/10" type="submit">Excluir</button>
-									</form>
-								</div>
-							</div>
-						</div>
-					}
-				</div>
-			}
+			@StudentsList(data)
 		</div>
 	</section>
+}
+
+templ StudentsList(data StudentsPageData) {
+	<div id="students-list">
+		if len(data.Items) == 0 {
+			<div class="mt-6 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 p-6 text-sm text-slate-400">Nenhum aluno encontrado.</div>
+		} else {
+			<div class="mt-6 grid gap-3">
+				for _, item := range data.Items {
+					<div class="rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3">
+						<div class="flex flex-wrap items-center justify-between gap-3">
+							<div>
+								<p class="text-sm text-slate-100">{item.FullName}</p>
+								<p class="mt-1 text-xs text-slate-400">{item.Phone} {item.Email}</p>
+								if item.BirthDate != "" {
+									<p class="mt-1 text-xs text-slate-500">Nascimento: {item.BirthDate}</p>
+								}
+							</div>
+							<div class="flex items-center gap-2 text-xs">
+								<span class={item.StatusClass}>{item.StatusLabel}</span>
+								<a class="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:border-emerald-400/40" href={"/students/" + item.ID + "/edit"}>Editar</a>
+								<form method="post" action={"/students/" + item.ID + "/delete"} hx-post={"/students/" + item.ID + "/delete"} hx-target="#students-list" hx-swap="outerHTML" hx-confirm="Excluir este aluno?">
+									<input type="hidden" name="q" value={data.Query}/>
+									<input type="hidden" name="status" value={data.Status}/>
+									<button class="rounded-full border border-rose-400/60 px-3 py-1 text-rose-200 hover:bg-rose-400/10" type="submit">Excluir</button>
+								</form>
+							</div>
+						</div>
+					</div>
+				}
+			</div>
+		}
+	</div>
 }
 
 templ StudentsPreview(data StudentsPreviewData) {
@@ -60,6 +70,9 @@ templ StudentsPreview(data StudentsPreviewData) {
 						<span>{item.FullName}</span>
 						<span class={item.StatusClass}>{item.StatusLabel}</span>
 					</div>
+					if item.BirthDate != "" {
+						<p class="mt-1 text-xs text-slate-500">Nascimento: {item.BirthDate}</p>
+					}
 				</li>
 			}
 		}

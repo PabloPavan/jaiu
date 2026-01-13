@@ -48,6 +48,7 @@ type PlanFormData struct {
 type StudentItem struct {
 	ID          string
 	FullName    string
+	BirthDate   string
 	Phone       string
 	Email       string
 	Status      string

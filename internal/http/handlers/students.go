@@ -14,39 +14,10 @@ import (
 )
 
 func (h *Handler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
-	query := strings.TrimSpace(r.URL.Query().Get("q"))
-	status := normalizeStudentStatusValue(strings.TrimSpace(r.URL.Query().Get("status")))
-
-	data := view.StudentsPageData{
-		Query:  query,
-		Status: status,
-	}
-
-	if h.services.Students != nil {
-		filter := ports.StudentFilter{
-			Query:    query,
-			Statuses: statusFilter(status),
-			Limit:    50,
-		}
-		students, err := h.services.Students.Search(r.Context(), filter)
-		if err != nil {
-			log.Printf("list students: %v", err)
-		} else {
-			data.Items = make([]view.StudentItem, 0, len(students))
-			for _, student := range students {
-				label, className := statusPresentation(student.Status)
-				item := view.StudentItem{
-					ID:          student.ID,
-					FullName:    student.FullName,
-					Phone:       student.Phone,
-					Email:       student.Email,
-					Status:      string(student.Status),
-					StatusLabel: label,
-					StatusClass: className,
-				}
-				data.Items = append(data.Items, item)
-			}
-		}
+	data := h.buildStudentsData(r)
+	if isHTMX(r) {
+		h.renderComponent(w, r, view.StudentsList(data))
+		return
 	}
 
 	h.renderPage(w, r, page("Alunos", view.StudentsPage(data)))
@@ -72,6 +43,7 @@ func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
 				item := view.StudentItem{
 					ID:          student.ID,
 					FullName:    student.FullName,
+					BirthDate:   formatDateBR(student.BirthDate),
 					Phone:       student.Phone,
 					Email:       student.Email,
 					Status:      string(student.Status),
@@ -96,19 +68,37 @@ func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 	student, err := parseStudentForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.StudentFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 		return
 	}
 
 	if h.services.Students == nil {
 		data.Error = "Servico de alunos indisponivel."
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.StudentFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 		return
 	}
 
 	if _, err := h.services.Students.Register(r.Context(), student); err != nil {
 		data.Error = "Nao foi possivel salvar o aluno."
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.StudentFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
+		return
+	}
+
+	if isHTMX(r) {
+		w.Header().Set("HX-Redirect", "/students")
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
@@ -143,12 +133,20 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 	student, err := parseStudentForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.StudentFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 		return
 	}
 
 	if h.services.Students == nil {
 		data.Error = "Servico de alunos indisponivel."
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.StudentFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 		return
 	}
@@ -156,7 +154,17 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 	student.ID = studentID
 	if _, err := h.services.Students.Update(r.Context(), student); err != nil {
 		data.Error = "Nao foi possivel atualizar o aluno."
+		if isHTMX(r) {
+			h.renderComponent(w, r, view.StudentFormPage(data))
+			return
+		}
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
+		return
+	}
+
+	if isHTMX(r) {
+		w.Header().Set("HX-Redirect", "/students")
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
@@ -180,6 +188,12 @@ func (h *Handler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if isHTMX(r) {
+		data := h.buildStudentsData(r)
+		h.renderComponent(w, r, view.StudentsList(data))
+		return
+	}
+
 	http.Redirect(w, r, "/students", http.StatusSeeOther)
 }
 
@@ -200,7 +214,7 @@ func studentFormEditData(student domain.Student) view.StudentFormData {
 		DeleteAction: "/students/" + student.ID + "/delete",
 		ShowDelete:   student.ID != "",
 		FullName:     student.FullName,
-		BirthDate:    formatDateInput(student.BirthDate),
+		BirthDate:    formatDateInputBR(student.BirthDate),
 		Gender:       student.Gender,
 		Phone:        student.Phone,
 		Email:        student.Email,
@@ -234,7 +248,7 @@ func parseStudentForm(r *http.Request, data *view.StudentFormData) (domain.Stude
 	data.BirthDate = birthRaw
 	birthDate, err := parseDateInput(birthRaw)
 	if err != nil {
-		return domain.Student{}, errors.New("Data de nascimento invalida.")
+		return domain.Student{}, errors.New("Data de nascimento invalida. Use dd/mm/aaaa.")
 	}
 
 	gender := strings.TrimSpace(r.FormValue("gender"))
@@ -319,20 +333,74 @@ func statusPresentation(status domain.StudentStatus) (string, string) {
 	}
 }
 
+func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
+	query := strings.TrimSpace(r.FormValue("q"))
+	status := normalizeStudentStatusValue(strings.TrimSpace(r.FormValue("status")))
+
+	data := view.StudentsPageData{
+		Query:  query,
+		Status: status,
+	}
+
+	if h.services.Students != nil {
+		filter := ports.StudentFilter{
+			Query:    query,
+			Statuses: statusFilter(status),
+			Limit:    50,
+		}
+		students, err := h.services.Students.Search(r.Context(), filter)
+		if err != nil {
+			log.Printf("list students: %v", err)
+		} else {
+			data.Items = make([]view.StudentItem, 0, len(students))
+			for _, student := range students {
+				label, className := statusPresentation(student.Status)
+				item := view.StudentItem{
+					ID:          student.ID,
+					FullName:    student.FullName,
+					BirthDate:   formatDateBR(student.BirthDate),
+					Phone:       student.Phone,
+					Email:       student.Email,
+					Status:      string(student.Status),
+					StatusLabel: label,
+					StatusClass: className,
+				}
+				data.Items = append(data.Items, item)
+			}
+		}
+	}
+
+	return data
+}
+
+func formatDateBR(value *time.Time) string {
+	if value == nil {
+		return ""
+	}
+	return value.Format("02/01/2006")
+}
+
 func parseDateInput(value string) (*time.Time, error) {
 	if value == "" {
 		return nil, nil
 	}
-	parsed, err := time.Parse("2006-01-02", value)
+	if strings.Contains(value, "-") {
+		parsed, err := time.Parse("2006-01-02", value)
+		if err != nil {
+			return nil, err
+		}
+		return &parsed, nil
+	}
+	parsed, err := time.Parse("02/01/2006", value)
 	if err != nil {
 		return nil, err
 	}
 	return &parsed, nil
 }
 
-func formatDateInput(value *time.Time) string {
+func formatDateInputBR(value *time.Time) string {
 	if value == nil {
 		return ""
 	}
-	return value.Format("2006-01-02")
+	return value.Format("02/01/2006")
 }
