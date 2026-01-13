@@ -92,6 +92,13 @@ Ou rode via Docker:
 docker run --rm -v "$PWD":/workspace -w /workspace sqlc/sqlc:1.26.0 generate
 ```
 
+## Seed de usuario
+
+```bash
+export DATABASE_URL="postgres://jaiu:secret@localhost:5432/jaiu?sslmode=disable"
+go run ./cmd/seed-user -email admin@academia.com -password 123456 -name "Admin" -role admin
+```
+
 ## Proximos passos sugeridos
 
 - CRUDs completos com validacoes

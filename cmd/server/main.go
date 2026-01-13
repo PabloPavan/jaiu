@@ -11,8 +11,10 @@ import (
 
 func main() {
 	cfg := app.Config{
-		Addr:        envOr("ADDR", ":8080"),
-		DatabaseURL: os.Getenv("DATABASE_URL"),
+		Addr:          envOr("ADDR", ":8080"),
+		DatabaseURL:   os.Getenv("DATABASE_URL"),
+		RedisAddr:     os.Getenv("REDIS_ADDR"),
+		RedisPassword: os.Getenv("REDIS_PASSWORD"),
 	}
 
 	application, err := app.New(cfg)

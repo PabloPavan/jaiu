@@ -5,14 +5,19 @@
     <p class="mt-1 text-sm text-slate-300">Admin e operadores têm acesso às áreas internas.</p>
   </div>
 
-  <form class="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+  <form class="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" method="post" action="/auth/login">
+    {{ with .Data }}
+      {{ if .Error }}
+        <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">{{ .Error }}</div>
+      {{ end }}
+    {{ end }}
     <label class="grid gap-2 text-sm text-slate-200">
       Email
-      <input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="email" placeholder="voce@academia.com">
+      <input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="email" name="email" value="{{ with .Data }}{{ .Email }}{{ end }}" placeholder="voce@academia.com" autocomplete="email">
     </label>
     <label class="grid gap-2 text-sm text-slate-200">
       Senha
-      <input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="password" placeholder="••••••••">
+      <input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="password" name="password" placeholder="••••••••" autocomplete="current-password">
     </label>
     <button class="rounded-full bg-emerald-400/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/30" type="submit">Entrar</button>
   </form>
