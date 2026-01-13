@@ -1,0 +1,18 @@
+{{ define "partials/nav" }}
+<header class="border-b border-slate-800/70 bg-slate-950/60 backdrop-blur">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+    <div>
+      <p class="text-xs uppercase tracking-[0.3em] text-emerald-300">Jaiu</p>
+      <p class="text-lg font-semibold">Gestão de academia</p>
+    </div>
+    <nav class="flex flex-wrap items-center gap-4 text-sm text-slate-200">
+      <a class="hover:text-emerald-200" href="/students">Alunos</a>
+      <a class="hover:text-emerald-200" href="/plans">Planos</a>
+      <a class="hover:text-emerald-200" href="/subscriptions">Assinaturas</a>
+      <a class="hover:text-emerald-200" href="/payments">Pagamentos</a>
+      <a class="hover:text-emerald-200" href="/reports">Relatórios</a>
+      <a class="rounded-full border border-emerald-400/60 px-3 py-1 text-emerald-200 hover:bg-emerald-400/10" href="/auth/login">Entrar</a>
+    </nav>
+  </div>
+</header>
+{{ end }}

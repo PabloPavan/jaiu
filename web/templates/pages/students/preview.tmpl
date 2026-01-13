@@ -1,0 +1,9 @@
+{{ define "partial/students-preview" }}
+<ul class="grid gap-2">
+  {{ range .Items }}
+    <li class="rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-2">{{ . }}</li>
+  {{ else }}
+    <li class="text-slate-400">Nenhum aluno encontrado.</li>
+  {{ end }}
+</ul>
+{{ end }}

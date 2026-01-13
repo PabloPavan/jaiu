@@ -1,0 +1,16 @@
+# Go
+/bin/
+/tmp/
+*.exe
+*.test
+*.out
+
+# Environment
+.env
+.env.*
+
+# Frontend
+node_modules/
+
+# OS
+.DS_Store

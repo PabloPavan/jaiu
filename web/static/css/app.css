@@ -1,0 +1,6 @@
+/* Custom tweaks layered on top of Tailwind CDN. */
+
+:focus-visible {
+  outline: 2px solid rgba(16, 185, 129, 0.8);
+  outline-offset: 2px;
+}
