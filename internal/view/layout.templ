@@ -1,0 +1,25 @@
+package view
+
+templ BaseLayout(title string, currentUser *UserInfo, content templ.Component) {
+	<!doctype html>
+	<html lang="pt-BR">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{title} - Jaiu</title>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<link rel="stylesheet" href="/static/css/app.css"/>
+			<script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+		</head>
+		<body class="min-h-screen bg-slate-950 text-slate-100">
+			<div class="bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900">
+				@Nav(currentUser)
+				<main class="mx-auto max-w-6xl px-6 py-10">
+					if content != nil {
+						@content
+					}
+				</main>
+			</div>
+		</body>
+	</html>
+}

@@ -12,7 +12,6 @@ import (
 	"github.com/PabloPavan/jaiu/internal/http/router"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/service"
-	"github.com/PabloPavan/jaiu/internal/view"
 	"github.com/jackc/pgx/v5/pgxpool"
 	redis "github.com/redis/go-redis/v9"
 )
@@ -63,11 +62,6 @@ func New(cfg Config) (*App, error) {
 		}
 	}
 
-	renderer, err := view.NewRenderer()
-	if err != nil {
-		return nil, fmt.Errorf("init renderer: %w", err)
-	}
-
 	var authService handlers.AuthService
 	var planService handlers.PlanService
 	var sessionStore ports.SessionStore
@@ -98,7 +92,7 @@ func New(cfg Config) (*App, error) {
 		sessionStore = redisadapter.NewSessionStore(redisClient)
 	}
 
-	h := handlers.New(renderer, authService, planService, sessionStore, sessionConfig)
+	h := handlers.New(authService, planService, sessionStore, sessionConfig)
 
 	return &App{
 		Router: router.New(h, sessionStore, sessionConfig.CookieName),

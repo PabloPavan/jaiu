@@ -4,30 +4,21 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/PabloPavan/jaiu/internal/view"
 )
 
-type planListItem struct {
-	Name         string
-	DurationDays int
-	Price        string
-	Description  string
-}
-
-type planListViewData struct {
-	Items []planListItem
-}
-
 func (h *Handler) PlansIndex(w http.ResponseWriter, r *http.Request) {
-	data := planListViewData{}
+	data := view.PlansPageData{}
 
 	if h.plans != nil {
 		plans, err := h.plans.ListActive(r.Context())
 		if err != nil {
 			log.Printf("list plans: %v", err)
 		} else {
-			data.Items = make([]planListItem, 0, len(plans))
+			data.Items = make([]view.PlanItem, 0, len(plans))
 			for _, plan := range plans {
-				item := planListItem{
+				item := view.PlanItem{
 					Name:         plan.Name,
 					DurationDays: plan.DurationDays,
 					Price:        formatCents(plan.PriceCents),
@@ -38,7 +29,7 @@ func (h *Handler) PlansIndex(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.renderPage(w, r, page("Planos", "page/plans/index", data))
+	h.renderPage(w, r, page("Planos", view.PlansPage(data)))
 }
 
 func formatCents(cents int64) string {

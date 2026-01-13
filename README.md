@@ -1,11 +1,11 @@
 # Jaiu
 
-Sistema de gestao de academia (MVP) com Go + templates HTML + HTMX + Tailwind + chi.
+Sistema de gestao de academia (MVP) com Go + templ + HTMX + Tailwind + chi.
 
 ## Stack
 
 - Go 1.22
-- `html/template`
+- templ (componentes de UI)
 - HTMX para interacoes dinamicas
 - Tailwind CSS (CDN no MVP, com build opcional)
 - chi para roteamento HTTP
@@ -21,13 +21,12 @@ internal/adapter     # adaptadores (db, etc)
 internal/http        # rotas e handlers
 internal/ports       # portas (interfaces)
 internal/service     # casos de uso
-internal/view        # renderer de templates
+internal/view        # componentes (templ)
 internal/domain      # entidades e enums de dominio
 db/migrations        # migrations SQL
 db/queries           # queries sqlc
 db/schema.sql        # schema para sqlc
 sqlc.yaml            # config do sqlc
-web/templates        # layouts e paginas
 web/static           # css/js estatico
 web/tailwind         # config do Tailwind (build opcional)
 ```
@@ -66,11 +65,37 @@ No MVP esta usando o CDN do Tailwind direto no template base. Quando quiser comp
 
 Isso gera `web/static/css/app.css`. Depois, remova o script do CDN no template base.
 
+## templ
+
+Gere os componentes a partir dos arquivos `.templ`:
+
+```bash
+templ generate
+```
+
+Se o binario `templ` nao estiver instalado:
+
+```bash
+go install github.com/a-h/templ/cmd/templ@latest
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+Atalho:
+
+```bash
+./scripts/templ.sh
+```
+
+Se preferir rodar via Docker:
+
+```bash
+docker run --rm -v "$PWD":/workspace -w /workspace ghcr.io/a-h/templ:latest generate
+```
+
 ## Migrations
 
 ```bash
-export DATABASE_URL="postgres://jaiu:secret@localhost:5432/jaiu?sslmode=disable"
-./scripts/migrate.sh up
+docker compose --profile migrate run --rm migrate
 ```
 
 ## sqlc

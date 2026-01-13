@@ -1,0 +1,31 @@
+package view
+
+templ PaymentsPage() {
+	<section class="grid gap-6">
+		<div>
+			<h1 class="text-2xl font-semibold">Pagamentos</h1>
+			<p class="mt-1 text-sm text-slate-300">Registre pagamentos manuais e acompanhe comprovantes.</p>
+		</div>
+
+		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+			<div class="grid gap-4 md:grid-cols-2">
+				<div class="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+					<p class="text-sm text-slate-400">Ultimos recebimentos</p>
+					<ul class="mt-3 grid gap-2 text-sm text-slate-300">
+						<li>Pix - R$ 220 - Hoje 09:40</li>
+						<li>Dinheiro - R$ 180 - Ontem 18:10</li>
+						<li>Cartao - R$ 420 - 2 dias</li>
+					</ul>
+				</div>
+				<div class="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+					<p class="text-sm text-slate-400">Registrar novo</p>
+					<div class="mt-3 grid gap-2 text-sm text-slate-300">
+						<p>Aluno + assinatura</p>
+						<p>Metodo - valor - referencia</p>
+						<p>Observacoes e comprovante</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+}

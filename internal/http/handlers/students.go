@@ -1,17 +1,17 @@
 package handlers
 
-import "net/http"
+import (
+	"net/http"
 
-type studentPreviewData struct {
-	Items []string
-}
+	"github.com/PabloPavan/jaiu/internal/view"
+)
 
 func (h *Handler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
-	h.renderPage(w, r, page("Alunos", "page/students/index", nil))
+	h.renderPage(w, r, page("Alunos", view.StudentsPage()))
 }
 
 func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
-	data := studentPreviewData{
+	data := view.StudentsPreviewData{
 		Items: []string{
 			"Ana Souza · Ativa · Renovar em 10 dias",
 			"Carlos Lima · Inativo · Último pagamento há 45 dias",
@@ -19,5 +19,5 @@ func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	h.renderPartial(w, "partial/students-preview", data)
+	h.renderComponent(w, r, view.StudentsPreview(data))
 }
