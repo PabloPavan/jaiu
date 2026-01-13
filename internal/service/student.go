@@ -46,6 +46,14 @@ func (s *StudentService) SetStatus(ctx context.Context, studentID string, status
 	return s.repo.Update(ctx, student)
 }
 
+func (s *StudentService) FindByID(ctx context.Context, studentID string) (domain.Student, error) {
+	return s.repo.FindByID(ctx, studentID)
+}
+
+func (s *StudentService) Deactivate(ctx context.Context, studentID string) (domain.Student, error) {
+	return s.SetStatus(ctx, studentID, domain.StudentInactive)
+}
+
 func (s *StudentService) Search(ctx context.Context, filter ports.StudentFilter) ([]domain.Student, error) {
 	return s.repo.Search(ctx, filter)
 }

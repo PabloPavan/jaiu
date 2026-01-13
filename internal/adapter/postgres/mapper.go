@@ -46,3 +46,25 @@ func textFrom(value pgtype.Text) string {
 	}
 	return value.String
 }
+
+func textTo(value string) pgtype.Text {
+	if value == "" {
+		return pgtype.Text{}
+	}
+	return pgtype.Text{String: value, Valid: true}
+}
+
+func dateFrom(value pgtype.Date) *time.Time {
+	if !value.Valid {
+		return nil
+	}
+	date := value.Time
+	return &date
+}
+
+func dateTo(value *time.Time) pgtype.Date {
+	if value == nil {
+		return pgtype.Date{}
+	}
+	return pgtype.Date{Time: *value, Valid: true}
+}

@@ -20,8 +20,9 @@ type Handler struct {
 }
 
 type Services struct {
-	Auth  AuthService
-	Plans PlanService
+	Auth     AuthService
+	Plans    PlanService
+	Students StudentService
 }
 
 type AuthService interface {
@@ -34,6 +35,15 @@ type PlanService interface {
 	Create(ctx context.Context, plan domain.Plan) (domain.Plan, error)
 	Update(ctx context.Context, plan domain.Plan) (domain.Plan, error)
 	Deactivate(ctx context.Context, planID string) (domain.Plan, error)
+}
+
+type StudentService interface {
+	Search(ctx context.Context, filter ports.StudentFilter) ([]domain.Student, error)
+	FindByID(ctx context.Context, id string) (domain.Student, error)
+	Register(ctx context.Context, student domain.Student) (domain.Student, error)
+	Update(ctx context.Context, student domain.Student) (domain.Student, error)
+	SetStatus(ctx context.Context, studentID string, status domain.StudentStatus) (domain.Student, error)
+	Deactivate(ctx context.Context, studentID string) (domain.Student, error)
 }
 
 type SessionConfig struct {

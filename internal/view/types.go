@@ -45,8 +45,43 @@ type PlanFormData struct {
 	Error        string
 }
 
+type StudentItem struct {
+	ID          string
+	FullName    string
+	Phone       string
+	Email       string
+	Status      string
+	StatusLabel string
+	StatusClass string
+}
+
+type StudentsPageData struct {
+	Query  string
+	Status string
+	Items  []StudentItem
+}
+
+type StudentFormData struct {
+	Title        string
+	Action       string
+	SubmitLabel  string
+	DeleteAction string
+	ShowDelete   bool
+	FullName     string
+	BirthDate    string
+	Gender       string
+	Phone        string
+	Email        string
+	CPF          string
+	Address      string
+	Notes        string
+	PhotoURL     string
+	Status       string
+	Error        string
+}
+
 type StudentsPreviewData struct {
-	Items []string
+	Items []StudentItem
 }
 
 type LoginData struct {

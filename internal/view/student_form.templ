@@ -1,0 +1,77 @@
+package view
+
+templ StudentFormPage(data StudentFormData) {
+	<section class="mx-auto grid max-w-3xl gap-6">
+		<div class="flex flex-wrap items-center justify-between gap-4">
+			<div>
+				<h1 class="text-2xl font-semibold">{data.Title}</h1>
+				<p class="mt-1 text-sm text-slate-300">Dados principais do aluno.</p>
+			</div>
+			<a class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-emerald-400/40" href="/students">Voltar</a>
+		</div>
+
+		<form class="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" method="post" action={data.Action}>
+			if data.Error != "" {
+				<div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">{data.Error}</div>
+			}
+			<label class="grid gap-2 text-sm text-slate-200">
+				Nome completo
+				<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="full_name" placeholder="Nome do aluno" value={data.FullName} required/>
+			</label>
+			<div class="grid gap-4 md:grid-cols-2">
+				<label class="grid gap-2 text-sm text-slate-200">
+					Data de nascimento
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="date" name="birth_date" value={data.BirthDate}/>
+				</label>
+				<label class="grid gap-2 text-sm text-slate-200">
+					Status
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="status">
+						<option value="active" selected?={data.Status == "" || data.Status == "active"}>Ativo</option>
+						<option value="inactive" selected?={data.Status == "inactive"}>Inativo</option>
+						<option value="suspended" selected?={data.Status == "suspended"}>Suspenso</option>
+					</select>
+				</label>
+			</div>
+			<div class="grid gap-4 md:grid-cols-2">
+				<label class="grid gap-2 text-sm text-slate-200">
+					Telefone / WhatsApp
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="phone" placeholder="(00) 00000-0000" value={data.Phone}/>
+				</label>
+				<label class="grid gap-2 text-sm text-slate-200">
+					E-mail
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="email" name="email" placeholder="aluno@email.com" value={data.Email}/>
+				</label>
+			</div>
+			<div class="grid gap-4 md:grid-cols-2">
+				<label class="grid gap-2 text-sm text-slate-200">
+					CPF
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="cpf" placeholder="000.000.000-00" value={data.CPF}/>
+				</label>
+				<label class="grid gap-2 text-sm text-slate-200">
+					Sexo
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="gender" placeholder="Opcional" value={data.Gender}/>
+				</label>
+			</div>
+			<label class="grid gap-2 text-sm text-slate-200">
+				Endereco
+				<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="address" placeholder="Opcional" value={data.Address}/>
+			</label>
+			<label class="grid gap-2 text-sm text-slate-200">
+				Observacoes
+				<textarea class="min-h-[110px] rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="notes" placeholder="Anotacoes adicionais">{data.Notes}</textarea>
+			</label>
+			<label class="grid gap-2 text-sm text-slate-200">
+				Foto (URL)
+				<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="photo_url" placeholder="https://..." value={data.PhotoURL}/>
+			</label>
+			<div class="flex flex-wrap items-center gap-3">
+				<button class="rounded-full bg-emerald-400/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/30" type="submit">{data.SubmitLabel}</button>
+			</div>
+		</form>
+		if data.ShowDelete {
+			<form method="post" action={data.DeleteAction}>
+				<button class="rounded-full border border-rose-400/60 px-4 py-2 text-sm text-rose-200 hover:bg-rose-400/10" type="submit">Excluir</button>
+			</form>
+		}
+	</section>
+}
