@@ -20,9 +20,10 @@ type Handler struct {
 }
 
 type Services struct {
-	Auth     AuthService
-	Plans    PlanService
-	Students StudentService
+	Auth          AuthService
+	Plans         PlanService
+	Students      StudentService
+	Subscriptions SubscriptionService
 }
 
 type AuthService interface {
@@ -44,6 +45,15 @@ type StudentService interface {
 	Update(ctx context.Context, student domain.Student) (domain.Student, error)
 	SetStatus(ctx context.Context, studentID string, status domain.StudentStatus) (domain.Student, error)
 	Deactivate(ctx context.Context, studentID string) (domain.Student, error)
+}
+
+type SubscriptionService interface {
+	FindByID(ctx context.Context, id string) (domain.Subscription, error)
+	Create(ctx context.Context, subscription domain.Subscription) (domain.Subscription, error)
+	Update(ctx context.Context, subscription domain.Subscription) (domain.Subscription, error)
+	Cancel(ctx context.Context, subscriptionID string) (domain.Subscription, error)
+	ListByStudent(ctx context.Context, studentID string) ([]domain.Subscription, error)
+	DueBetween(ctx context.Context, start, end time.Time) ([]domain.Subscription, error)
 }
 
 type SessionConfig struct {

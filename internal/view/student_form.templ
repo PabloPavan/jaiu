@@ -21,7 +21,7 @@ templ StudentFormPage(data StudentFormData) {
 			<div class="grid gap-4 md:grid-cols-2">
 				<label class="grid gap-2 text-sm text-slate-200">
 					Data de nascimento
-					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="birth_date" placeholder="dd/mm/aaaa" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" value={data.BirthDate}/>
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="birth_date" placeholder="dd/mm/aaaa" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" title="Use o formato dd/mm/aaaa" value={data.BirthDate}/>
 				</label>
 				<label class="grid gap-2 text-sm text-slate-200">
 					Status

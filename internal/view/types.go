@@ -81,6 +81,53 @@ type StudentFormData struct {
 	Error        string
 }
 
+type StudentOption struct {
+	ID   string
+	Name string
+}
+
+type PlanOption struct {
+	ID   string
+	Name string
+}
+
+type SubscriptionItem struct {
+	ID          string
+	StudentName string
+	PlanName    string
+	StartDate   string
+	EndDate     string
+	Status      string
+	StatusLabel string
+	StatusClass string
+	Price       string
+}
+
+type SubscriptionsPageData struct {
+	StudentID string
+	Status    string
+	Students  []StudentOption
+	Items     []SubscriptionItem
+}
+
+type SubscriptionFormData struct {
+	Title          string
+	Action         string
+	SubmitLabel    string
+	DeleteAction   string
+	ShowDelete     bool
+	DisableSelects bool
+	StudentID      string
+	PlanID         string
+	StartDate      string
+	EndDate        string
+	Status         string
+	Price          string
+	Students       []StudentOption
+	Plans          []PlanOption
+	Error          string
+}
+
 type StudentsPreviewData struct {
 	Items []StudentItem
 }

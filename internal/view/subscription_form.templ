@@ -1,0 +1,81 @@
+package view
+
+templ SubscriptionFormPage(data SubscriptionFormData) {
+	<section class="mx-auto grid max-w-3xl gap-6">
+		<div class="flex flex-wrap items-center justify-between gap-4">
+			<div>
+				<h1 class="text-2xl font-semibold">{data.Title}</h1>
+				<p class="mt-1 text-sm text-slate-300">Defina aluno, plano e vencimento.</p>
+			</div>
+			<a class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-emerald-400/40" href="/subscriptions">Voltar</a>
+		</div>
+
+		<form class="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" method="post" action={data.Action} hx-post={data.Action} hx-target="#page-content" hx-swap="innerHTML">
+			if data.Error != "" {
+				<div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">{data.Error}</div>
+			}
+			<div class="grid gap-4 md:grid-cols-2">
+				<label class="grid gap-2 text-sm text-slate-200">
+					Aluno
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="student_id" required disabled?={data.DisableSelects}>
+						<option value="">Selecione</option>
+						for _, option := range data.Students {
+							<option value={option.ID} selected?={data.StudentID == option.ID}>{option.Name}</option>
+						}
+					</select>
+					if data.DisableSelects {
+						<input type="hidden" name="student_id" value={data.StudentID}/>
+					}
+				</label>
+				<label class="grid gap-2 text-sm text-slate-200">
+					Plano
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="plan_id" required disabled?={data.DisableSelects}>
+						<option value="">Selecione</option>
+						for _, option := range data.Plans {
+							<option value={option.ID} selected?={data.PlanID == option.ID}>{option.Name}</option>
+						}
+					</select>
+					if data.DisableSelects {
+						<input type="hidden" name="plan_id" value={data.PlanID}/>
+					}
+				</label>
+			</div>
+			<div class="grid gap-4 md:grid-cols-2">
+				<label class="grid gap-2 text-sm text-slate-200">
+					Data de inicio
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="start_date" placeholder="dd/mm/aaaa" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" title="Use o formato dd/mm/aaaa" value={data.StartDate} required/>
+				</label>
+				<label class="grid gap-2 text-sm text-slate-200">
+					Vencimento
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="end_date" placeholder="dd/mm/aaaa" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" title="Use o formato dd/mm/aaaa" value={data.EndDate}/>
+				</label>
+			</div>
+			<div class="grid gap-4 md:grid-cols-2">
+				<label class="grid gap-2 text-sm text-slate-200">
+					Status
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="status">
+						<option value="active" selected?={data.Status == "" || data.Status == "active"}>Ativa</option>
+						<option value="ended" selected?={data.Status == "ended"}>Encerrada</option>
+						<option value="canceled" selected?={data.Status == "canceled"}>Cancelada</option>
+						<option value="suspended" selected?={data.Status == "suspended"}>Suspensa</option>
+					</select>
+				</label>
+				<label class="grid gap-2 text-sm text-slate-200">
+					Preco negociado (R$)
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="price" placeholder="Ex: 149,90" value={data.Price}/>
+				</label>
+			</div>
+			<p class="text-xs text-slate-500">Se o vencimento estiver vazio, usamos a duracao do plano.</p>
+			<div class="flex flex-wrap items-center gap-3">
+				<button class="rounded-full bg-emerald-400/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/30" type="submit">{data.SubmitLabel}</button>
+			</div>
+		</form>
+		if data.ShowDelete {
+			<form method="post" action={data.DeleteAction} hx-post={data.DeleteAction} hx-target="#subscriptions-list" hx-swap="outerHTML" hx-confirm="Cancelar esta assinatura?">
+				<input type="hidden" name="student_id" value={data.StudentID}/>
+				<input type="hidden" name="status" value={data.Status}/>
+				<button class="rounded-full border border-rose-400/60 px-4 py-2 text-sm text-rose-200 hover:bg-rose-400/10" type="submit">Cancelar</button>
+			</form>
+		}
+	</section>
+}

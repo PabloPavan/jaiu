@@ -248,7 +248,7 @@ func parseStudentForm(r *http.Request, data *view.StudentFormData) (domain.Stude
 	data.BirthDate = birthRaw
 	birthDate, err := parseDateInput(birthRaw)
 	if err != nil {
-		return domain.Student{}, errors.New("Data de nascimento invalida. Use dd/mm/aaaa.")
+		return domain.Student{}, errors.New("Data de nascimento invalida. Use o formato dd/mm/aaaa.")
 	}
 
 	gender := strings.TrimSpace(r.FormValue("gender"))

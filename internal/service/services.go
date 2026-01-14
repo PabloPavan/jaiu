@@ -24,7 +24,7 @@ func New(deps Dependencies) *Services {
 	return &Services{
 		Students:      NewStudentService(deps.Students),
 		Plans:         NewPlanService(deps.Plans),
-		Subscriptions: NewSubscriptionService(deps.Subscriptions),
+		Subscriptions: NewSubscriptionService(deps.Subscriptions, deps.Plans, deps.Students),
 		Payments:      NewPaymentService(deps.Payments),
 		Reports:       NewReportService(deps.Reports),
 		Auth:          NewAuthService(deps.Users),

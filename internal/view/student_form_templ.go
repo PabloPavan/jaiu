@@ -104,14 +104,14 @@ func StudentFormPage(data StudentFormData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" required></label><div class=\"grid gap-4 md:grid-cols-2\"><label class=\"grid gap-2 text-sm text-slate-200\">Data de nascimento <input class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" type=\"text\" name=\"birth_date\" placeholder=\"dd/mm/aaaa\" inputmode=\"numeric\" pattern=\"\\\\d{2}/\\\\d{2}/\\\\d{4}\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" required></label><div class=\"grid gap-4 md:grid-cols-2\"><label class=\"grid gap-2 text-sm text-slate-200\">Data de nascimento <input class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" type=\"text\" name=\"birth_date\" placeholder=\"dd/mm/aaaa\" inputmode=\"numeric\" pattern=\"[0-9]{2}/[0-9]{2}/[0-9]{4}\" title=\"Use o formato dd/mm/aaaa\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(data.BirthDate)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/student_form.templ`, Line: 24, Col: 208}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/student_form.templ`, Line: 24, Col: 247}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {

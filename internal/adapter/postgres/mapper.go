@@ -68,3 +68,10 @@ func dateTo(value *time.Time) pgtype.Date {
 	}
 	return pgtype.Date{Time: *value, Valid: true}
 }
+
+func dateFromValue(value pgtype.Date) time.Time {
+	if !value.Valid {
+		return time.Time{}
+	}
+	return value.Time
+}
