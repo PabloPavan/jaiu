@@ -62,6 +62,11 @@ func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string) ht
 
 		r.Route("/payments", func(r chi.Router) {
 			r.Get("/", h.PaymentsIndex)
+			r.Get("/new", h.PaymentsNew)
+			r.Post("/", h.PaymentsCreate)
+			r.Get("/{paymentID}/edit", h.PaymentsEdit)
+			r.Post("/{paymentID}", h.PaymentsUpdate)
+			r.Post("/{paymentID}/reverse", h.PaymentsReverse)
 		})
 
 		r.Route("/reports", func(r chi.Router) {

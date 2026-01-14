@@ -128,6 +128,48 @@ type SubscriptionFormData struct {
 	Error          string
 }
 
+type SubscriptionOption struct {
+	ID    string
+	Label string
+}
+
+type PaymentItem struct {
+	ID                string
+	SubscriptionLabel string
+	PaidAt            string
+	Amount            string
+	MethodLabel       string
+	Reference         string
+	Notes             string
+	Status            string
+	StatusLabel       string
+	StatusClass       string
+}
+
+type PaymentsPageData struct {
+	SubscriptionID string
+	Status         string
+	Subscriptions  []SubscriptionOption
+	Items          []PaymentItem
+}
+
+type PaymentFormData struct {
+	Title          string
+	Action         string
+	SubmitLabel    string
+	DeleteAction   string
+	ShowDelete     bool
+	SubscriptionID string
+	PaidAt         string
+	Amount         string
+	Method         string
+	Reference      string
+	Notes          string
+	Status         string
+	Subscriptions  []SubscriptionOption
+	Error          string
+}
+
 type StudentsPreviewData struct {
 	Items []StudentItem
 }

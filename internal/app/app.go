@@ -66,6 +66,7 @@ func New(cfg Config) (*App, error) {
 	var planService handlers.PlanService
 	var studentService handlers.StudentService
 	var subscriptionService handlers.SubscriptionService
+	var paymentService handlers.PaymentService
 	var sessionStore ports.SessionStore
 	sessionConfig := handlers.SessionConfig{
 		CookieName: cfg.SessionCookieName,
@@ -94,6 +95,9 @@ func New(cfg Config) (*App, error) {
 
 		subscriptionRepo := postgres.NewSubscriptionRepository(pool)
 		subscriptionService = service.NewSubscriptionService(subscriptionRepo, planRepo, studentRepo)
+
+		paymentRepo := postgres.NewPaymentRepository(pool)
+		paymentService = service.NewPaymentService(paymentRepo, subscriptionRepo)
 	}
 
 	if redisClient != nil {
@@ -105,6 +109,7 @@ func New(cfg Config) (*App, error) {
 		Plans:         planService,
 		Students:      studentService,
 		Subscriptions: subscriptionService,
+		Payments:      paymentService,
 	}, sessionStore, sessionConfig)
 
 	return &App{

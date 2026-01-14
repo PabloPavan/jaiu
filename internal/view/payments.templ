@@ -1,31 +1,69 @@
 package view
 
-templ PaymentsPage() {
+templ PaymentsPage(data PaymentsPageData) {
 	<section class="grid gap-6">
-		<div>
-			<h1 class="text-2xl font-semibold">Pagamentos</h1>
-			<p class="mt-1 text-sm text-slate-300">Registre pagamentos manuais e acompanhe comprovantes.</p>
+		<div class="flex flex-wrap items-start justify-between gap-4">
+			<div>
+				<h1 class="text-2xl font-semibold">Pagamentos</h1>
+				<p class="mt-1 text-sm text-slate-300">Registre pagamentos manuais e acompanhe comprovantes.</p>
+			</div>
+			<a class="rounded-full bg-emerald-400/15 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/25" href="/payments/new">Novo pagamento</a>
 		</div>
 
 		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-			<div class="grid gap-4 md:grid-cols-2">
-				<div class="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-					<p class="text-sm text-slate-400">Ultimos recebimentos</p>
-					<ul class="mt-3 grid gap-2 text-sm text-slate-300">
-						<li>Pix - R$ 220 - Hoje 09:40</li>
-						<li>Dinheiro - R$ 180 - Ontem 18:10</li>
-						<li>Cartao - R$ 420 - 2 dias</li>
-					</ul>
-				</div>
-				<div class="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-					<p class="text-sm text-slate-400">Registrar novo</p>
-					<div class="mt-3 grid gap-2 text-sm text-slate-300">
-						<p>Aluno + assinatura</p>
-						<p>Metodo - valor - referencia</p>
-						<p>Observacoes e comprovante</p>
-					</div>
-				</div>
-			</div>
+			<form class="flex flex-wrap items-center gap-3" method="get" action="/payments" hx-get="/payments" hx-target="#payments-list" hx-swap="outerHTML" hx-push-url="true">
+				<select class="min-w-[240px] rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100" name="subscription_id">
+					<option value="">Todas as assinaturas</option>
+					for _, option := range data.Subscriptions {
+						<option value={option.ID} selected?={data.SubscriptionID == option.ID}>{option.Label}</option>
+					}
+				</select>
+				<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100" name="status">
+					<option value="all" selected?={data.Status == "all"}>Todos</option>
+					<option value="confirmed" selected?={data.Status == "confirmed"}>Confirmados</option>
+					<option value="reversed" selected?={data.Status == "reversed"}>Estornados</option>
+				</select>
+				<button class="rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:border-emerald-400/40" type="submit">Filtrar</button>
+			</form>
+
+			@PaymentsList(data)
 		</div>
 	</section>
+}
+
+templ PaymentsList(data PaymentsPageData) {
+	<div id="payments-list">
+		if len(data.Items) == 0 {
+			<div class="mt-6 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 p-6 text-sm text-slate-400">Nenhum pagamento encontrado.</div>
+		} else {
+			<div class="mt-6 grid gap-3">
+				for _, item := range data.Items {
+					<div class="rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3">
+						<div class="flex flex-wrap items-center justify-between gap-3">
+							<div>
+								<p class="text-sm text-slate-100">{item.SubscriptionLabel}</p>
+								<p class="mt-1 text-xs text-slate-400">{item.PaidAt} · {item.MethodLabel}</p>
+								if item.Reference != "" {
+									<p class="mt-1 text-xs text-slate-500">Ref: {item.Reference}</p>
+								}
+							</div>
+							<div class="flex items-center gap-2 text-xs">
+								<span class={item.StatusClass}>{item.StatusLabel}</span>
+								<span class="rounded-full border border-slate-700 px-3 py-1 text-slate-200">{item.Amount}</span>
+								<a class="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:border-emerald-400/40" href={"/payments/" + item.ID + "/edit"}>Editar</a>
+								<form method="post" action={"/payments/" + item.ID + "/reverse"} hx-post={"/payments/" + item.ID + "/reverse"} hx-target="#payments-list" hx-swap="outerHTML" hx-confirm="Estornar este pagamento?">
+									<input type="hidden" name="subscription_id" value={data.SubscriptionID}/>
+									<input type="hidden" name="status" value={data.Status}/>
+									<button class="rounded-full border border-rose-400/60 px-3 py-1 text-rose-200 hover:bg-rose-400/10" type="submit">Estornar</button>
+								</form>
+							</div>
+						</div>
+						if item.Notes != "" {
+							<p class="mt-2 text-xs text-slate-500">Obs: {item.Notes}</p>
+						}
+					</div>
+				}
+			</div>
+		}
+	</div>
 }

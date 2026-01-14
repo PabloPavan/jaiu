@@ -24,6 +24,7 @@ type Services struct {
 	Plans         PlanService
 	Students      StudentService
 	Subscriptions SubscriptionService
+	Payments      PaymentService
 }
 
 type AuthService interface {
@@ -54,6 +55,15 @@ type SubscriptionService interface {
 	Cancel(ctx context.Context, subscriptionID string) (domain.Subscription, error)
 	ListByStudent(ctx context.Context, studentID string) ([]domain.Subscription, error)
 	DueBetween(ctx context.Context, start, end time.Time) ([]domain.Subscription, error)
+}
+
+type PaymentService interface {
+	FindByID(ctx context.Context, id string) (domain.Payment, error)
+	Register(ctx context.Context, payment domain.Payment) (domain.Payment, error)
+	Update(ctx context.Context, payment domain.Payment) (domain.Payment, error)
+	Reverse(ctx context.Context, paymentID string) (domain.Payment, error)
+	ListBySubscription(ctx context.Context, subscriptionID string) ([]domain.Payment, error)
+	ListByPeriod(ctx context.Context, start, end time.Time) ([]domain.Payment, error)
 }
 
 type SessionConfig struct {

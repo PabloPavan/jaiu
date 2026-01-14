@@ -27,10 +27,10 @@ func NewSubscriptionService(repo ports.SubscriptionRepository, plans ports.PlanR
 
 func (s *SubscriptionService) Create(ctx context.Context, subscription domain.Subscription) (domain.Subscription, error) {
 	if subscription.StudentID == "" {
-		return domain.Subscription{}, errors.New("student_id is required")
+		return domain.Subscription{}, errors.New("aluno e obrigatorio")
 	}
 	if subscription.PlanID == "" {
-		return domain.Subscription{}, errors.New("plan_id is required")
+		return domain.Subscription{}, errors.New("plano e obrigatorio")
 	}
 
 	if s.students != nil {
@@ -61,11 +61,11 @@ func (s *SubscriptionService) Create(ctx context.Context, subscription domain.Su
 	}
 
 	if subscription.EndDate.IsZero() {
-		return domain.Subscription{}, errors.New("end_date is required")
+		return domain.Subscription{}, errors.New("data de vencimento e obrigatoria")
 	}
 
 	if subscription.EndDate.Before(subscription.StartDate) {
-		return domain.Subscription{}, errors.New("end_date must be after start_date")
+		return domain.Subscription{}, errors.New("data de vencimento deve ser depois da data de inicio")
 	}
 
 	if subscription.PriceCents <= 0 && plan.PriceCents > 0 {
@@ -81,7 +81,7 @@ func (s *SubscriptionService) Create(ctx context.Context, subscription domain.Su
 
 func (s *SubscriptionService) Update(ctx context.Context, subscription domain.Subscription) (domain.Subscription, error) {
 	if subscription.StartDate.IsZero() {
-		return domain.Subscription{}, errors.New("start_date is required")
+		return domain.Subscription{}, errors.New("data de inicio e obrigatoria")
 	}
 	if subscription.Status == "" {
 		subscription.Status = domain.SubscriptionActive
@@ -90,7 +90,7 @@ func (s *SubscriptionService) Update(ctx context.Context, subscription domain.Su
 	var plan domain.Plan
 	if subscription.EndDate.IsZero() || subscription.PriceCents <= 0 {
 		if s.plans == nil {
-			return domain.Subscription{}, errors.New("plan repository not configured")
+			return domain.Subscription{}, errors.New("repositorio de planos nao configurado")
 		}
 		loaded, err := s.plans.FindByID(ctx, subscription.PlanID)
 		if err != nil {
@@ -104,11 +104,11 @@ func (s *SubscriptionService) Update(ctx context.Context, subscription domain.Su
 	}
 
 	if subscription.EndDate.IsZero() {
-		return domain.Subscription{}, errors.New("end_date is required")
+		return domain.Subscription{}, errors.New("data de vencimento e obrigatoria")
 	}
 
 	if subscription.EndDate.Before(subscription.StartDate) {
-		return domain.Subscription{}, errors.New("end_date must be after start_date")
+		return domain.Subscription{}, errors.New("data de vencimento deve ser depois da data de inicio")
 	}
 
 	if subscription.PriceCents <= 0 && plan.PriceCents > 0 {

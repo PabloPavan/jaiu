@@ -1,0 +1,75 @@
+package view
+
+templ PaymentFormPage(data PaymentFormData) {
+	<section class="mx-auto grid max-w-3xl gap-6">
+		<div class="flex flex-wrap items-center justify-between gap-4">
+			<div>
+				<h1 class="text-2xl font-semibold">{data.Title}</h1>
+				<p class="mt-1 text-sm text-slate-300">Registre o pagamento manual da assinatura.</p>
+			</div>
+			<a class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-emerald-400/40" href="/payments">Voltar</a>
+		</div>
+
+		<form class="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" method="post" action={data.Action} hx-post={data.Action} hx-target="#page-content" hx-swap="innerHTML">
+			if data.Error != "" {
+				<div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">{data.Error}</div>
+			}
+			<label class="grid gap-2 text-sm text-slate-200">
+				Assinatura
+				<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="subscription_id" required>
+					<option value="">Selecione</option>
+					for _, option := range data.Subscriptions {
+						<option value={option.ID} selected?={data.SubscriptionID == option.ID}>{option.Label}</option>
+					}
+				</select>
+			</label>
+			<div class="grid gap-4 md:grid-cols-2">
+				<label class="grid gap-2 text-sm text-slate-200">
+					Data do pagamento
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="paid_at" placeholder="dd/mm/aaaa" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" title="Use o formato dd/mm/aaaa" value={data.PaidAt} required/>
+				</label>
+				<label class="grid gap-2 text-sm text-slate-200">
+					Valor (R$)
+					<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="amount" placeholder="Ex: 149,90" value={data.Amount} required/>
+				</label>
+			</div>
+			<div class="grid gap-4 md:grid-cols-2">
+				<label class="grid gap-2 text-sm text-slate-200">
+					Metodo
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="method">
+						<option value="cash" selected?={data.Method == "" || data.Method == "cash"}>Dinheiro</option>
+						<option value="pix" selected?={data.Method == "pix"}>Pix</option>
+						<option value="card" selected?={data.Method == "card"}>Cartao</option>
+						<option value="transfer" selected?={data.Method == "transfer"}>Transferencia</option>
+						<option value="other" selected?={data.Method == "other"}>Outro</option>
+					</select>
+				</label>
+				<label class="grid gap-2 text-sm text-slate-200">
+					Status
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="status">
+						<option value="confirmed" selected?={data.Status == "" || data.Status == "confirmed"}>Confirmado</option>
+						<option value="reversed" selected?={data.Status == "reversed"}>Estornado</option>
+					</select>
+				</label>
+			</div>
+			<label class="grid gap-2 text-sm text-slate-200">
+				Referencia
+				<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="reference" placeholder="Opcional" value={data.Reference}/>
+			</label>
+			<label class="grid gap-2 text-sm text-slate-200">
+				Observacoes
+				<textarea class="min-h-[110px] rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="notes" placeholder="Opcional">{data.Notes}</textarea>
+			</label>
+			<div class="flex flex-wrap items-center gap-3">
+				<button class="rounded-full bg-emerald-400/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/30" type="submit">{data.SubmitLabel}</button>
+			</div>
+		</form>
+		if data.ShowDelete {
+			<form method="post" action={data.DeleteAction} hx-post={data.DeleteAction} hx-target="#payments-list" hx-swap="outerHTML" hx-confirm="Estornar este pagamento?">
+				<input type="hidden" name="subscription_id" value={data.SubscriptionID}/>
+				<input type="hidden" name="status" value={data.Status}/>
+				<button class="rounded-full border border-rose-400/60 px-4 py-2 text-sm text-rose-200 hover:bg-rose-400/10" type="submit">Estornar</button>
+			</form>
+		}
+	</section>
+}
