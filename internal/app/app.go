@@ -97,7 +97,10 @@ func New(cfg Config) (*App, error) {
 		subscriptionService = service.NewSubscriptionService(subscriptionRepo, planRepo, studentRepo)
 
 		paymentRepo := postgres.NewPaymentRepository(pool)
-		paymentService = service.NewPaymentService(paymentRepo, subscriptionRepo)
+		periodRepo := postgres.NewBillingPeriodRepository(pool)
+		balanceRepo := postgres.NewSubscriptionBalanceRepository(pool)
+		allocationRepo := postgres.NewPaymentAllocationRepository(pool)
+		paymentService = service.NewPaymentService(paymentRepo, subscriptionRepo, planRepo, periodRepo, balanceRepo, allocationRepo)
 	}
 
 	if redisClient != nil {

@@ -1,6 +1,7 @@
 # Go
 /bin/
 /tmp/
+.cache/
 *.exe
 *.test
 *.out

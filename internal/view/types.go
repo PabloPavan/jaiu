@@ -144,6 +144,9 @@ type PaymentItem struct {
 	Status            string
 	StatusLabel       string
 	StatusClass       string
+	KindLabel         string
+	KindClass         string
+	Credit            string
 }
 
 type PaymentsPageData struct {

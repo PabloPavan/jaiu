@@ -14,18 +14,22 @@ import (
 )
 
 type PaymentRepository struct {
-	pool    *pgxpool.Pool
 	queries *sqlc.Queries
 }
 
 func NewPaymentRepository(pool *pgxpool.Pool) *PaymentRepository {
-	return &PaymentRepository{pool: pool, queries: sqlc.New(pool)}
+	return &PaymentRepository{queries: sqlc.New(pool)}
 }
 
 func (r *PaymentRepository) Create(ctx context.Context, payment domain.Payment) (domain.Payment, error) {
 	subscriptionID, err := stringToUUID(payment.SubscriptionID)
 	if err != nil || !subscriptionID.Valid {
 		return domain.Payment{}, err
+	}
+
+	kind := string(payment.Kind)
+	if kind == "" {
+		kind = string(domain.PaymentFull)
 	}
 
 	params := sqlc.CreatePaymentParams{
@@ -36,6 +40,8 @@ func (r *PaymentRepository) Create(ctx context.Context, payment domain.Payment) 
 		Reference:      textTo(payment.Reference),
 		Notes:          textTo(payment.Notes),
 		Status:         string(payment.Status),
+		Kind:           kind,
+		CreditCents:    payment.CreditCents,
 	}
 
 	created, err := r.queries.CreatePayment(ctx, params)
@@ -52,40 +58,31 @@ func (r *PaymentRepository) Update(ctx context.Context, payment domain.Payment) 
 		return domain.Payment{}, err
 	}
 
-	query := `
-		UPDATE payments
-		SET paid_at = $2,
-		    amount_cents = $3,
-		    method = $4,
-		    reference = $5,
-		    notes = $6,
-		    status = $7
-		WHERE id = $1
-		RETURNING id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at
-	`
+	subscriptionID, err := stringToUUID(payment.SubscriptionID)
+	if err != nil || !subscriptionID.Valid {
+		return domain.Payment{}, err
+	}
 
-	row := r.pool.QueryRow(ctx, query,
-		id,
-		pgtype.Timestamptz{Time: payment.PaidAt, Valid: true},
-		payment.AmountCents,
-		string(payment.Method),
-		textTo(payment.Reference),
-		textTo(payment.Notes),
-		string(payment.Status),
-	)
+	kind := string(payment.Kind)
+	if kind == "" {
+		kind = string(domain.PaymentFull)
+	}
 
-	var updated sqlc.Payment
-	if err := row.Scan(
-		&updated.ID,
-		&updated.SubscriptionID,
-		&updated.PaidAt,
-		&updated.AmountCents,
-		&updated.Method,
-		&updated.Reference,
-		&updated.Notes,
-		&updated.Status,
-		&updated.CreatedAt,
-	); err != nil {
+	params := sqlc.UpdatePaymentParams{
+		ID:             id,
+		SubscriptionID: subscriptionID,
+		PaidAt:         pgtype.Timestamptz{Time: payment.PaidAt, Valid: true},
+		AmountCents:    payment.AmountCents,
+		Method:         string(payment.Method),
+		Reference:      textTo(payment.Reference),
+		Notes:          textTo(payment.Notes),
+		Status:         string(payment.Status),
+		Kind:           kind,
+		CreditCents:    payment.CreditCents,
+	}
+
+	updated, err := r.queries.UpdatePayment(ctx, params)
+	if err != nil {
 		return domain.Payment{}, err
 	}
 
@@ -98,27 +95,8 @@ func (r *PaymentRepository) FindByID(ctx context.Context, id string) (domain.Pay
 		return domain.Payment{}, err
 	}
 
-	query := `
-		SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at
-		FROM payments
-		WHERE id = $1
-		LIMIT 1
-	`
-
-	row := r.pool.QueryRow(ctx, query, uuidValue)
-
-	var payment sqlc.Payment
-	if err := row.Scan(
-		&payment.ID,
-		&payment.SubscriptionID,
-		&payment.PaidAt,
-		&payment.AmountCents,
-		&payment.Method,
-		&payment.Reference,
-		&payment.Notes,
-		&payment.Status,
-		&payment.CreatedAt,
-	); err != nil {
+	payment, err := r.queries.GetPayment(ctx, uuidValue)
+	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Payment{}, ports.ErrNotFound
 		}
@@ -167,7 +145,11 @@ func (r *PaymentRepository) ListByPeriod(ctx context.Context, start, end time.Ti
 }
 
 func mapPayment(payment sqlc.Payment) domain.Payment {
-	return domain.Payment{
+	if !payment.ID.Valid {
+		return domain.Payment{}
+	}
+
+	result := domain.Payment{
 		ID:             uuidToString(payment.ID),
 		SubscriptionID: uuidToString(payment.SubscriptionID),
 		PaidAt:         timeFrom(payment.PaidAt),
@@ -176,6 +158,13 @@ func mapPayment(payment sqlc.Payment) domain.Payment {
 		Reference:      textFrom(payment.Reference),
 		Notes:          textFrom(payment.Notes),
 		Status:         domain.PaymentStatus(payment.Status),
+		Kind:           domain.PaymentKind(payment.Kind),
+		CreditCents:    payment.CreditCents,
 		CreatedAt:      timeFrom(payment.CreatedAt),
 	}
+	if result.Kind == "" {
+		result.Kind = domain.PaymentFull
+	}
+
+	return result
 }

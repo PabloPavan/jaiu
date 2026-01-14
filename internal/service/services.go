@@ -12,12 +12,15 @@ type Services struct {
 }
 
 type Dependencies struct {
-	Students      ports.StudentRepository
-	Plans         ports.PlanRepository
-	Subscriptions ports.SubscriptionRepository
-	Payments      ports.PaymentRepository
-	Reports       ports.ReportRepository
-	Users         ports.UserRepository
+	Students       ports.StudentRepository
+	Plans          ports.PlanRepository
+	Subscriptions  ports.SubscriptionRepository
+	Payments       ports.PaymentRepository
+	BillingPeriods ports.BillingPeriodRepository
+	Balances       ports.SubscriptionBalanceRepository
+	Allocations    ports.PaymentAllocationRepository
+	Reports        ports.ReportRepository
+	Users          ports.UserRepository
 }
 
 func New(deps Dependencies) *Services {
@@ -25,7 +28,7 @@ func New(deps Dependencies) *Services {
 		Students:      NewStudentService(deps.Students),
 		Plans:         NewPlanService(deps.Plans),
 		Subscriptions: NewSubscriptionService(deps.Subscriptions, deps.Plans, deps.Students),
-		Payments:      NewPaymentService(deps.Payments, deps.Subscriptions),
+		Payments:      NewPaymentService(deps.Payments, deps.Subscriptions, deps.Plans, deps.BillingPeriods, deps.Balances, deps.Allocations),
 		Reports:       NewReportService(deps.Reports),
 		Auth:          NewAuthService(deps.Users),
 	}

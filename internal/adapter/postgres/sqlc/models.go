@@ -8,6 +8,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type BillingPeriod struct {
+	ID              pgtype.UUID        `json:"id"`
+	SubscriptionID  pgtype.UUID        `json:"subscription_id"`
+	PeriodStart     pgtype.Date        `json:"period_start"`
+	PeriodEnd       pgtype.Date        `json:"period_end"`
+	AmountDueCents  int64              `json:"amount_due_cents"`
+	AmountPaidCents int64              `json:"amount_paid_cents"`
+	Status          string             `json:"status"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Payment struct {
 	ID             pgtype.UUID        `json:"id"`
 	SubscriptionID pgtype.UUID        `json:"subscription_id"`
@@ -18,6 +30,15 @@ type Payment struct {
 	Notes          pgtype.Text        `json:"notes"`
 	Status         string             `json:"status"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	Kind           string             `json:"kind"`
+	CreditCents    int64              `json:"credit_cents"`
+}
+
+type PaymentAllocation struct {
+	PaymentID       pgtype.UUID        `json:"payment_id"`
+	BillingPeriodID pgtype.UUID        `json:"billing_period_id"`
+	AmountCents     int64              `json:"amount_cents"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 }
 
 type Plan struct {
@@ -57,6 +78,12 @@ type Subscription struct {
 	PriceCents int64              `json:"price_cents"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+type SubscriptionBalance struct {
+	SubscriptionID pgtype.UUID        `json:"subscription_id"`
+	CreditCents    int64              `json:"credit_cents"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
 type User struct {

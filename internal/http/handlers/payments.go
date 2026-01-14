@@ -223,6 +223,11 @@ func (h *Handler) buildPaymentsData(r *http.Request) view.PaymentsPageData {
 		}
 
 		statusLabel, statusClass := paymentStatusPresentation(payment.Status)
+		kindLabel, kindClass := paymentKindPresentation(payment.Kind)
+		credit := ""
+		if payment.CreditCents > 0 {
+			credit = formatBRL(payment.CreditCents)
+		}
 		item := view.PaymentItem{
 			ID:                payment.ID,
 			SubscriptionLabel: label,
@@ -234,6 +239,9 @@ func (h *Handler) buildPaymentsData(r *http.Request) view.PaymentsPageData {
 			Status:            string(payment.Status),
 			StatusLabel:       statusLabel,
 			StatusClass:       statusClass,
+			KindLabel:         kindLabel,
+			KindClass:         kindClass,
+			Credit:            credit,
 		}
 		data.Items = append(data.Items, item)
 	}
@@ -460,6 +468,19 @@ func paymentStatusPresentation(status domain.PaymentStatus) (string, string) {
 		return "Estornado", "rounded-full bg-rose-400/10 px-3 py-1 text-rose-200"
 	default:
 		return "Confirmado", "rounded-full bg-emerald-400/10 px-3 py-1 text-emerald-200"
+	}
+}
+
+func paymentKindPresentation(kind domain.PaymentKind) (string, string) {
+	switch kind {
+	case domain.PaymentPartial:
+		return "Parcial", "rounded-full bg-amber-400/10 px-3 py-1 text-amber-200"
+	case domain.PaymentAdvance:
+		return "Adiantado", "rounded-full bg-sky-400/10 px-3 py-1 text-sky-200"
+	case domain.PaymentCredit:
+		return "Credito", "rounded-full bg-teal-400/10 px-3 py-1 text-teal-200"
+	default:
+		return "Integral", "rounded-full bg-slate-700/50 px-3 py-1 text-slate-200"
 	}
 }
 

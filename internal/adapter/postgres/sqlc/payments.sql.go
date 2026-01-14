@@ -19,11 +19,13 @@ INSERT INTO payments (
   method,
   reference,
   notes,
-  status
+  status,
+  kind,
+  credit_cents
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7
+  $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
-RETURNING id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at
+RETURNING id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents
 `
 
 type CreatePaymentParams struct {
@@ -34,6 +36,8 @@ type CreatePaymentParams struct {
 	Reference      pgtype.Text        `json:"reference"`
 	Notes          pgtype.Text        `json:"notes"`
 	Status         string             `json:"status"`
+	Kind           string             `json:"kind"`
+	CreditCents    int64              `json:"credit_cents"`
 }
 
 func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error) {
@@ -45,6 +49,8 @@ func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (P
 		arg.Reference,
 		arg.Notes,
 		arg.Status,
+		arg.Kind,
+		arg.CreditCents,
 	)
 	var i Payment
 	err := row.Scan(
@@ -57,12 +63,37 @@ func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (P
 		&i.Notes,
 		&i.Status,
 		&i.CreatedAt,
+		&i.Kind,
+		&i.CreditCents,
+	)
+	return i, err
+}
+
+const getPayment = `-- name: GetPayment :one
+SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents FROM payments WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetPayment(ctx context.Context, id pgtype.UUID) (Payment, error) {
+	row := q.db.QueryRow(ctx, getPayment, id)
+	var i Payment
+	err := row.Scan(
+		&i.ID,
+		&i.SubscriptionID,
+		&i.PaidAt,
+		&i.AmountCents,
+		&i.Method,
+		&i.Reference,
+		&i.Notes,
+		&i.Status,
+		&i.CreatedAt,
+		&i.Kind,
+		&i.CreditCents,
 	)
 	return i, err
 }
 
 const listPaymentsByPeriod = `-- name: ListPaymentsByPeriod :many
-SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at
+SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents
 FROM payments
 WHERE paid_at >= $1 AND paid_at < $2
 ORDER BY paid_at DESC
@@ -92,6 +123,8 @@ func (q *Queries) ListPaymentsByPeriod(ctx context.Context, arg ListPaymentsByPe
 			&i.Notes,
 			&i.Status,
 			&i.CreatedAt,
+			&i.Kind,
+			&i.CreditCents,
 		); err != nil {
 			return nil, err
 		}
@@ -104,7 +137,7 @@ func (q *Queries) ListPaymentsByPeriod(ctx context.Context, arg ListPaymentsByPe
 }
 
 const listPaymentsBySubscription = `-- name: ListPaymentsBySubscription :many
-SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at FROM payments WHERE subscription_id = $1 ORDER BY paid_at DESC
+SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents FROM payments WHERE subscription_id = $1 ORDER BY paid_at DESC
 `
 
 func (q *Queries) ListPaymentsBySubscription(ctx context.Context, subscriptionID pgtype.UUID) ([]Payment, error) {
@@ -126,6 +159,8 @@ func (q *Queries) ListPaymentsBySubscription(ctx context.Context, subscriptionID
 			&i.Notes,
 			&i.Status,
 			&i.CreatedAt,
+			&i.Kind,
+			&i.CreditCents,
 		); err != nil {
 			return nil, err
 		}
@@ -135,4 +170,63 @@ func (q *Queries) ListPaymentsBySubscription(ctx context.Context, subscriptionID
 		return nil, err
 	}
 	return items, nil
+}
+
+const updatePayment = `-- name: UpdatePayment :one
+UPDATE payments
+SET
+  subscription_id = $2,
+  paid_at = $3,
+  amount_cents = $4,
+  method = $5,
+  reference = $6,
+  notes = $7,
+  status = $8,
+  kind = $9,
+  credit_cents = $10
+WHERE id = $1
+RETURNING id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents
+`
+
+type UpdatePaymentParams struct {
+	ID             pgtype.UUID        `json:"id"`
+	SubscriptionID pgtype.UUID        `json:"subscription_id"`
+	PaidAt         pgtype.Timestamptz `json:"paid_at"`
+	AmountCents    int64              `json:"amount_cents"`
+	Method         string             `json:"method"`
+	Reference      pgtype.Text        `json:"reference"`
+	Notes          pgtype.Text        `json:"notes"`
+	Status         string             `json:"status"`
+	Kind           string             `json:"kind"`
+	CreditCents    int64              `json:"credit_cents"`
+}
+
+func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (Payment, error) {
+	row := q.db.QueryRow(ctx, updatePayment,
+		arg.ID,
+		arg.SubscriptionID,
+		arg.PaidAt,
+		arg.AmountCents,
+		arg.Method,
+		arg.Reference,
+		arg.Notes,
+		arg.Status,
+		arg.Kind,
+		arg.CreditCents,
+	)
+	var i Payment
+	err := row.Scan(
+		&i.ID,
+		&i.SubscriptionID,
+		&i.PaidAt,
+		&i.AmountCents,
+		&i.Method,
+		&i.Reference,
+		&i.Notes,
+		&i.Status,
+		&i.CreatedAt,
+		&i.Kind,
+		&i.CreditCents,
+	)
+	return i, err
 }

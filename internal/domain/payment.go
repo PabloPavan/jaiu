@@ -11,5 +11,7 @@ type Payment struct {
 	Reference      string
 	Notes          string
 	Status         PaymentStatus
+	Kind           PaymentKind
+	CreditCents    int64
 	CreatedAt      time.Time
 }

@@ -44,6 +44,26 @@ type PaymentRepository interface {
 	ListByPeriod(ctx context.Context, start, end time.Time) ([]domain.Payment, error)
 }
 
+type BillingPeriodRepository interface {
+	Create(ctx context.Context, period domain.BillingPeriod) (domain.BillingPeriod, error)
+	Update(ctx context.Context, period domain.BillingPeriod) (domain.BillingPeriod, error)
+	ListBySubscription(ctx context.Context, subscriptionID string) ([]domain.BillingPeriod, error)
+	ListOpenBySubscription(ctx context.Context, subscriptionID string) ([]domain.BillingPeriod, error)
+	MarkOverdue(ctx context.Context, subscriptionID string, now time.Time) error
+}
+
+type PaymentAllocationRepository interface {
+	Create(ctx context.Context, allocation domain.PaymentAllocation) error
+	ListByPayment(ctx context.Context, paymentID string) ([]domain.PaymentAllocation, error)
+	DeleteByPayment(ctx context.Context, paymentID string) error
+}
+
+type SubscriptionBalanceRepository interface {
+	Get(ctx context.Context, subscriptionID string) (domain.SubscriptionBalance, error)
+	Set(ctx context.Context, balance domain.SubscriptionBalance) (domain.SubscriptionBalance, error)
+	Add(ctx context.Context, subscriptionID string, delta int64) (domain.SubscriptionBalance, error)
+}
+
 type UserRepository interface {
 	Create(ctx context.Context, user domain.User) (domain.User, error)
 	FindByEmail(ctx context.Context, email string) (domain.User, error)

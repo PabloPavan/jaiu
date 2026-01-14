@@ -49,7 +49,11 @@ templ PaymentsList(data PaymentsPageData) {
 							</div>
 							<div class="flex items-center gap-2 text-xs">
 								<span class={item.StatusClass}>{item.StatusLabel}</span>
+								<span class={item.KindClass}>{item.KindLabel}</span>
 								<span class="rounded-full border border-slate-700 px-3 py-1 text-slate-200">{item.Amount}</span>
+								if item.Credit != "" {
+									<span class="rounded-full border border-slate-700 px-3 py-1 text-slate-300">Credito {item.Credit}</span>
+								}
 								<a class="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:border-emerald-400/40" href={"/payments/" + item.ID + "/edit"}>Editar</a>
 								<form method="post" action={"/payments/" + item.ID + "/reverse"} hx-post={"/payments/" + item.ID + "/reverse"} hx-target="#payments-list" hx-swap="outerHTML" hx-confirm="Estornar este pagamento?">
 									<input type="hidden" name="subscription_id" value={data.SubscriptionID}/>

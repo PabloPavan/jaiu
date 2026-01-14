@@ -8,11 +8,15 @@ type PaymentStatus string
 
 type PaymentMethod string
 
+type PaymentKind string
+
+type BillingPeriodStatus string
+
 type UserRole string
 
 const (
-	StudentActive   StudentStatus = "active"
-	StudentInactive StudentStatus = "inactive"
+	StudentActive    StudentStatus = "active"
+	StudentInactive  StudentStatus = "inactive"
 	StudentSuspended StudentStatus = "suspended"
 )
 
@@ -29,11 +33,25 @@ const (
 )
 
 const (
+	PaymentFull    PaymentKind = "full"
+	PaymentPartial PaymentKind = "partial"
+	PaymentAdvance PaymentKind = "advance"
+	PaymentCredit  PaymentKind = "credit"
+)
+
+const (
 	PaymentCash     PaymentMethod = "cash"
 	PaymentPix      PaymentMethod = "pix"
 	PaymentCard     PaymentMethod = "card"
 	PaymentTransfer PaymentMethod = "transfer"
 	PaymentOther    PaymentMethod = "other"
+)
+
+const (
+	BillingOpen    BillingPeriodStatus = "open"
+	BillingPaid    BillingPeriodStatus = "paid"
+	BillingPartial BillingPeriodStatus = "partial"
+	BillingOverdue BillingPeriodStatus = "overdue"
 )
 
 const (

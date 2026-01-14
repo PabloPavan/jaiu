@@ -11,28 +11,41 @@ import (
 )
 
 type Querier interface {
+	AddSubscriptionBalance(ctx context.Context, arg AddSubscriptionBalanceParams) (SubscriptionBalance, error)
+	CreateBillingPeriod(ctx context.Context, arg CreateBillingPeriodParams) (BillingPeriod, error)
 	CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error)
+	CreatePaymentAllocation(ctx context.Context, arg CreatePaymentAllocationParams) error
 	CreatePlan(ctx context.Context, arg CreatePlanParams) (Plan, error)
 	CreateStudent(ctx context.Context, arg CreateStudentParams) (Student, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeletePaymentAllocationsByPayment(ctx context.Context, paymentID pgtype.UUID) error
 	DelinquentSubscriptions(ctx context.Context, dollar_1 pgtype.Date) ([]DelinquentSubscriptionsRow, error)
+	GetPayment(ctx context.Context, id pgtype.UUID) (Payment, error)
 	GetPlan(ctx context.Context, id pgtype.UUID) (Plan, error)
 	GetStudent(ctx context.Context, id pgtype.UUID) (Student, error)
 	GetSubscription(ctx context.Context, id pgtype.UUID) (Subscription, error)
+	GetSubscriptionBalance(ctx context.Context, subscriptionID pgtype.UUID) (SubscriptionBalance, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	ListActivePlans(ctx context.Context) ([]Plan, error)
+	ListBillingPeriodsBySubscription(ctx context.Context, subscriptionID pgtype.UUID) ([]BillingPeriod, error)
+	ListOpenBillingPeriodsBySubscription(ctx context.Context, subscriptionID pgtype.UUID) ([]BillingPeriod, error)
+	ListPaymentAllocationsByPayment(ctx context.Context, paymentID pgtype.UUID) ([]PaymentAllocation, error)
 	ListPaymentsByPeriod(ctx context.Context, arg ListPaymentsByPeriodParams) ([]Payment, error)
 	ListPaymentsBySubscription(ctx context.Context, subscriptionID pgtype.UUID) ([]Payment, error)
 	ListSubscriptionsByStudent(ctx context.Context, studentID pgtype.UUID) ([]Subscription, error)
 	ListSubscriptionsDueBetween(ctx context.Context, arg ListSubscriptionsDueBetweenParams) ([]Subscription, error)
+	MarkBillingPeriodsOverdue(ctx context.Context, arg MarkBillingPeriodsOverdueParams) error
 	RevenueByPeriod(ctx context.Context, arg RevenueByPeriodParams) (RevenueByPeriodRow, error)
 	SearchStudents(ctx context.Context, arg SearchStudentsParams) ([]Student, error)
 	StudentsByStatus(ctx context.Context) ([]StudentsByStatusRow, error)
 	UpcomingDue(ctx context.Context, arg UpcomingDueParams) ([]UpcomingDueRow, error)
+	UpdateBillingPeriod(ctx context.Context, arg UpdateBillingPeriodParams) (BillingPeriod, error)
+	UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (Payment, error)
 	UpdatePlan(ctx context.Context, arg UpdatePlanParams) (Plan, error)
 	UpdateStudent(ctx context.Context, arg UpdateStudentParams) (Student, error)
 	UpdateSubscription(ctx context.Context, arg UpdateSubscriptionParams) (Subscription, error)
+	UpsertSubscriptionBalance(ctx context.Context, arg UpsertSubscriptionBalanceParams) (SubscriptionBalance, error)
 }
 
 var _ Querier = (*Queries)(nil)
