@@ -24,7 +24,7 @@ INSERT INTO subscriptions (
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8
 )
-RETURNING id, student_id, plan_id, start_date, end_date, status, price_cents, payment_day, auto_renew, created_at, updated_at
+RETURNING id, student_id, plan_id, start_date, end_date, status, price_cents, created_at, updated_at, payment_day, auto_renew
 `
 
 type CreateSubscriptionParams struct {
@@ -58,16 +58,16 @@ func (q *Queries) CreateSubscription(ctx context.Context, arg CreateSubscription
 		&i.EndDate,
 		&i.Status,
 		&i.PriceCents,
-		&i.PaymentDay,
-		&i.AutoRenew,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PaymentDay,
+		&i.AutoRenew,
 	)
 	return i, err
 }
 
 const getSubscription = `-- name: GetSubscription :one
-SELECT id, student_id, plan_id, start_date, end_date, status, price_cents, payment_day, auto_renew, created_at, updated_at FROM subscriptions WHERE id = $1 LIMIT 1
+SELECT id, student_id, plan_id, start_date, end_date, status, price_cents, created_at, updated_at, payment_day, auto_renew FROM subscriptions WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetSubscription(ctx context.Context, id pgtype.UUID) (Subscription, error) {
@@ -81,16 +81,92 @@ func (q *Queries) GetSubscription(ctx context.Context, id pgtype.UUID) (Subscrip
 		&i.EndDate,
 		&i.Status,
 		&i.PriceCents,
-		&i.PaymentDay,
-		&i.AutoRenew,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PaymentDay,
+		&i.AutoRenew,
 	)
 	return i, err
 }
 
+const listAutoRenewSubscriptions = `-- name: ListAutoRenewSubscriptions :many
+SELECT id, student_id, plan_id, start_date, end_date, status, price_cents, created_at, updated_at, payment_day, auto_renew
+FROM subscriptions
+WHERE status = 'active'
+  AND auto_renew = true
+ORDER BY start_date
+`
+
+func (q *Queries) ListAutoRenewSubscriptions(ctx context.Context) ([]Subscription, error) {
+	rows, err := q.db.Query(ctx, listAutoRenewSubscriptions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Subscription
+	for rows.Next() {
+		var i Subscription
+		if err := rows.Scan(
+			&i.ID,
+			&i.StudentID,
+			&i.PlanID,
+			&i.StartDate,
+			&i.EndDate,
+			&i.Status,
+			&i.PriceCents,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.PaymentDay,
+			&i.AutoRenew,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSubscriptionsByPlan = `-- name: ListSubscriptionsByPlan :many
+SELECT id, student_id, plan_id, start_date, end_date, status, price_cents, created_at, updated_at, payment_day, auto_renew FROM subscriptions WHERE plan_id = $1 ORDER BY start_date DESC
+`
+
+func (q *Queries) ListSubscriptionsByPlan(ctx context.Context, planID pgtype.UUID) ([]Subscription, error) {
+	rows, err := q.db.Query(ctx, listSubscriptionsByPlan, planID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Subscription
+	for rows.Next() {
+		var i Subscription
+		if err := rows.Scan(
+			&i.ID,
+			&i.StudentID,
+			&i.PlanID,
+			&i.StartDate,
+			&i.EndDate,
+			&i.Status,
+			&i.PriceCents,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.PaymentDay,
+			&i.AutoRenew,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSubscriptionsByStudent = `-- name: ListSubscriptionsByStudent :many
-SELECT id, student_id, plan_id, start_date, end_date, status, price_cents, payment_day, auto_renew, created_at, updated_at FROM subscriptions WHERE student_id = $1 ORDER BY start_date DESC
+SELECT id, student_id, plan_id, start_date, end_date, status, price_cents, created_at, updated_at, payment_day, auto_renew FROM subscriptions WHERE student_id = $1 ORDER BY start_date DESC
 `
 
 func (q *Queries) ListSubscriptionsByStudent(ctx context.Context, studentID pgtype.UUID) ([]Subscription, error) {
@@ -110,10 +186,10 @@ func (q *Queries) ListSubscriptionsByStudent(ctx context.Context, studentID pgty
 			&i.EndDate,
 			&i.Status,
 			&i.PriceCents,
-			&i.PaymentDay,
-			&i.AutoRenew,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.PaymentDay,
+			&i.AutoRenew,
 		); err != nil {
 			return nil, err
 		}
@@ -126,7 +202,7 @@ func (q *Queries) ListSubscriptionsByStudent(ctx context.Context, studentID pgty
 }
 
 const listSubscriptionsDueBetween = `-- name: ListSubscriptionsDueBetween :many
-SELECT id, student_id, plan_id, start_date, end_date, status, price_cents, payment_day, auto_renew, created_at, updated_at
+SELECT id, student_id, plan_id, start_date, end_date, status, price_cents, created_at, updated_at, payment_day, auto_renew
 FROM subscriptions
 WHERE status = 'active'
   AND end_date BETWEEN $1 AND $2
@@ -155,10 +231,10 @@ func (q *Queries) ListSubscriptionsDueBetween(ctx context.Context, arg ListSubsc
 			&i.EndDate,
 			&i.Status,
 			&i.PriceCents,
-			&i.PaymentDay,
-			&i.AutoRenew,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.PaymentDay,
+			&i.AutoRenew,
 		); err != nil {
 			return nil, err
 		}
@@ -181,7 +257,7 @@ SET
   auto_renew = $7,
   updated_at = now()
 WHERE id = $1
-RETURNING id, student_id, plan_id, start_date, end_date, status, price_cents, payment_day, auto_renew, created_at, updated_at
+RETURNING id, student_id, plan_id, start_date, end_date, status, price_cents, created_at, updated_at, payment_day, auto_renew
 `
 
 type UpdateSubscriptionParams struct {
@@ -213,50 +289,10 @@ func (q *Queries) UpdateSubscription(ctx context.Context, arg UpdateSubscription
 		&i.EndDate,
 		&i.Status,
 		&i.PriceCents,
-		&i.PaymentDay,
-		&i.AutoRenew,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PaymentDay,
+		&i.AutoRenew,
 	)
 	return i, err
-}
-
-const listAutoRenewSubscriptions = `-- name: ListAutoRenewSubscriptions :many
-SELECT id, student_id, plan_id, start_date, end_date, status, price_cents, payment_day, auto_renew, created_at, updated_at
-FROM subscriptions
-WHERE status = 'active'
-  AND auto_renew = true
-ORDER BY start_date
-`
-
-func (q *Queries) ListAutoRenewSubscriptions(ctx context.Context) ([]Subscription, error) {
-	rows, err := q.db.Query(ctx, listAutoRenewSubscriptions)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Subscription
-	for rows.Next() {
-		var i Subscription
-		if err := rows.Scan(
-			&i.ID,
-			&i.StudentID,
-			&i.PlanID,
-			&i.StartDate,
-			&i.EndDate,
-			&i.Status,
-			&i.PriceCents,
-			&i.PaymentDay,
-			&i.AutoRenew,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }

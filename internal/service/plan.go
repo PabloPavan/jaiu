@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
@@ -9,12 +10,13 @@ import (
 )
 
 type PlanService struct {
-	repo ports.PlanRepository
-	now  func() time.Time
+	repo          ports.PlanRepository
+	subscriptions ports.SubscriptionRepository
+	now           func() time.Time
 }
 
-func NewPlanService(repo ports.PlanRepository) *PlanService {
-	return &PlanService{repo: repo, now: time.Now}
+func NewPlanService(repo ports.PlanRepository, subscriptions ports.SubscriptionRepository) *PlanService {
+	return &PlanService{repo: repo, subscriptions: subscriptions, now: time.Now}
 }
 
 func (s *PlanService) Create(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
@@ -27,7 +29,16 @@ func (s *PlanService) Create(ctx context.Context, plan domain.Plan) (domain.Plan
 
 func (s *PlanService) Update(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
 	plan.UpdatedAt = s.now()
-	return s.repo.Update(ctx, plan)
+	updated, err := s.repo.Update(ctx, plan)
+	if err != nil {
+		return domain.Plan{}, err
+	}
+	if !updated.Active {
+		if err := s.endSubscriptionsForPlan(ctx, updated.ID); err != nil {
+			return updated, err
+		}
+	}
+	return updated, nil
 }
 
 func (s *PlanService) Deactivate(ctx context.Context, planID string) (domain.Plan, error) {
@@ -39,7 +50,14 @@ func (s *PlanService) Deactivate(ctx context.Context, planID string) (domain.Pla
 	plan.Active = false
 	plan.UpdatedAt = s.now()
 
-	return s.repo.Update(ctx, plan)
+	updated, err := s.repo.Update(ctx, plan)
+	if err != nil {
+		return domain.Plan{}, err
+	}
+	if err := s.endSubscriptionsForPlan(ctx, updated.ID); err != nil {
+		return updated, err
+	}
+	return updated, nil
 }
 
 func (s *PlanService) FindByID(ctx context.Context, planID string) (domain.Plan, error) {
@@ -48,4 +66,15 @@ func (s *PlanService) FindByID(ctx context.Context, planID string) (domain.Plan,
 
 func (s *PlanService) ListActive(ctx context.Context) ([]domain.Plan, error) {
 	return s.repo.ListActive(ctx)
+}
+
+func (s *PlanService) endSubscriptionsForPlan(ctx context.Context, planID string) error {
+	if s.subscriptions == nil {
+		return errors.New("assinaturas indisponiveis")
+	}
+	subscriptions, err := s.subscriptions.ListByPlan(ctx, planID)
+	if err != nil {
+		return err
+	}
+	return endSubscriptions(ctx, s.subscriptions, subscriptions, s.now())
 }

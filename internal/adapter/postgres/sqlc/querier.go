@@ -28,11 +28,13 @@ type Querier interface {
 	GetSubscriptionBalance(ctx context.Context, subscriptionID pgtype.UUID) (SubscriptionBalance, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	ListActivePlans(ctx context.Context) ([]Plan, error)
+	ListAutoRenewSubscriptions(ctx context.Context) ([]Subscription, error)
 	ListBillingPeriodsBySubscription(ctx context.Context, subscriptionID pgtype.UUID) ([]BillingPeriod, error)
 	ListOpenBillingPeriodsBySubscription(ctx context.Context, subscriptionID pgtype.UUID) ([]BillingPeriod, error)
 	ListPaymentAllocationsByPayment(ctx context.Context, paymentID pgtype.UUID) ([]PaymentAllocation, error)
 	ListPaymentsByPeriod(ctx context.Context, arg ListPaymentsByPeriodParams) ([]Payment, error)
 	ListPaymentsBySubscription(ctx context.Context, subscriptionID pgtype.UUID) ([]Payment, error)
+	ListSubscriptionsByPlan(ctx context.Context, planID pgtype.UUID) ([]Subscription, error)
 	ListSubscriptionsByStudent(ctx context.Context, studentID pgtype.UUID) ([]Subscription, error)
 	ListSubscriptionsDueBetween(ctx context.Context, arg ListSubscriptionsDueBetweenParams) ([]Subscription, error)
 	MarkBillingPeriodsOverdue(ctx context.Context, arg MarkBillingPeriodsOverdueParams) error

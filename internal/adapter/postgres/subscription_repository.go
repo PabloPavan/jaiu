@@ -109,6 +109,25 @@ func (r *SubscriptionRepository) ListByStudent(ctx context.Context, studentID st
 	return result, nil
 }
 
+func (r *SubscriptionRepository) ListByPlan(ctx context.Context, planID string) ([]domain.Subscription, error) {
+	uuidValue, err := stringToUUID(planID)
+	if err != nil || !uuidValue.Valid {
+		return nil, err
+	}
+
+	subscriptions, err := r.queries.ListSubscriptionsByPlan(ctx, uuidValue)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]domain.Subscription, 0, len(subscriptions))
+	for _, subscription := range subscriptions {
+		result = append(result, mapSubscription(subscription))
+	}
+
+	return result, nil
+}
+
 func (r *SubscriptionRepository) ListDueBetween(ctx context.Context, start, end time.Time) ([]domain.Subscription, error) {
 	params := sqlc.ListSubscriptionsDueBetweenParams{
 		EndDate:   dateTo(&start),

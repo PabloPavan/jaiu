@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
@@ -9,12 +10,13 @@ import (
 )
 
 type StudentService struct {
-	repo ports.StudentRepository
-	now  func() time.Time
+	repo          ports.StudentRepository
+	subscriptions ports.SubscriptionRepository
+	now           func() time.Time
 }
 
-func NewStudentService(repo ports.StudentRepository) *StudentService {
-	return &StudentService{repo: repo, now: time.Now}
+func NewStudentService(repo ports.StudentRepository, subscriptions ports.SubscriptionRepository) *StudentService {
+	return &StudentService{repo: repo, subscriptions: subscriptions, now: time.Now}
 }
 
 func (s *StudentService) Register(ctx context.Context, student domain.Student) (domain.Student, error) {
@@ -31,7 +33,16 @@ func (s *StudentService) Register(ctx context.Context, student domain.Student) (
 
 func (s *StudentService) Update(ctx context.Context, student domain.Student) (domain.Student, error) {
 	student.UpdatedAt = s.now()
-	return s.repo.Update(ctx, student)
+	updated, err := s.repo.Update(ctx, student)
+	if err != nil {
+		return domain.Student{}, err
+	}
+	if updated.Status == domain.StudentInactive || updated.Status == domain.StudentSuspended {
+		if err := s.endSubscriptionsForStudent(ctx, updated.ID); err != nil {
+			return updated, err
+		}
+	}
+	return updated, nil
 }
 
 func (s *StudentService) SetStatus(ctx context.Context, studentID string, status domain.StudentStatus) (domain.Student, error) {
@@ -41,9 +52,7 @@ func (s *StudentService) SetStatus(ctx context.Context, studentID string, status
 	}
 
 	student.Status = status
-	student.UpdatedAt = s.now()
-
-	return s.repo.Update(ctx, student)
+	return s.Update(ctx, student)
 }
 
 func (s *StudentService) FindByID(ctx context.Context, studentID string) (domain.Student, error) {
@@ -56,4 +65,15 @@ func (s *StudentService) Deactivate(ctx context.Context, studentID string) (doma
 
 func (s *StudentService) Search(ctx context.Context, filter ports.StudentFilter) ([]domain.Student, error) {
 	return s.repo.Search(ctx, filter)
+}
+
+func (s *StudentService) endSubscriptionsForStudent(ctx context.Context, studentID string) error {
+	if s.subscriptions == nil {
+		return errors.New("assinaturas indisponiveis")
+	}
+	subscriptions, err := s.subscriptions.ListByStudent(ctx, studentID)
+	if err != nil {
+		return err
+	}
+	return endSubscriptions(ctx, s.subscriptions, subscriptions, s.now())
 }

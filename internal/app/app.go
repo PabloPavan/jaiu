@@ -88,12 +88,10 @@ func New(cfg Config) (*App, error) {
 		authService = service.NewAuthService(userRepo)
 
 		planRepo := postgres.NewPlanRepository(pool)
-		planService = service.NewPlanService(planRepo)
-
 		studentRepo := postgres.NewStudentRepository(pool)
-		studentService = service.NewStudentService(studentRepo)
-
 		subscriptionRepo := postgres.NewSubscriptionRepository(pool)
+		planService = service.NewPlanService(planRepo, subscriptionRepo)
+		studentService = service.NewStudentService(studentRepo, subscriptionRepo)
 		subscriptionService = service.NewSubscriptionService(subscriptionRepo, planRepo, studentRepo)
 
 		paymentRepo := postgres.NewPaymentRepository(pool)

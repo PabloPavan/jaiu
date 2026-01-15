@@ -54,6 +54,9 @@ func (s *PaymentService) Register(ctx context.Context, payment domain.Payment) (
 	if err != nil {
 		return domain.Payment{}, err
 	}
+	if subscription.Status != domain.SubscriptionActive {
+		return domain.Payment{}, errors.New("assinatura inativa")
+	}
 
 	plan, err := s.plans.FindByID(ctx, subscription.PlanID)
 	if err != nil {

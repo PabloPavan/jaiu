@@ -32,6 +32,9 @@ SELECT * FROM subscriptions WHERE id = $1 LIMIT 1;
 -- name: ListSubscriptionsByStudent :many
 SELECT * FROM subscriptions WHERE student_id = $1 ORDER BY start_date DESC;
 
+-- name: ListSubscriptionsByPlan :many
+SELECT * FROM subscriptions WHERE plan_id = $1 ORDER BY start_date DESC;
+
 -- name: ListSubscriptionsDueBetween :many
 SELECT *
 FROM subscriptions

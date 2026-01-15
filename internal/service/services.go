@@ -25,8 +25,8 @@ type Dependencies struct {
 
 func New(deps Dependencies) *Services {
 	return &Services{
-		Students:      NewStudentService(deps.Students),
-		Plans:         NewPlanService(deps.Plans),
+		Students:      NewStudentService(deps.Students, deps.Subscriptions),
+		Plans:         NewPlanService(deps.Plans, deps.Subscriptions),
 		Subscriptions: NewSubscriptionService(deps.Subscriptions, deps.Plans, deps.Students),
 		Payments:      NewPaymentService(deps.Payments, deps.Subscriptions, deps.Plans, deps.BillingPeriods, deps.Balances, deps.Allocations),
 		Reports:       NewReportService(deps.Reports),
