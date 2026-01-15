@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -238,17 +239,19 @@ func (h *Handler) buildSubscriptionsData(r *http.Request) view.SubscriptionsPage
 		}
 
 		label, className := subscriptionStatusPresentation(subscription.Status)
-		item := view.SubscriptionItem{
-			ID:          subscription.ID,
-			StudentName: studentName,
-			PlanName:    planName,
-			StartDate:   formatDateBRValue(subscription.StartDate),
-			EndDate:     formatDateBRValue(subscription.EndDate),
-			Status:      string(subscription.Status),
-			StatusLabel: label,
-			StatusClass: className,
-			Price:       formatBRL(subscription.PriceCents),
-		}
+	item := view.SubscriptionItem{
+		ID:          subscription.ID,
+		StudentName: studentName,
+		PlanName:    planName,
+		StartDate:   formatDateBRValue(subscription.StartDate),
+		EndDate:     formatDateBRValue(subscription.EndDate),
+		PaymentDay:  formatInt(subscription.PaymentDay),
+		AutoRenew:   subscription.AutoRenew,
+		Status:      string(subscription.Status),
+		StatusLabel: label,
+		StatusClass: className,
+		Price:       formatBRL(subscription.PriceCents),
+	}
 		data.Items = append(data.Items, item)
 	}
 
@@ -263,6 +266,7 @@ func (h *Handler) subscriptionFormCreateData(r *http.Request) view.SubscriptionF
 		SubmitLabel: "Criar assinatura",
 		Status:      string(domain.SubscriptionActive),
 		StartDate:   formatDateBRValue(now),
+		PaymentDay:  formatInt(now.Day()),
 	}
 	h.fillSubscriptionFormOptions(r, &data)
 	return data
@@ -279,6 +283,8 @@ func (h *Handler) subscriptionFormEditData(r *http.Request, subscription domain.
 		PlanID:       subscription.PlanID,
 		StartDate:    formatDateBRValue(subscription.StartDate),
 		EndDate:      formatDateBRValue(subscription.EndDate),
+		PaymentDay:   formatInt(subscription.PaymentDay),
+		AutoRenew:    subscription.AutoRenew,
 		Status:       string(subscription.Status),
 		Price:        formatCentsInput(subscription.PriceCents),
 	}
@@ -329,6 +335,13 @@ func (h *Handler) parseSubscriptionForm(r *http.Request, data *view.Subscription
 		return domain.Subscription{}, errors.New("Vencimento invalido. Use o formato dd/mm/aaaa.")
 	}
 
+	paymentDayRaw := strings.TrimSpace(r.FormValue("payment_day"))
+	data.PaymentDay = paymentDayRaw
+	paymentDay, err := parsePaymentDay(paymentDayRaw)
+	if err != nil {
+		return domain.Subscription{}, err
+	}
+
 	statusValue := strings.TrimSpace(r.FormValue("status"))
 	status, err := parseSubscriptionStatus(statusValue)
 	if err != nil {
@@ -343,12 +356,17 @@ func (h *Handler) parseSubscriptionForm(r *http.Request, data *view.Subscription
 		return domain.Subscription{}, errors.New("Preco invalido.")
 	}
 
+	autoRenew := strings.TrimSpace(r.FormValue("auto_renew")) != ""
+	data.AutoRenew = autoRenew
+
 	subscription := domain.Subscription{
 		StudentID:  studentID,
 		PlanID:     planID,
 		StartDate:  *startDate,
 		Status:     status,
 		PriceCents: priceCents,
+		PaymentDay: paymentDay,
+		AutoRenew:  autoRenew,
 	}
 	if endDate != nil {
 		subscription.EndDate = *endDate
@@ -509,4 +527,22 @@ func formatDateBRValue(value time.Time) string {
 		return ""
 	}
 	return value.Format("02/01/2006")
+}
+
+func parsePaymentDay(value string) (int, error) {
+	if value == "" {
+		return 0, errors.New("Dia do pagamento e obrigatorio.")
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < 1 || parsed > 31 {
+		return 0, errors.New("Dia do pagamento invalido. Use um numero de 1 a 31.")
+	}
+	return parsed, nil
+}
+
+func formatInt(value int) string {
+	if value == 0 {
+		return ""
+	}
+	return strconv.Itoa(value)
 }

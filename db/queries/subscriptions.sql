@@ -5,9 +5,11 @@ INSERT INTO subscriptions (
   start_date,
   end_date,
   status,
-  price_cents
+  price_cents,
+  payment_day,
+  auto_renew
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5, $6, $7, $8
 )
 RETURNING *;
 
@@ -18,6 +20,8 @@ SET
   end_date = $3,
   status = $4,
   price_cents = $5,
+  payment_day = $6,
+  auto_renew = $7,
   updated_at = now()
 WHERE id = $1
 RETURNING *;
@@ -34,3 +38,10 @@ FROM subscriptions
 WHERE status = 'active'
   AND end_date BETWEEN $1 AND $2
 ORDER BY end_date;
+
+-- name: ListAutoRenewSubscriptions :many
+SELECT *
+FROM subscriptions
+WHERE status = 'active'
+  AND auto_renew = true
+ORDER BY start_date;

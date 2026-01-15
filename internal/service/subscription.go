@@ -56,6 +56,13 @@ func (s *SubscriptionService) Create(ctx context.Context, subscription domain.Su
 		subscription.StartDate = dateOnly(s.now())
 	}
 
+	if subscription.PaymentDay <= 0 {
+		subscription.PaymentDay = subscription.StartDate.Day()
+	}
+	if subscription.PaymentDay < 1 || subscription.PaymentDay > 31 {
+		return domain.Subscription{}, errors.New("dia do pagamento invalido")
+	}
+
 	if subscription.EndDate.IsZero() && plan.DurationDays > 0 {
 		subscription.EndDate = subscription.StartDate.AddDate(0, 0, plan.DurationDays)
 	}
@@ -85,6 +92,10 @@ func (s *SubscriptionService) Update(ctx context.Context, subscription domain.Su
 	}
 	if subscription.Status == "" {
 		subscription.Status = domain.SubscriptionActive
+	}
+
+	if subscription.PaymentDay < 1 || subscription.PaymentDay > 31 {
+		return domain.Subscription{}, errors.New("dia do pagamento invalido")
 	}
 
 	var plan domain.Plan

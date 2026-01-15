@@ -75,7 +75,7 @@ func (s *PaymentService) Register(ctx context.Context, payment domain.Payment) (
 	if _, err := s.ensurePeriods(ctx, subscription, plan, today); err != nil {
 		return domain.Payment{}, err
 	}
-	if err := s.applyBalance(ctx, subscription.ID, today); err != nil {
+	if err := s.applyBalance(ctx, subscription, today); err != nil {
 		return domain.Payment{}, err
 	}
 
@@ -148,7 +148,14 @@ func (s *PaymentService) Reverse(ctx context.Context, paymentID string) (domain.
 	}
 
 	if s.allocations != nil && s.periods != nil {
-		if err := s.rollbackPayment(ctx, payment); err != nil {
+		if s.subscriptions == nil {
+			return domain.Payment{}, errors.New("assinaturas indisponiveis")
+		}
+		subscription, err := s.subscriptions.FindByID(ctx, payment.SubscriptionID)
+		if err != nil {
+			return domain.Payment{}, err
+		}
+		if err := s.rollbackPayment(ctx, payment, subscription); err != nil {
 			return domain.Payment{}, err
 		}
 	}
@@ -183,30 +190,33 @@ func (s *PaymentService) applyPayment(ctx context.Context, payment domain.Paymen
 		return paymentApplicationResult{}, errors.New("periodos de cobranca indisponiveis")
 	}
 
-	if err := s.periods.MarkOverdue(ctx, subscription.ID, today); err != nil {
+	paymentDay, err := effectivePaymentDay(subscription)
+	if err != nil {
 		return paymentApplicationResult{}, err
 	}
-
+	if _, err := refreshPeriodStatusesBySubscription(ctx, s.periods, subscription.ID, paymentDay, today); err != nil {
+		return paymentApplicationResult{}, err
+	}
 	periods, err := s.periods.ListOpenBySubscription(ctx, subscription.ID)
 	if err != nil {
 		return paymentApplicationResult{}, err
 	}
 
-	priceCents := subscription.PriceCents
-	if priceCents <= 0 {
-		priceCents = plan.PriceCents
+	priceCents, err := effectivePriceCents(subscription, plan)
+	if err != nil {
+		return paymentApplicationResult{}, err
 	}
 
 	remaining := payment.AmountCents
 	partial := false
 	paidFuture := false
-	lastEnd := subscription.StartDate
+	lastStart := subscription.StartDate
 
 	if allPeriods, err := s.periods.ListBySubscription(ctx, subscription.ID); err == nil && len(allPeriods) > 0 {
 		sort.Slice(allPeriods, func(i, j int) bool {
-			return allPeriods[i].PeriodEnd.Before(allPeriods[j].PeriodEnd)
+			return allPeriods[i].PeriodStart.Before(allPeriods[j].PeriodStart)
 		})
-		lastEnd = allPeriods[len(allPeriods)-1].PeriodEnd
+		lastStart = allPeriods[len(allPeriods)-1].PeriodStart
 	}
 
 	for _, period := range periods {
@@ -223,7 +233,7 @@ func (s *PaymentService) applyPayment(ctx context.Context, payment domain.Paymen
 		}
 
 		period.AmountPaidCents += applied
-		period.Status = resolvePeriodStatus(period, today)
+		period.Status = resolvePeriodStatus(period, today, paymentDay)
 		if period.AmountPaidCents < period.AmountDueCents {
 			partial = true
 		}
@@ -242,14 +252,12 @@ func (s *PaymentService) applyPayment(ctx context.Context, payment domain.Paymen
 		}
 
 		remaining -= applied
-		if updated.PeriodEnd.After(lastEnd) {
-			lastEnd = updated.PeriodEnd
-		}
 	}
 
-	if remaining > 0 {
+	if remaining > 0 && subscription.AutoRenew {
 		for remaining >= priceCents && priceCents > 0 {
-			future := buildPeriod(subscription.ID, lastEnd, plan.DurationDays, priceCents)
+			nextStart := renewalDateForPeriod(lastStart, paymentDay)
+			future := buildPeriod(subscription.ID, nextStart, plan.DurationDays, priceCents)
 			future.AmountPaidCents = priceCents
 			future.Status = domain.BillingPaid
 
@@ -267,7 +275,7 @@ func (s *PaymentService) applyPayment(ctx context.Context, payment domain.Paymen
 			}
 
 			remaining -= priceCents
-			lastEnd = created.PeriodEnd
+			lastStart = created.PeriodStart
 			paidFuture = true
 		}
 	}
@@ -288,7 +296,7 @@ func (s *PaymentService) applyPayment(ctx context.Context, payment domain.Paymen
 	}, nil
 }
 
-func (s *PaymentService) rollbackPayment(ctx context.Context, payment domain.Payment) error {
+func (s *PaymentService) rollbackPayment(ctx context.Context, payment domain.Payment, subscription domain.Subscription) error {
 	if s.periods == nil || s.allocations == nil {
 		return errors.New("dependencias de estorno indisponiveis")
 	}
@@ -313,6 +321,10 @@ func (s *PaymentService) rollbackPayment(ctx context.Context, payment domain.Pay
 	}
 
 	today := dateOnly(s.now())
+	paymentDay, err := effectivePaymentDay(subscription)
+	if err != nil {
+		return err
+	}
 	for _, allocation := range allocations {
 		period, ok := periodMap[allocation.BillingPeriodID]
 		if !ok {
@@ -322,7 +334,7 @@ func (s *PaymentService) rollbackPayment(ctx context.Context, payment domain.Pay
 		if period.AmountPaidCents < 0 {
 			period.AmountPaidCents = 0
 		}
-		period.Status = resolvePeriodStatus(period, today)
+		period.Status = resolvePeriodStatus(period, today, paymentDay)
 		if _, err := s.periods.Update(ctx, period); err != nil {
 			return err
 		}
@@ -332,62 +344,15 @@ func (s *PaymentService) rollbackPayment(ctx context.Context, payment domain.Pay
 }
 
 func (s *PaymentService) ensurePeriods(ctx context.Context, subscription domain.Subscription, plan domain.Plan, today time.Time) ([]domain.BillingPeriod, error) {
-	if subscription.StartDate.IsZero() {
-		return nil, errors.New("data de inicio da assinatura invalida")
-	}
-	if plan.DurationDays <= 0 {
-		return nil, errors.New("duracao do plano invalida")
-	}
-	priceCents := subscription.PriceCents
-	if priceCents <= 0 {
-		if plan.PriceCents <= 0 {
-			return nil, errors.New("valor do plano invalido")
-		}
-		priceCents = plan.PriceCents
-	}
-
-	periods, err := s.periods.ListBySubscription(ctx, subscription.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(periods) == 0 {
-		first := buildPeriod(subscription.ID, subscription.StartDate, plan.DurationDays, priceCents)
-		created, err := s.periods.Create(ctx, first)
-		if err != nil {
-			return nil, err
-		}
-		periods = append(periods, created)
-	}
-
-	sort.Slice(periods, func(i, j int) bool {
-		return periods[i].PeriodStart.Before(periods[j].PeriodStart)
-	})
-
-	last := periods[len(periods)-1]
-	for !last.PeriodEnd.After(today) {
-		next := buildPeriod(subscription.ID, last.PeriodEnd, plan.DurationDays, priceCents)
-		created, err := s.periods.Create(ctx, next)
-		if err != nil {
-			return nil, err
-		}
-		periods = append(periods, created)
-		last = created
-	}
-
-	if err := s.periods.MarkOverdue(ctx, subscription.ID, today); err != nil {
-		return nil, err
-	}
-
-	return periods, nil
+	return ensureBillingPeriods(ctx, s.periods, subscription, plan, today)
 }
 
-func (s *PaymentService) applyBalance(ctx context.Context, subscriptionID string, today time.Time) error {
+func (s *PaymentService) applyBalance(ctx context.Context, subscription domain.Subscription, today time.Time) error {
 	if s.balances == nil || s.periods == nil {
 		return nil
 	}
 
-	balance, err := s.balances.Get(ctx, subscriptionID)
+	balance, err := s.balances.Get(ctx, subscription.ID)
 	if err != nil {
 		return err
 	}
@@ -397,11 +362,15 @@ func (s *PaymentService) applyBalance(ctx context.Context, subscriptionID string
 		return nil
 	}
 
-	if err := s.periods.MarkOverdue(ctx, subscriptionID, today); err != nil {
+	paymentDay, err := effectivePaymentDay(subscription)
+	if err != nil {
+		return err
+	}
+	if _, err := refreshPeriodStatusesBySubscription(ctx, s.periods, subscription.ID, paymentDay, today); err != nil {
 		return err
 	}
 
-	periods, err := s.periods.ListOpenBySubscription(ctx, subscriptionID)
+	periods, err := s.periods.ListOpenBySubscription(ctx, subscription.ID)
 	if err != nil {
 		return err
 	}
@@ -417,7 +386,7 @@ func (s *PaymentService) applyBalance(ctx context.Context, subscriptionID string
 
 		applied := minInt64(remaining, due)
 		period.AmountPaidCents += applied
-		period.Status = resolvePeriodStatus(period, today)
+		period.Status = resolvePeriodStatus(period, today, paymentDay)
 		if _, err := s.periods.Update(ctx, period); err != nil {
 			return err
 		}
@@ -426,7 +395,7 @@ func (s *PaymentService) applyBalance(ctx context.Context, subscriptionID string
 
 	if remaining != balance.CreditCents {
 		_, err = s.balances.Set(ctx, domain.SubscriptionBalance{
-			SubscriptionID: subscriptionID,
+			SubscriptionID: subscription.ID,
 			CreditCents:    remaining,
 		})
 		if err != nil {
@@ -450,17 +419,18 @@ func buildPeriod(subscriptionID string, start time.Time, durationDays int, amoun
 	}
 }
 
-func resolvePeriodStatus(period domain.BillingPeriod, today time.Time) domain.BillingPeriodStatus {
+func resolvePeriodStatus(period domain.BillingPeriod, today time.Time, paymentDay int) domain.BillingPeriodStatus {
+	dueDate := dueDateForPeriod(period.PeriodStart, paymentDay)
 	if period.AmountPaidCents >= period.AmountDueCents {
 		return domain.BillingPaid
 	}
 	if period.AmountPaidCents > 0 {
-		if period.PeriodEnd.Before(today) {
+		if today.After(dueDate) {
 			return domain.BillingOverdue
 		}
 		return domain.BillingPartial
 	}
-	if period.PeriodEnd.Before(today) {
+	if today.After(dueDate) {
 		return domain.BillingOverdue
 	}
 	return domain.BillingOpen

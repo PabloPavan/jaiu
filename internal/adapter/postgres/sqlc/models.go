@@ -76,6 +76,8 @@ type Subscription struct {
 	EndDate    pgtype.Date        `json:"end_date"`
 	Status     string             `json:"status"`
 	PriceCents int64              `json:"price_cents"`
+	PaymentDay int32              `json:"payment_day"`
+	AutoRenew  bool               `json:"auto_renew"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }

@@ -45,6 +45,12 @@ templ SubscriptionsList(data SubscriptionsPageData) {
 							<div>
 								<p class="text-sm text-slate-100">{item.StudentName}</p>
 								<p class="mt-1 text-xs text-slate-400">{item.PlanName}</p>
+								<p class="mt-1 text-xs text-slate-500">
+									Dia pagamento {item.PaymentDay}
+									if item.AutoRenew {
+										<span> · Auto-renovavel</span>
+									}
+								</p>
 								<p class="mt-1 text-xs text-slate-500">{item.StartDate} - {item.EndDate}</p>
 							</div>
 							<div class="flex items-center gap-2 text-xs">

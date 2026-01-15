@@ -37,6 +37,8 @@ func (r *SubscriptionRepository) Create(ctx context.Context, subscription domain
 		EndDate:    dateTo(&subscription.EndDate),
 		Status:     string(subscription.Status),
 		PriceCents: subscription.PriceCents,
+		PaymentDay: int32(subscription.PaymentDay),
+		AutoRenew:  subscription.AutoRenew,
 	}
 
 	created, err := r.queries.CreateSubscription(ctx, params)
@@ -59,6 +61,8 @@ func (r *SubscriptionRepository) Update(ctx context.Context, subscription domain
 		EndDate:    dateTo(&subscription.EndDate),
 		Status:     string(subscription.Status),
 		PriceCents: subscription.PriceCents,
+		PaymentDay: int32(subscription.PaymentDay),
+		AutoRenew:  subscription.AutoRenew,
 	}
 
 	updated, err := r.queries.UpdateSubscription(ctx, params)
@@ -124,6 +128,20 @@ func (r *SubscriptionRepository) ListDueBetween(ctx context.Context, start, end 
 	return result, nil
 }
 
+func (r *SubscriptionRepository) ListAutoRenew(ctx context.Context) ([]domain.Subscription, error) {
+	subscriptions, err := r.queries.ListAutoRenewSubscriptions(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]domain.Subscription, 0, len(subscriptions))
+	for _, subscription := range subscriptions {
+		result = append(result, mapSubscription(subscription))
+	}
+
+	return result, nil
+}
+
 func mapSubscription(subscription sqlc.Subscription) domain.Subscription {
 	return domain.Subscription{
 		ID:         uuidToString(subscription.ID),
@@ -133,6 +151,8 @@ func mapSubscription(subscription sqlc.Subscription) domain.Subscription {
 		EndDate:    dateFromValue(subscription.EndDate),
 		Status:     domain.SubscriptionStatus(subscription.Status),
 		PriceCents: subscription.PriceCents,
+		PaymentDay: int(subscription.PaymentDay),
+		AutoRenew:  subscription.AutoRenew,
 		CreatedAt:  timeFrom(subscription.CreatedAt),
 		UpdatedAt:  timeFrom(subscription.UpdatedAt),
 	}

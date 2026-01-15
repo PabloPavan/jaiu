@@ -10,6 +10,8 @@ type Subscription struct {
 	EndDate    time.Time
 	Status     SubscriptionStatus
 	PriceCents int64
+	PaymentDay int
+	AutoRenew  bool
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }

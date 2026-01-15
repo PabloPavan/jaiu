@@ -97,6 +97,8 @@ type SubscriptionItem struct {
 	PlanName    string
 	StartDate   string
 	EndDate     string
+	PaymentDay  string
+	AutoRenew   bool
 	Status      string
 	StatusLabel string
 	StatusClass string
@@ -121,6 +123,8 @@ type SubscriptionFormData struct {
 	PlanID         string
 	StartDate      string
 	EndDate        string
+	PaymentDay     string
+	AutoRenew      bool
 	Status         string
 	Price          string
 	Students       []StudentOption

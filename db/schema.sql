@@ -35,6 +35,8 @@ CREATE TABLE subscriptions (
   end_date date NOT NULL,
   status text NOT NULL DEFAULT 'active',
   price_cents bigint NOT NULL,
+  payment_day integer NOT NULL,
+  auto_renew boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -100,6 +102,7 @@ CREATE INDEX plans_active_idx ON plans (active);
 CREATE INDEX subscriptions_student_idx ON subscriptions (student_id);
 CREATE INDEX subscriptions_status_idx ON subscriptions (status);
 CREATE INDEX subscriptions_end_date_idx ON subscriptions (end_date);
+CREATE INDEX subscriptions_auto_renew_idx ON subscriptions (status, auto_renew);
 
 CREATE INDEX payments_subscription_idx ON payments (subscription_id);
 CREATE INDEX payments_paid_at_idx ON payments (paid_at);
@@ -107,6 +110,7 @@ CREATE INDEX payments_paid_at_idx ON payments (paid_at);
 CREATE INDEX billing_periods_subscription_idx ON billing_periods (subscription_id);
 CREATE INDEX billing_periods_status_idx ON billing_periods (status);
 CREATE INDEX billing_periods_period_end_idx ON billing_periods (period_end);
+CREATE UNIQUE INDEX billing_periods_subscription_period_start_idx ON billing_periods (subscription_id, period_start);
 
 CREATE INDEX payment_allocations_payment_idx ON payment_allocations (payment_id);
 CREATE INDEX payment_allocations_period_idx ON payment_allocations (billing_period_id);

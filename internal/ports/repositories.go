@@ -34,6 +34,7 @@ type SubscriptionRepository interface {
 	FindByID(ctx context.Context, id string) (domain.Subscription, error)
 	ListByStudent(ctx context.Context, studentID string) ([]domain.Subscription, error)
 	ListDueBetween(ctx context.Context, start, end time.Time) ([]domain.Subscription, error)
+	ListAutoRenew(ctx context.Context) ([]domain.Subscription, error)
 }
 
 type PaymentRepository interface {
