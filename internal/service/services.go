@@ -19,6 +19,7 @@ type Dependencies struct {
 	BillingPeriods ports.BillingPeriodRepository
 	Balances       ports.SubscriptionBalanceRepository
 	Allocations    ports.PaymentAllocationRepository
+	PaymentTx      ports.PaymentTxRunner
 	Reports        ports.ReportRepository
 	Users          ports.UserRepository
 }
@@ -28,7 +29,7 @@ func New(deps Dependencies) *Services {
 		Students:      NewStudentService(deps.Students, deps.Subscriptions),
 		Plans:         NewPlanService(deps.Plans, deps.Subscriptions),
 		Subscriptions: NewSubscriptionService(deps.Subscriptions, deps.Plans, deps.Students),
-		Payments:      NewPaymentService(deps.Payments, deps.Subscriptions, deps.Plans, deps.BillingPeriods, deps.Balances, deps.Allocations),
+		Payments:      NewPaymentService(deps.Payments, deps.Subscriptions, deps.Plans, deps.BillingPeriods, deps.Balances, deps.Allocations, deps.PaymentTx),
 		Reports:       NewReportService(deps.Reports),
 		Auth:          NewAuthService(deps.Users),
 	}

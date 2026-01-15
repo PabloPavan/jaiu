@@ -20,6 +20,10 @@ func NewSubscriptionRepository(pool *pgxpool.Pool) *SubscriptionRepository {
 	return &SubscriptionRepository{queries: sqlc.New(pool)}
 }
 
+func NewSubscriptionRepositoryWithQueries(queries *sqlc.Queries) *SubscriptionRepository {
+	return &SubscriptionRepository{queries: queries}
+}
+
 func (r *SubscriptionRepository) Create(ctx context.Context, subscription domain.Subscription) (domain.Subscription, error) {
 	studentID, err := stringToUUID(subscription.StudentID)
 	if err != nil || !studentID.Valid {

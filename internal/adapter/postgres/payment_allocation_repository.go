@@ -17,6 +17,10 @@ func NewPaymentAllocationRepository(pool *pgxpool.Pool) *PaymentAllocationReposi
 	return &PaymentAllocationRepository{queries: sqlc.New(pool)}
 }
 
+func NewPaymentAllocationRepositoryWithQueries(queries *sqlc.Queries) *PaymentAllocationRepository {
+	return &PaymentAllocationRepository{queries: queries}
+}
+
 func (r *PaymentAllocationRepository) Create(ctx context.Context, allocation domain.PaymentAllocation) error {
 	paymentID, err := stringToUUID(allocation.PaymentID)
 	if err != nil || !paymentID.Valid {

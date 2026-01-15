@@ -14,6 +14,7 @@ templ PaymentFormPage(data PaymentFormData) {
 			if data.Error != "" {
 				<div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">{data.Error}</div>
 			}
+			<input type="hidden" name="idempotency_key" value={data.IdempotencyKey}/>
 			<label class="grid gap-2 text-sm text-slate-200">
 				Assinatura
 				<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="subscription_id" required>

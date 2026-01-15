@@ -20,6 +20,10 @@ func NewPlanRepository(pool *pgxpool.Pool) *PlanRepository {
 	return &PlanRepository{queries: sqlc.New(pool)}
 }
 
+func NewPlanRepositoryWithQueries(queries *sqlc.Queries) *PlanRepository {
+	return &PlanRepository{queries: queries}
+}
+
 func (r *PlanRepository) Create(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
 	params := sqlc.CreatePlanParams{
 		Name:         plan.Name,

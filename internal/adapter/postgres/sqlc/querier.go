@@ -22,6 +22,7 @@ type Querier interface {
 	DeletePaymentAllocationsByPayment(ctx context.Context, paymentID pgtype.UUID) error
 	DelinquentSubscriptions(ctx context.Context, dollar_1 pgtype.Date) ([]DelinquentSubscriptionsRow, error)
 	GetPayment(ctx context.Context, id pgtype.UUID) (Payment, error)
+	GetPaymentByIdempotencyKey(ctx context.Context, idempotencyKey pgtype.Text) (Payment, error)
 	GetPlan(ctx context.Context, id pgtype.UUID) (Plan, error)
 	GetStudent(ctx context.Context, id pgtype.UUID) (Student, error)
 	GetSubscription(ctx context.Context, id pgtype.UUID) (Subscription, error)

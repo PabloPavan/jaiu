@@ -32,6 +32,7 @@ type Payment struct {
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 	Kind           string             `json:"kind"`
 	CreditCents    int64              `json:"credit_cents"`
+	IdempotencyKey pgtype.Text        `json:"idempotency_key"`
 }
 
 type PaymentAllocation struct {

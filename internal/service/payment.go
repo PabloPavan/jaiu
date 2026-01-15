@@ -16,6 +16,7 @@ type PaymentService struct {
 	periods       ports.BillingPeriodRepository
 	balances      ports.SubscriptionBalanceRepository
 	allocations   ports.PaymentAllocationRepository
+	txRunner      ports.PaymentTxRunner
 	now           func() time.Time
 }
 
@@ -26,6 +27,7 @@ func NewPaymentService(
 	periods ports.BillingPeriodRepository,
 	balances ports.SubscriptionBalanceRepository,
 	allocations ports.PaymentAllocationRepository,
+	txRunner ports.PaymentTxRunner,
 ) *PaymentService {
 	return &PaymentService{
 		repo:          repo,
@@ -34,11 +36,38 @@ func NewPaymentService(
 		periods:       periods,
 		balances:      balances,
 		allocations:   allocations,
+		txRunner:      txRunner,
 		now:           time.Now,
 	}
 }
 
 func (s *PaymentService) Register(ctx context.Context, payment domain.Payment) (domain.Payment, error) {
+	if s.txRunner != nil {
+		var result domain.Payment
+		err := s.txRunner.RunSerializable(ctx, func(ctx context.Context, deps ports.PaymentDependencies) error {
+			txService := &PaymentService{
+				repo:          deps.Payments,
+				subscriptions: deps.Subscriptions,
+				plans:         deps.Plans,
+				periods:       deps.BillingPeriods,
+				balances:      deps.Balances,
+				allocations:   deps.Allocations,
+				now:           s.now,
+			}
+			var err error
+			result, err = txService.register(ctx, payment)
+			return err
+		})
+		if err != nil {
+			return domain.Payment{}, err
+		}
+		return result, nil
+	}
+
+	return s.register(ctx, payment)
+}
+
+func (s *PaymentService) register(ctx context.Context, payment domain.Payment) (domain.Payment, error) {
 	if payment.SubscriptionID == "" {
 		return domain.Payment{}, errors.New("assinatura e obrigatoria")
 	}
@@ -48,6 +77,16 @@ func (s *PaymentService) Register(ctx context.Context, payment domain.Payment) (
 
 	if s.subscriptions == nil || s.plans == nil || s.periods == nil || s.allocations == nil {
 		return domain.Payment{}, errors.New("dependencias de pagamentos indisponiveis")
+	}
+
+	if payment.IdempotencyKey != "" {
+		existing, err := s.repo.FindByIdempotencyKey(ctx, payment.IdempotencyKey)
+		if err == nil {
+			return existing, nil
+		}
+		if err != nil && !errors.Is(err, ports.ErrNotFound) {
+			return domain.Payment{}, err
+		}
 	}
 
 	subscription, err := s.subscriptions.FindByID(ctx, payment.SubscriptionID)
@@ -80,6 +119,13 @@ func (s *PaymentService) Register(ctx context.Context, payment domain.Payment) (
 
 	created, err := s.repo.Create(ctx, payment)
 	if err != nil {
+		if errors.Is(err, ports.ErrConflict) && payment.IdempotencyKey != "" {
+			existing, findErr := s.repo.FindByIdempotencyKey(ctx, payment.IdempotencyKey)
+			if findErr == nil {
+				return existing, nil
+			}
+			return domain.Payment{}, findErr
+		}
 		return domain.Payment{}, err
 	}
 
@@ -122,6 +168,7 @@ func (s *PaymentService) Update(ctx context.Context, payment domain.Payment) (do
 	}
 	payment.Kind = current.Kind
 	payment.CreditCents = current.CreditCents
+	payment.IdempotencyKey = current.IdempotencyKey
 
 	if payment.SubscriptionID != current.SubscriptionID || payment.AmountCents != current.AmountCents || !sameDayTime(payment.PaidAt, current.PaidAt) {
 		return domain.Payment{}, errors.New("para alterar valor ou data, estorne e registre um novo pagamento")

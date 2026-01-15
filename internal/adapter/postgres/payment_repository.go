@@ -9,6 +9,7 @@ import (
 	"github.com/PabloPavan/jaiu/internal/domain"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -19,6 +20,10 @@ type PaymentRepository struct {
 
 func NewPaymentRepository(pool *pgxpool.Pool) *PaymentRepository {
 	return &PaymentRepository{queries: sqlc.New(pool)}
+}
+
+func NewPaymentRepositoryWithQueries(queries *sqlc.Queries) *PaymentRepository {
+	return &PaymentRepository{queries: queries}
 }
 
 func (r *PaymentRepository) Create(ctx context.Context, payment domain.Payment) (domain.Payment, error) {
@@ -42,10 +47,15 @@ func (r *PaymentRepository) Create(ctx context.Context, payment domain.Payment) 
 		Status:         string(payment.Status),
 		Kind:           kind,
 		CreditCents:    payment.CreditCents,
+		IdempotencyKey: textTo(payment.IdempotencyKey),
 	}
 
 	created, err := r.queries.CreatePayment(ctx, params)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == "payments_idempotency_key_idx" {
+			return domain.Payment{}, ports.ErrConflict
+		}
 		return domain.Payment{}, err
 	}
 
@@ -96,6 +106,22 @@ func (r *PaymentRepository) FindByID(ctx context.Context, id string) (domain.Pay
 	}
 
 	payment, err := r.queries.GetPayment(ctx, uuidValue)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Payment{}, ports.ErrNotFound
+		}
+		return domain.Payment{}, err
+	}
+
+	return mapPayment(payment), nil
+}
+
+func (r *PaymentRepository) FindByIdempotencyKey(ctx context.Context, key string) (domain.Payment, error) {
+	if key == "" {
+		return domain.Payment{}, ports.ErrNotFound
+	}
+
+	payment, err := r.queries.GetPaymentByIdempotencyKey(ctx, textTo(key))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Payment{}, ports.ErrNotFound
@@ -160,6 +186,7 @@ func mapPayment(payment sqlc.Payment) domain.Payment {
 		Status:         domain.PaymentStatus(payment.Status),
 		Kind:           domain.PaymentKind(payment.Kind),
 		CreditCents:    payment.CreditCents,
+		IdempotencyKey: textFrom(payment.IdempotencyKey),
 		CreatedAt:      timeFrom(payment.CreatedAt),
 	}
 	if result.Kind == "" {

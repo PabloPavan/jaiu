@@ -42,6 +42,7 @@ type PaymentRepository interface {
 	Create(ctx context.Context, payment domain.Payment) (domain.Payment, error)
 	Update(ctx context.Context, payment domain.Payment) (domain.Payment, error)
 	FindByID(ctx context.Context, id string) (domain.Payment, error)
+	FindByIdempotencyKey(ctx context.Context, key string) (domain.Payment, error)
 	ListBySubscription(ctx context.Context, subscriptionID string) ([]domain.Payment, error)
 	ListByPeriod(ctx context.Context, start, end time.Time) ([]domain.Payment, error)
 }

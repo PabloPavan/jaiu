@@ -21,11 +21,12 @@ INSERT INTO payments (
   notes,
   status,
   kind,
-  credit_cents
+  credit_cents,
+  idempotency_key
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 )
-RETURNING id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents
+RETURNING id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents, idempotency_key
 `
 
 type CreatePaymentParams struct {
@@ -38,6 +39,7 @@ type CreatePaymentParams struct {
 	Status         string             `json:"status"`
 	Kind           string             `json:"kind"`
 	CreditCents    int64              `json:"credit_cents"`
+	IdempotencyKey pgtype.Text        `json:"idempotency_key"`
 }
 
 func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error) {
@@ -51,6 +53,7 @@ func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (P
 		arg.Status,
 		arg.Kind,
 		arg.CreditCents,
+		arg.IdempotencyKey,
 	)
 	var i Payment
 	err := row.Scan(
@@ -65,12 +68,13 @@ func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (P
 		&i.CreatedAt,
 		&i.Kind,
 		&i.CreditCents,
+		&i.IdempotencyKey,
 	)
 	return i, err
 }
 
 const getPayment = `-- name: GetPayment :one
-SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents FROM payments WHERE id = $1 LIMIT 1
+SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents, idempotency_key FROM payments WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetPayment(ctx context.Context, id pgtype.UUID) (Payment, error) {
@@ -88,12 +92,37 @@ func (q *Queries) GetPayment(ctx context.Context, id pgtype.UUID) (Payment, erro
 		&i.CreatedAt,
 		&i.Kind,
 		&i.CreditCents,
+		&i.IdempotencyKey,
+	)
+	return i, err
+}
+
+const getPaymentByIdempotencyKey = `-- name: GetPaymentByIdempotencyKey :one
+SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents, idempotency_key FROM payments WHERE idempotency_key = $1 LIMIT 1
+`
+
+func (q *Queries) GetPaymentByIdempotencyKey(ctx context.Context, idempotencyKey pgtype.Text) (Payment, error) {
+	row := q.db.QueryRow(ctx, getPaymentByIdempotencyKey, idempotencyKey)
+	var i Payment
+	err := row.Scan(
+		&i.ID,
+		&i.SubscriptionID,
+		&i.PaidAt,
+		&i.AmountCents,
+		&i.Method,
+		&i.Reference,
+		&i.Notes,
+		&i.Status,
+		&i.CreatedAt,
+		&i.Kind,
+		&i.CreditCents,
+		&i.IdempotencyKey,
 	)
 	return i, err
 }
 
 const listPaymentsByPeriod = `-- name: ListPaymentsByPeriod :many
-SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents
+SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents, idempotency_key
 FROM payments
 WHERE paid_at >= $1 AND paid_at < $2
 ORDER BY paid_at DESC
@@ -125,6 +154,7 @@ func (q *Queries) ListPaymentsByPeriod(ctx context.Context, arg ListPaymentsByPe
 			&i.CreatedAt,
 			&i.Kind,
 			&i.CreditCents,
+			&i.IdempotencyKey,
 		); err != nil {
 			return nil, err
 		}
@@ -137,7 +167,7 @@ func (q *Queries) ListPaymentsByPeriod(ctx context.Context, arg ListPaymentsByPe
 }
 
 const listPaymentsBySubscription = `-- name: ListPaymentsBySubscription :many
-SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents FROM payments WHERE subscription_id = $1 ORDER BY paid_at DESC
+SELECT id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents, idempotency_key FROM payments WHERE subscription_id = $1 ORDER BY paid_at DESC
 `
 
 func (q *Queries) ListPaymentsBySubscription(ctx context.Context, subscriptionID pgtype.UUID) ([]Payment, error) {
@@ -161,6 +191,7 @@ func (q *Queries) ListPaymentsBySubscription(ctx context.Context, subscriptionID
 			&i.CreatedAt,
 			&i.Kind,
 			&i.CreditCents,
+			&i.IdempotencyKey,
 		); err != nil {
 			return nil, err
 		}
@@ -185,7 +216,7 @@ SET
   kind = $9,
   credit_cents = $10
 WHERE id = $1
-RETURNING id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents
+RETURNING id, subscription_id, paid_at, amount_cents, method, reference, notes, status, created_at, kind, credit_cents, idempotency_key
 `
 
 type UpdatePaymentParams struct {
@@ -227,6 +258,7 @@ func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (P
 		&i.CreatedAt,
 		&i.Kind,
 		&i.CreditCents,
+		&i.IdempotencyKey,
 	)
 	return i, err
 }

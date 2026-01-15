@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"log"
 	"net/http"
@@ -257,6 +259,7 @@ func (h *Handler) paymentFormCreateData(r *http.Request) view.PaymentFormData {
 		SubmitLabel: "Registrar pagamento",
 		PaidAt:      formatDateBRValue(now),
 		Status:      string(domain.PaymentConfirmed),
+		IdempotencyKey: newIdempotencyKey(),
 	}
 	h.fillPaymentFormOptions(r, &data)
 	return data
@@ -276,6 +279,7 @@ func (h *Handler) paymentFormEditData(r *http.Request, payment domain.Payment) v
 		Reference:      payment.Reference,
 		Notes:          payment.Notes,
 		Status:         string(payment.Status),
+		IdempotencyKey: payment.IdempotencyKey,
 	}
 	h.fillPaymentFormOptions(r, &data)
 	return data
@@ -295,6 +299,9 @@ func (h *Handler) parsePaymentForm(r *http.Request, data *view.PaymentFormData) 
 	if err := r.ParseForm(); err != nil {
 		return domain.Payment{}, errors.New("Nao foi possivel ler o formulario.")
 	}
+
+	idempotencyKey := strings.TrimSpace(r.FormValue("idempotency_key"))
+	data.IdempotencyKey = idempotencyKey
 
 	subscriptionID := strings.TrimSpace(r.FormValue("subscription_id"))
 	data.SubscriptionID = subscriptionID
@@ -340,6 +347,7 @@ func (h *Handler) parsePaymentForm(r *http.Request, data *view.PaymentFormData) 
 		Reference:      reference,
 		Notes:          notes,
 		Status:         status,
+		IdempotencyKey: idempotencyKey,
 	}, nil
 }
 
@@ -438,6 +446,14 @@ func parsePaymentMethod(value string) domain.PaymentMethod {
 	default:
 		return domain.PaymentCash
 	}
+}
+
+func newIdempotencyKey() string {
+	key := make([]byte, 16)
+	if _, err := rand.Read(key); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(key)
 }
 
 func parsePaymentStatus(value string) (domain.PaymentStatus, error) {

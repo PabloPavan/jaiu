@@ -174,6 +174,7 @@ type PaymentFormData struct {
 	Notes          string
 	Status         string
 	Subscriptions  []SubscriptionOption
+	IdempotencyKey string
 	Error          string
 }
 

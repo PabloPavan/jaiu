@@ -8,9 +8,10 @@ INSERT INTO payments (
   notes,
   status,
   kind,
-  credit_cents
+  credit_cents,
+  idempotency_key
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 )
 RETURNING *;
 
@@ -31,6 +32,9 @@ RETURNING *;
 
 -- name: GetPayment :one
 SELECT * FROM payments WHERE id = $1 LIMIT 1;
+
+-- name: GetPaymentByIdempotencyKey :one
+SELECT * FROM payments WHERE idempotency_key = $1 LIMIT 1;
 
 -- name: ListPaymentsBySubscription :many
 SELECT * FROM payments WHERE subscription_id = $1 ORDER BY paid_at DESC;

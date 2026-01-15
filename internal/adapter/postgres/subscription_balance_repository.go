@@ -18,6 +18,10 @@ func NewSubscriptionBalanceRepository(pool *pgxpool.Pool) *SubscriptionBalanceRe
 	return &SubscriptionBalanceRepository{queries: sqlc.New(pool)}
 }
 
+func NewSubscriptionBalanceRepositoryWithQueries(queries *sqlc.Queries) *SubscriptionBalanceRepository {
+	return &SubscriptionBalanceRepository{queries: queries}
+}
+
 func (r *SubscriptionBalanceRepository) Get(ctx context.Context, subscriptionID string) (domain.SubscriptionBalance, error) {
 	uuidValue, err := stringToUUID(subscriptionID)
 	if err != nil || !uuidValue.Valid {

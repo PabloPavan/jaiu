@@ -13,5 +13,6 @@ type Payment struct {
 	Status         PaymentStatus
 	Kind           PaymentKind
 	CreditCents    int64
+	IdempotencyKey string
 	CreatedAt      time.Time
 }

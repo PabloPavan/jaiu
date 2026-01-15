@@ -17,6 +17,10 @@ func NewBillingPeriodRepository(pool *pgxpool.Pool) *BillingPeriodRepository {
 	return &BillingPeriodRepository{queries: sqlc.New(pool)}
 }
 
+func NewBillingPeriodRepositoryWithQueries(queries *sqlc.Queries) *BillingPeriodRepository {
+	return &BillingPeriodRepository{queries: queries}
+}
+
 func (r *BillingPeriodRepository) Create(ctx context.Context, period domain.BillingPeriod) (domain.BillingPeriod, error) {
 	subscriptionID, err := stringToUUID(period.SubscriptionID)
 	if err != nil || !subscriptionID.Valid {
