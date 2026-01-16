@@ -86,7 +86,8 @@ func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.services.Students.Register(r.Context(), student); err != nil {
+	created, err := h.services.Students.Register(r.Context(), student)
+	if err != nil {
 		data.Error = "Nao foi possivel salvar o aluno."
 		if isHTMX(r) {
 			h.renderComponent(w, r, view.StudentFormPage(data))
@@ -95,6 +96,9 @@ func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 		return
 	}
+	h.recordAudit(r, "student.create", "student", created.ID, map[string]any{
+		"status": string(created.Status),
+	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/students")
@@ -152,7 +156,8 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	student.ID = studentID
-	if _, err := h.services.Students.Update(r.Context(), student); err != nil {
+	updated, err := h.services.Students.Update(r.Context(), student)
+	if err != nil {
 		data.Error = "Nao foi possivel atualizar o aluno."
 		if isHTMX(r) {
 			h.renderComponent(w, r, view.StudentFormPage(data))
@@ -161,6 +166,9 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 		return
 	}
+	h.recordAudit(r, "student.update", "student", updated.ID, map[string]any{
+		"status": string(updated.Status),
+	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/students")
@@ -178,7 +186,8 @@ func (h *Handler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.services.Students.Deactivate(r.Context(), studentID); err != nil {
+	updated, err := h.services.Students.Deactivate(r.Context(), studentID)
+	if err != nil {
 		if errors.Is(err, ports.ErrNotFound) {
 			http.NotFound(w, r)
 			return
@@ -187,6 +196,9 @@ func (h *Handler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao excluir aluno.", http.StatusInternalServerError)
 		return
 	}
+	h.recordAudit(r, "student.deactivate", "student", updated.ID, map[string]any{
+		"status": string(updated.Status),
+	})
 
 	if isHTMX(r) {
 		data := h.buildStudentsData(r)

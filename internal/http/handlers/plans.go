@@ -53,7 +53,8 @@ func (h *Handler) PlansCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.services.Plans.Create(r.Context(), plan); err != nil {
+	created, err := h.services.Plans.Create(r.Context(), plan)
+	if err != nil {
 		data.Error = "Nao foi possivel salvar o plano."
 		if isHTMX(r) {
 			h.renderComponent(w, r, view.PlanFormPage(data))
@@ -62,6 +63,11 @@ func (h *Handler) PlansCreate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
 		return
 	}
+	h.recordAudit(r, "plan.create", "plan", created.ID, map[string]any{
+		"active":        created.Active,
+		"duration_days": created.DurationDays,
+		"price_cents":   created.PriceCents,
+	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/plans")
@@ -119,7 +125,8 @@ func (h *Handler) PlansUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	plan.ID = planID
-	if _, err := h.services.Plans.Update(r.Context(), plan); err != nil {
+	updated, err := h.services.Plans.Update(r.Context(), plan)
+	if err != nil {
 		data.Error = "Nao foi possivel atualizar o plano."
 		if isHTMX(r) {
 			h.renderComponent(w, r, view.PlanFormPage(data))
@@ -128,6 +135,11 @@ func (h *Handler) PlansUpdate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
 		return
 	}
+	h.recordAudit(r, "plan.update", "plan", updated.ID, map[string]any{
+		"active":        updated.Active,
+		"duration_days": updated.DurationDays,
+		"price_cents":   updated.PriceCents,
+	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/plans")
@@ -145,7 +157,8 @@ func (h *Handler) PlansDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.services.Plans.Deactivate(r.Context(), planID); err != nil {
+	updated, err := h.services.Plans.Deactivate(r.Context(), planID)
+	if err != nil {
 		if errors.Is(err, ports.ErrNotFound) {
 			http.NotFound(w, r)
 			return
@@ -154,6 +167,9 @@ func (h *Handler) PlansDelete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao excluir plano.", http.StatusInternalServerError)
 		return
 	}
+	h.recordAudit(r, "plan.deactivate", "plan", updated.ID, map[string]any{
+		"active": updated.Active,
+	})
 
 	if isHTMX(r) {
 		data := h.buildPlansData(r)

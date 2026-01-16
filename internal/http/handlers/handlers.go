@@ -25,6 +25,7 @@ type Services struct {
 	Students      StudentService
 	Subscriptions SubscriptionService
 	Payments      PaymentService
+	Audit         AuditService
 }
 
 type AuthService interface {
@@ -64,6 +65,10 @@ type PaymentService interface {
 	Reverse(ctx context.Context, paymentID string) (domain.Payment, error)
 	ListBySubscription(ctx context.Context, subscriptionID string) ([]domain.Payment, error)
 	ListByPeriod(ctx context.Context, start, end time.Time) ([]domain.Payment, error)
+}
+
+type AuditService interface {
+	Record(ctx context.Context, event domain.AuditEvent) error
 }
 
 type SessionConfig struct {

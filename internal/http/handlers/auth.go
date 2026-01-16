@@ -16,11 +16,11 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 	if h.services.Auth == nil {
-		http.Error(w, "auth not configured", http.StatusNotImplemented)
+		http.Error(w, "autenticacao nao configurada", http.StatusNotImplemented)
 		return
 	}
 	if h.sessions == nil {
-		http.Error(w, "sessions not configured", http.StatusNotImplemented)
+		http.Error(w, "sessoes nao configuradas", http.StatusNotImplemented)
 		return
 	}
 
@@ -62,6 +62,8 @@ func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.recordAuditWithActor(r, user.ID, string(user.Role), "user.login", "user", user.ID, nil)
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.config.CookieName,
 		Value:    token,
@@ -76,10 +78,23 @@ func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	var actor ports.Session
+	if h.sessions != nil {
+		if cookie, err := r.Cookie(h.config.CookieName); err == nil {
+			if session, err := h.sessions.Get(r.Context(), cookie.Value); err == nil {
+				actor = session
+			}
+		}
+	}
+
 	if h.sessions != nil {
 		if cookie, err := r.Cookie(h.config.CookieName); err == nil {
 			_ = h.sessions.Delete(r.Context(), cookie.Value)
 		}
+	}
+
+	if actor.UserID != "" {
+		h.recordAuditWithActor(r, actor.UserID, string(actor.Role), "user.logout", "user", actor.UserID, nil)
 	}
 
 	http.SetCookie(w, &http.Cookie{

@@ -81,6 +81,19 @@ CREATE TABLE payment_allocations (
   PRIMARY KEY (payment_id, billing_period_id)
 );
 
+CREATE TABLE audit_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  actor_id uuid,
+  actor_role text,
+  action text NOT NULL,
+  entity_type text NOT NULL,
+  entity_id uuid,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  ip text,
+  user_agent text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE TABLE users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
@@ -114,6 +127,9 @@ CREATE UNIQUE INDEX billing_periods_subscription_period_start_idx ON billing_per
 
 CREATE INDEX payment_allocations_payment_idx ON payment_allocations (payment_id);
 CREATE INDEX payment_allocations_period_idx ON payment_allocations (billing_period_id);
+
+CREATE INDEX audit_events_actor_idx ON audit_events (actor_id, created_at);
+CREATE INDEX audit_events_entity_idx ON audit_events (entity_type, entity_id, created_at);
 
 CREATE INDEX users_active_idx ON users (active);
 

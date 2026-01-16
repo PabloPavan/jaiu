@@ -16,7 +16,7 @@ func RequireSession(store ports.SessionStore, cookieName string) func(http.Handl
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if store == nil {
-				http.Error(w, "sessions not configured", http.StatusNotImplemented)
+				http.Error(w, "sessoes nao configuradas", http.StatusNotImplemented)
 				return
 			}
 

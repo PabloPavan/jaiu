@@ -79,6 +79,10 @@ type ReportRepository interface {
 	UpcomingDue(ctx context.Context, start, end time.Time) ([]DueSubscription, error)
 }
 
+type AuditRepository interface {
+	Record(ctx context.Context, event domain.AuditEvent) error
+}
+
 type RevenueSummary struct {
 	Start      time.Time
 	End        time.Time

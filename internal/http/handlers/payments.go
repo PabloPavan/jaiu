@@ -54,7 +54,8 @@ func (h *Handler) PaymentsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.services.Payments.Register(r.Context(), payment); err != nil {
+	created, err := h.services.Payments.Register(r.Context(), payment)
+	if err != nil {
 		data.Error = "Nao foi possivel salvar o pagamento."
 		if isHTMX(r) {
 			h.renderComponent(w, r, view.PaymentFormPage(data))
@@ -63,6 +64,15 @@ func (h *Handler) PaymentsCreate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.PaymentFormPage(data)))
 		return
 	}
+	h.recordAudit(r, "payment.create", "payment", created.ID, map[string]any{
+		"amount_cents":    created.AmountCents,
+		"credit_cents":    created.CreditCents,
+		"kind":            string(created.Kind),
+		"method":          string(created.Method),
+		"status":          string(created.Status),
+		"subscription_id": created.SubscriptionID,
+		"idempotency_key": created.IdempotencyKey,
+	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/payments")
@@ -120,7 +130,8 @@ func (h *Handler) PaymentsUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payment.ID = paymentID
-	if _, err := h.services.Payments.Update(r.Context(), payment); err != nil {
+	updated, err := h.services.Payments.Update(r.Context(), payment)
+	if err != nil {
 		data.Error = "Nao foi possivel atualizar o pagamento."
 		if isHTMX(r) {
 			h.renderComponent(w, r, view.PaymentFormPage(data))
@@ -129,6 +140,15 @@ func (h *Handler) PaymentsUpdate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.PaymentFormPage(data)))
 		return
 	}
+	h.recordAudit(r, "payment.update", "payment", updated.ID, map[string]any{
+		"amount_cents":    updated.AmountCents,
+		"credit_cents":    updated.CreditCents,
+		"kind":            string(updated.Kind),
+		"method":          string(updated.Method),
+		"status":          string(updated.Status),
+		"subscription_id": updated.SubscriptionID,
+		"idempotency_key": updated.IdempotencyKey,
+	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/payments")
@@ -146,7 +166,8 @@ func (h *Handler) PaymentsReverse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.services.Payments.Reverse(r.Context(), paymentID); err != nil {
+	updated, err := h.services.Payments.Reverse(r.Context(), paymentID)
+	if err != nil {
 		if errors.Is(err, ports.ErrNotFound) {
 			http.NotFound(w, r)
 			return
@@ -155,6 +176,14 @@ func (h *Handler) PaymentsReverse(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao estornar pagamento.", http.StatusInternalServerError)
 		return
 	}
+	h.recordAudit(r, "payment.reverse", "payment", updated.ID, map[string]any{
+		"amount_cents":    updated.AmountCents,
+		"credit_cents":    updated.CreditCents,
+		"kind":            string(updated.Kind),
+		"method":          string(updated.Method),
+		"status":          string(updated.Status),
+		"subscription_id": updated.SubscriptionID,
+	})
 
 	if isHTMX(r) {
 		data := h.buildPaymentsData(r)

@@ -53,7 +53,8 @@ func (h *Handler) SubscriptionsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.services.Subscriptions.Create(r.Context(), subscription); err != nil {
+	created, err := h.services.Subscriptions.Create(r.Context(), subscription)
+	if err != nil {
 		data.Error = "Nao foi possivel salvar a assinatura."
 		if isHTMX(r) {
 			h.renderComponent(w, r, view.SubscriptionFormPage(data))
@@ -62,6 +63,14 @@ func (h *Handler) SubscriptionsCreate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.SubscriptionFormPage(data)))
 		return
 	}
+	h.recordAudit(r, "subscription.create", "subscription", created.ID, map[string]any{
+		"auto_renew":  created.AutoRenew,
+		"payment_day": created.PaymentDay,
+		"plan_id":     created.PlanID,
+		"price_cents": created.PriceCents,
+		"status":      string(created.Status),
+		"student_id":  created.StudentID,
+	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/subscriptions")
@@ -119,7 +128,8 @@ func (h *Handler) SubscriptionsUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	subscription.ID = subscriptionID
-	if _, err := h.services.Subscriptions.Update(r.Context(), subscription); err != nil {
+	updated, err := h.services.Subscriptions.Update(r.Context(), subscription)
+	if err != nil {
 		data.Error = "Nao foi possivel atualizar a assinatura."
 		if isHTMX(r) {
 			h.renderComponent(w, r, view.SubscriptionFormPage(data))
@@ -128,6 +138,14 @@ func (h *Handler) SubscriptionsUpdate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.SubscriptionFormPage(data)))
 		return
 	}
+	h.recordAudit(r, "subscription.update", "subscription", updated.ID, map[string]any{
+		"auto_renew":  updated.AutoRenew,
+		"payment_day": updated.PaymentDay,
+		"plan_id":     updated.PlanID,
+		"price_cents": updated.PriceCents,
+		"status":      string(updated.Status),
+		"student_id":  updated.StudentID,
+	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/subscriptions")
@@ -145,7 +163,8 @@ func (h *Handler) SubscriptionsCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.services.Subscriptions.Cancel(r.Context(), subscriptionID); err != nil {
+	updated, err := h.services.Subscriptions.Cancel(r.Context(), subscriptionID)
+	if err != nil {
 		if errors.Is(err, ports.ErrNotFound) {
 			http.NotFound(w, r)
 			return
@@ -154,6 +173,9 @@ func (h *Handler) SubscriptionsCancel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao cancelar assinatura.", http.StatusInternalServerError)
 		return
 	}
+	h.recordAudit(r, "subscription.cancel", "subscription", updated.ID, map[string]any{
+		"status": string(updated.Status),
+	})
 
 	if isHTMX(r) {
 		data := h.buildSubscriptionsData(r)
