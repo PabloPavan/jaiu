@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -16,6 +17,7 @@ func NewPool(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parse database url: %w", err)
 	}
+	cfg.ConnConfig.Tracer = observability.NewPgxTracer()
 
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {

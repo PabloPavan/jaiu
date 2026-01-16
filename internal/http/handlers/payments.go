@@ -5,13 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"log"
 	"net/http"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
+	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/view"
 	"github.com/go-chi/chi/v5"
@@ -86,7 +86,7 @@ func (h *Handler) PaymentsEdit(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		log.Printf("load payment: %v", err)
+		observability.Logger(r.Context()).Error("failed to load payment", "err", err)
 		http.Error(w, "Erro ao carregar pagamento.", http.StatusInternalServerError)
 		return
 	}
@@ -151,7 +151,7 @@ func (h *Handler) PaymentsReverse(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		log.Printf("reverse payment: %v", err)
+		observability.Logger(r.Context()).Error("failed to reverse payment", "err", err)
 		http.Error(w, "Erro ao estornar pagamento.", http.StatusInternalServerError)
 		return
 	}
@@ -184,7 +184,7 @@ func (h *Handler) buildPaymentsData(r *http.Request) view.PaymentsPageData {
 	if subscriptionID != "" {
 		list, err := h.services.Payments.ListBySubscription(r.Context(), subscriptionID)
 		if err != nil {
-			log.Printf("list payments: %v", err)
+			observability.Logger(r.Context()).Error("failed to list payments", "err", err)
 			return data
 		}
 		payments = list
@@ -193,7 +193,7 @@ func (h *Handler) buildPaymentsData(r *http.Request) view.PaymentsPageData {
 		for _, subscription := range subscriptions {
 			list, err := h.services.Payments.ListBySubscription(r.Context(), subscription.ID)
 			if err != nil {
-				log.Printf("list payments: %v", err)
+				observability.Logger(r.Context()).Error("failed to list payments", "err", err)
 				continue
 			}
 			payments = append(payments, list...)
@@ -254,11 +254,11 @@ func (h *Handler) buildPaymentsData(r *http.Request) view.PaymentsPageData {
 func (h *Handler) paymentFormCreateData(r *http.Request) view.PaymentFormData {
 	now := time.Now()
 	data := view.PaymentFormData{
-		Title:       "Novo pagamento",
-		Action:      "/payments",
-		SubmitLabel: "Registrar pagamento",
-		PaidAt:      formatDateBRValue(now),
-		Status:      string(domain.PaymentConfirmed),
+		Title:          "Novo pagamento",
+		Action:         "/payments",
+		SubmitLabel:    "Registrar pagamento",
+		PaidAt:         formatDateBRValue(now),
+		Status:         string(domain.PaymentConfirmed),
 		IdempotencyKey: newIdempotencyKey(),
 	}
 	h.fillPaymentFormOptions(r, &data)
@@ -361,7 +361,7 @@ func (h *Handler) loadSubscriptions(r *http.Request, statuses []domain.StudentSt
 	for _, student := range students {
 		list, err := h.services.Subscriptions.ListByStudent(r.Context(), student.ID)
 		if err != nil {
-			log.Printf("list subscriptions: %v", err)
+			observability.Logger(r.Context()).Error("failed to list subscriptions", "err", err)
 			continue
 		}
 		subscriptions = append(subscriptions, list...)

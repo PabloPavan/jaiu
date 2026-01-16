@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"hash/fnv"
-	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -11,11 +10,30 @@ import (
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/adapter/postgres"
+	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/PabloPavan/jaiu/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	obs, err := observability.Init(ctx, observability.Config{
+		ServiceName:    observability.ServiceName("jaiu-renewal-worker"),
+		ServiceVersion: os.Getenv("APP_VERSION"),
+		Environment:    os.Getenv("APP_ENV"),
+		LogLevel:       os.Getenv("LOG_LEVEL"),
+	})
+	logger := obs.Logger
+	if err != nil {
+		logger.Error("failed to initialize observability", "err", err)
+	}
+
 	cfg := config{
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		Hour:        envInt("RENEWAL_HOUR", 0),
@@ -23,15 +41,24 @@ func main() {
 	}
 
 	if cfg.DatabaseURL == "" {
-		log.Fatal("DATABASE_URL is required")
+		logger.Error("DATABASE_URL is required")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := obs.Shutdown(shutdownCtx); err != nil {
+			logger.Error("failed to shutdown observability", "err", err)
+		}
+		os.Exit(1)
 	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	pool, err := newPool(ctx, cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("init db: %v", err)
+		logger.Error("failed to connect to database", "err", err)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := obs.Shutdown(shutdownCtx); err != nil {
+			logger.Error("failed to shutdown observability", "err", err)
+		}
+		os.Exit(1)
 	}
 	defer pool.Close()
 
@@ -44,13 +71,42 @@ func main() {
 	)
 
 	lockKey := advisoryKey("jaiu:renewal_job")
+	tracer := otel.Tracer("renewal-worker")
+	meter := otel.Meter("renewal-worker")
+	runCounter, _ := meter.Int64Counter("renewal.job.runs", metric.WithDescription("Execucoes do job de renovacao"))
+	errorCounter, _ := meter.Int64Counter("renewal.job.errors", metric.WithDescription("Erros do job de renovacao"))
+	durationHist, _ := meter.Float64Histogram("renewal.job.duration_ms", metric.WithDescription("Duracao do job de renovacao em ms"))
+
 	go runDaily(ctx, cfg.Hour, cfg.Minute, func(runCtx context.Context) {
-		if err := withAdvisoryLock(runCtx, pool, lockKey, job.Run); err != nil {
-			log.Printf("renewal job error: %v", err)
+		runCtx, span := tracer.Start(runCtx, "renewal.run")
+		start := time.Now()
+		locked, err := withAdvisoryLock(runCtx, pool, lockKey, job.Run)
+		duration := float64(time.Since(start).Milliseconds())
+		attrs := []attribute.KeyValue{
+			attribute.Bool("lock_acquired", locked),
 		}
+
+		runCounter.Add(runCtx, 1, metric.WithAttributes(attrs...))
+		durationHist.Record(runCtx, duration, metric.WithAttributes(attrs...))
+		span.SetAttributes(attrs...)
+
+		if err != nil {
+			errorCounter.Add(runCtx, 1, metric.WithAttributes(attrs...))
+			observability.Logger(runCtx).Error("renewal job failed", "err", err, "lock_acquired", locked)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "renewal job failed")
+		} else if !locked {
+			observability.Logger(runCtx).Debug("renewal job skipped", "lock_acquired", false)
+		}
+		span.End()
 	})
 
 	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := obs.Shutdown(shutdownCtx); err != nil {
+		logger.Error("failed to shutdown observability", "err", err)
+	}
 }
 
 type config struct {
@@ -88,25 +144,25 @@ func nextRun(now time.Time, hour, minute int) time.Time {
 	return next
 }
 
-func withAdvisoryLock(ctx context.Context, pool *pgxpool.Pool, key int64, job func(context.Context) error) error {
+func withAdvisoryLock(ctx context.Context, pool *pgxpool.Pool, key int64, job func(context.Context) error) (bool, error) {
 	conn, err := pool.Acquire(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer conn.Release()
 
 	var locked bool
 	if err := conn.QueryRow(ctx, "SELECT pg_try_advisory_lock($1)", key).Scan(&locked); err != nil {
-		return err
+		return false, err
 	}
 	if !locked {
-		return nil
+		return false, nil
 	}
 	defer func() {
 		_, _ = conn.Exec(ctx, "SELECT pg_advisory_unlock($1)", key)
 	}()
 
-	return job(ctx)
+	return true, job(ctx)
 }
 
 func advisoryKey(value string) int64 {

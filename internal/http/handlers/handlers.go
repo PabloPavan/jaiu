@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
 	httpmw "github.com/PabloPavan/jaiu/internal/http/middleware"
+	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/view"
 	"github.com/a-h/templ"
@@ -100,12 +100,12 @@ func (h *Handler) renderPage(w http.ResponseWriter, r *http.Request, page view.P
 		}
 	}
 	if err := view.RenderPage(w, r, page); err != nil {
-		log.Printf("render error: %v", err)
+		observability.Logger(r.Context()).Error("failed to render page", "err", err)
 	}
 }
 
 func (h *Handler) renderComponent(w http.ResponseWriter, r *http.Request, component templ.Component) {
 	if err := view.RenderComponent(w, r, component); err != nil {
-		log.Printf("render partial error: %v", err)
+		observability.Logger(r.Context()).Error("failed to render component", "err", err)
 	}
 }

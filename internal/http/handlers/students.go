@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
+	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/view"
 	"github.com/go-chi/chi/v5"
@@ -35,7 +35,7 @@ func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
 		}
 		students, err := h.services.Students.Search(r.Context(), filter)
 		if err != nil {
-			log.Printf("preview students: %v", err)
+			observability.Logger(r.Context()).Error("failed to load students preview", "err", err)
 		} else {
 			data.Items = make([]view.StudentItem, 0, len(students))
 			for _, student := range students {
@@ -118,7 +118,7 @@ func (h *Handler) StudentsEdit(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		log.Printf("load student: %v", err)
+		observability.Logger(r.Context()).Error("failed to load student", "err", err)
 		http.Error(w, "Erro ao carregar aluno.", http.StatusInternalServerError)
 		return
 	}
@@ -183,7 +183,7 @@ func (h *Handler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		log.Printf("deactivate student: %v", err)
+		observability.Logger(r.Context()).Error("failed to deactivate student", "err", err)
 		http.Error(w, "Erro ao excluir aluno.", http.StatusInternalServerError)
 		return
 	}
@@ -350,7 +350,7 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 		}
 		students, err := h.services.Students.Search(r.Context(), filter)
 		if err != nil {
-			log.Printf("list students: %v", err)
+			observability.Logger(r.Context()).Error("failed to list students", "err", err)
 		} else {
 			data.Items = make([]view.StudentItem, 0, len(students))
 			for _, student := range students {

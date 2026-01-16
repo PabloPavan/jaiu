@@ -22,17 +22,17 @@ func main() {
 	flag.Parse()
 
 	if *email == "" || *password == "" {
-		log.Fatal("email e password sao obrigatorios")
+		log.Fatal("email and password are required")
 	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		log.Fatal("DATABASE_URL nao definido")
+		log.Fatal("DATABASE_URL is not set")
 	}
 
 	hash, err := service.HashPassword(*password)
 	if err != nil {
-		log.Fatalf("hash password: %v", err)
+		log.Fatalf("hash password failed: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -40,7 +40,7 @@ func main() {
 
 	pool, err := postgres.NewPool(ctx, databaseURL)
 	if err != nil {
-		log.Fatalf("connect db: %v", err)
+		log.Fatalf("connect db failed: %v", err)
 	}
 	defer pool.Close()
 
@@ -56,8 +56,8 @@ SET name = EXCLUDED.name,
 `
 
 	if _, err := pool.Exec(ctx, query, *name, *email, hash, *role, *active); err != nil {
-		log.Fatalf("insert user: %v", err)
+		log.Fatalf("insert user failed: %v", err)
 	}
 
-	log.Printf("usuario criado/atualizado: %s (%s)", *email, *role)
+	log.Printf("user created/updated: %s (%s)", *email, *role)
 }

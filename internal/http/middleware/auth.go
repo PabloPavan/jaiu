@@ -36,6 +36,11 @@ func RequireSession(store ports.SessionStore, cookieName string) func(http.Handl
 				return
 			}
 
+			if activity, ok := userActivityFromContext(r.Context()); ok {
+				activity.UserID = session.UserID
+				activity.Role = string(session.Role)
+			}
+
 			ctx := context.WithValue(r.Context(), sessionKey, session)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

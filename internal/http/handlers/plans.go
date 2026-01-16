@@ -3,12 +3,12 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
+	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/view"
 	"github.com/go-chi/chi/v5"
@@ -85,7 +85,7 @@ func (h *Handler) PlansEdit(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		log.Printf("load plan: %v", err)
+		observability.Logger(r.Context()).Error("failed to load plan", "err", err)
 		http.Error(w, "Erro ao carregar plano.", http.StatusInternalServerError)
 		return
 	}
@@ -150,7 +150,7 @@ func (h *Handler) PlansDelete(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		log.Printf("deactivate plan: %v", err)
+		observability.Logger(r.Context()).Error("failed to deactivate plan", "err", err)
 		http.Error(w, "Erro ao excluir plano.", http.StatusInternalServerError)
 		return
 	}
@@ -263,7 +263,7 @@ func (h *Handler) buildPlansData(r *http.Request) view.PlansPageData {
 	if h.services.Plans != nil {
 		plans, err := h.services.Plans.ListActive(r.Context())
 		if err != nil {
-			log.Printf("list plans: %v", err)
+			observability.Logger(r.Context()).Error("failed to list plans", "err", err)
 		} else {
 			data.Items = make([]view.PlanItem, 0, len(plans))
 			for _, plan := range plans {

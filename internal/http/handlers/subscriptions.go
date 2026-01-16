@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"sort"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
+	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/view"
 	"github.com/go-chi/chi/v5"
@@ -85,7 +85,7 @@ func (h *Handler) SubscriptionsEdit(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		log.Printf("load subscription: %v", err)
+		observability.Logger(r.Context()).Error("failed to load subscription", "err", err)
 		http.Error(w, "Erro ao carregar assinatura.", http.StatusInternalServerError)
 		return
 	}
@@ -150,7 +150,7 @@ func (h *Handler) SubscriptionsCancel(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		log.Printf("cancel subscription: %v", err)
+		observability.Logger(r.Context()).Error("failed to cancel subscription", "err", err)
 		http.Error(w, "Erro ao cancelar assinatura.", http.StatusInternalServerError)
 		return
 	}
@@ -183,7 +183,7 @@ func (h *Handler) buildSubscriptionsData(r *http.Request) view.SubscriptionsPage
 	if studentID != "" {
 		list, err := h.services.Subscriptions.ListByStudent(r.Context(), studentID)
 		if err != nil {
-			log.Printf("list subscriptions: %v", err)
+			observability.Logger(r.Context()).Error("failed to list subscriptions", "err", err)
 			return data
 		}
 		subscriptions = list
@@ -192,7 +192,7 @@ func (h *Handler) buildSubscriptionsData(r *http.Request) view.SubscriptionsPage
 		for _, student := range students {
 			list, err := h.services.Subscriptions.ListByStudent(r.Context(), student.ID)
 			if err != nil {
-				log.Printf("list subscriptions: %v", err)
+				observability.Logger(r.Context()).Error("failed to list subscriptions", "err", err)
 				continue
 			}
 			subscriptions = append(subscriptions, list...)
@@ -239,19 +239,19 @@ func (h *Handler) buildSubscriptionsData(r *http.Request) view.SubscriptionsPage
 		}
 
 		label, className := subscriptionStatusPresentation(subscription.Status)
-	item := view.SubscriptionItem{
-		ID:          subscription.ID,
-		StudentName: studentName,
-		PlanName:    planName,
-		StartDate:   formatDateBRValue(subscription.StartDate),
-		EndDate:     formatDateBRValue(subscription.EndDate),
-		PaymentDay:  formatInt(subscription.PaymentDay),
-		AutoRenew:   subscription.AutoRenew,
-		Status:      string(subscription.Status),
-		StatusLabel: label,
-		StatusClass: className,
-		Price:       formatBRL(subscription.PriceCents),
-	}
+		item := view.SubscriptionItem{
+			ID:          subscription.ID,
+			StudentName: studentName,
+			PlanName:    planName,
+			StartDate:   formatDateBRValue(subscription.StartDate),
+			EndDate:     formatDateBRValue(subscription.EndDate),
+			PaymentDay:  formatInt(subscription.PaymentDay),
+			AutoRenew:   subscription.AutoRenew,
+			Status:      string(subscription.Status),
+			StatusLabel: label,
+			StatusClass: className,
+			Price:       formatBRL(subscription.PriceCents),
+		}
 		data.Items = append(data.Items, item)
 	}
 
@@ -396,7 +396,7 @@ func (h *Handler) loadStudents(r *http.Request, statuses []domain.StudentStatus,
 		Limit:    limit,
 	})
 	if err != nil {
-		log.Printf("list students options: %v", err)
+		observability.Logger(r.Context()).Error("failed to list students", "err", err)
 		return nil
 	}
 	return students
@@ -420,7 +420,7 @@ func (h *Handler) listPlanOptions(r *http.Request) []view.PlanOption {
 
 	plans, err := h.services.Plans.ListActive(r.Context())
 	if err != nil {
-		log.Printf("list plans options: %v", err)
+		observability.Logger(r.Context()).Error("failed to list plans", "err", err)
 		return nil
 	}
 

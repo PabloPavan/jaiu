@@ -16,7 +16,7 @@ func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string) ht
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	r.Use(httpmw.Observability())
 	r.Use(middleware.Recoverer)
 
 	r.Get("/healthz", h.Health)
