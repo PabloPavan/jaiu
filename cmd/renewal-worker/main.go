@@ -40,6 +40,7 @@ func main() {
 		postgres.NewPlanRepository(pool),
 		postgres.NewBillingPeriodRepository(pool),
 		postgres.NewSubscriptionBalanceRepository(pool),
+		postgres.NewPaymentTxRunner(pool),
 	)
 
 	lockKey := advisoryKey("jaiu:renewal_job")

@@ -2,10 +2,13 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/adapter/postgres/sqlc"
 	"github.com/PabloPavan/jaiu/internal/domain"
+	"github.com/PabloPavan/jaiu/internal/ports"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -38,6 +41,10 @@ func (r *BillingPeriodRepository) Create(ctx context.Context, period domain.Bill
 
 	created, err := r.queries.CreateBillingPeriod(ctx, params)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == "billing_periods_subscription_period_start_idx" {
+			return domain.BillingPeriod{}, ports.ErrConflict
+		}
 		return domain.BillingPeriod{}, err
 	}
 

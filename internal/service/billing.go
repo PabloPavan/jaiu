@@ -38,9 +38,20 @@ func ensureBillingPeriods(ctx context.Context, repo ports.BillingPeriodRepositor
 		first.Status = resolvePeriodStatus(first, today, paymentDay)
 		created, err := repo.Create(ctx, first)
 		if err != nil {
-			return nil, err
+			if errors.Is(err, ports.ErrConflict) {
+				periods, err = repo.ListBySubscription(ctx, subscription.ID)
+				if err != nil {
+					return nil, err
+				}
+				if len(periods) == 0 {
+					return nil, errors.New("periodo de cobranca indisponivel")
+				}
+			} else {
+				return nil, err
+			}
+		} else {
+			periods = append(periods, created)
 		}
-		periods = append(periods, created)
 	}
 
 	sort.Slice(periods, func(i, j int) bool {
@@ -116,6 +127,24 @@ func ensureRenewals(
 			future.Status = resolvePeriodStatus(future, today, paymentDay)
 			created, err := repo.Create(ctx, future)
 			if err != nil {
+				if errors.Is(err, ports.ErrConflict) {
+					refreshed, err := repo.ListBySubscription(ctx, subscription.ID)
+					if err != nil {
+						return periods, err
+					}
+					periods = refreshed
+					periodByStart = make(map[string]domain.BillingPeriod, len(periods))
+					for _, period := range periods {
+						periodByStart[dateKey(period.PeriodStart)] = period
+					}
+					existing, ok := periodByStart[key]
+					if !ok {
+						return periods, errors.New("periodo de cobranca indisponivel")
+					}
+					last = existing
+					nextStart = renewalDateForPeriod(last.PeriodStart, paymentDay)
+					continue
+				}
 				return periods, err
 			}
 			periods = append(periods, created)
