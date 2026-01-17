@@ -25,7 +25,7 @@ templ StudentFormPage(data StudentFormData) {
 				</label>
 				<label class="grid gap-2 text-sm text-slate-200">
 					Status
-					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="status">
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="status" required>
 						<option value="active" selected?={data.Status == "" || data.Status == "active"}>Ativo</option>
 						<option value="inactive" selected?={data.Status == "inactive"}>Inativo</option>
 						<option value="suspended" selected?={data.Status == "suspended"}>Suspenso</option>

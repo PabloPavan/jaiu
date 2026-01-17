@@ -476,18 +476,14 @@ func ensurePlanOption(ctx context.Context, options []view.PlanOption, planID str
 }
 
 func parseSubscriptionStatus(value string) (domain.SubscriptionStatus, error) {
-	switch strings.ToLower(value) {
-	case "", string(domain.SubscriptionActive):
+	status := domain.SubscriptionStatus(strings.ToLower(value))
+	if status == "" {
 		return domain.SubscriptionActive, nil
-	case string(domain.SubscriptionEnded):
-		return domain.SubscriptionEnded, nil
-	case string(domain.SubscriptionCanceled):
-		return domain.SubscriptionCanceled, nil
-	case string(domain.SubscriptionSuspended):
-		return domain.SubscriptionSuspended, nil
-	default:
+	}
+	if !status.IsValid() {
 		return "", errors.New("Status invalido.")
 	}
+	return status, nil
 }
 
 func normalizeSubscriptionStatus(value string) string {

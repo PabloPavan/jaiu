@@ -327,7 +327,10 @@ func (h *Handler) parsePaymentForm(r *http.Request, data *view.PaymentFormData) 
 	}
 
 	methodValue := strings.TrimSpace(r.FormValue("method"))
-	method := parsePaymentMethod(methodValue)
+	method, err := parsePaymentMethod(methodValue)
+	if err != nil {
+		return domain.Payment{}, err
+	}
 	data.Method = string(method)
 
 	statusValue := strings.TrimSpace(r.FormValue("status"))
@@ -436,19 +439,15 @@ func ensureSubscriptionOption(ctx context.Context, options []view.SubscriptionOp
 	})
 }
 
-func parsePaymentMethod(value string) domain.PaymentMethod {
-	switch strings.ToLower(value) {
-	case string(domain.PaymentPix):
-		return domain.PaymentPix
-	case string(domain.PaymentCard):
-		return domain.PaymentCard
-	case string(domain.PaymentTransfer):
-		return domain.PaymentTransfer
-	case string(domain.PaymentOther):
-		return domain.PaymentOther
-	default:
-		return domain.PaymentCash
+func parsePaymentMethod(value string) (domain.PaymentMethod, error) {
+	method := domain.PaymentMethod(strings.ToLower(value))
+	if method == "" {
+		return "", errors.New("Metodo e obrigatorio.")
 	}
+	if !method.IsValid() {
+		return "", errors.New("Metodo invalido.")
+	}
+	return method, nil
 }
 
 func newIdempotencyKey() string {
@@ -460,14 +459,14 @@ func newIdempotencyKey() string {
 }
 
 func parsePaymentStatus(value string) (domain.PaymentStatus, error) {
-	switch strings.ToLower(value) {
-	case "", string(domain.PaymentConfirmed):
+	status := domain.PaymentStatus(strings.ToLower(value))
+	if status == "" {
 		return domain.PaymentConfirmed, nil
-	case string(domain.PaymentReversed):
-		return domain.PaymentReversed, nil
-	default:
+	}
+	if !status.IsValid() {
 		return "", errors.New("Status invalido.")
 	}
+	return status, nil
 }
 
 func normalizePaymentStatus(value string) string {

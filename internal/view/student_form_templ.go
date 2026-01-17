@@ -117,7 +117,7 @@ func StudentFormPage(data StudentFormData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"></label> <label class=\"grid gap-2 text-sm text-slate-200\">Status <select class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"status\"><option value=\"active\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"></label> <label class=\"grid gap-2 text-sm text-slate-200\">Status <select class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"status\" required><option value=\"active\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -58,3 +58,66 @@ const (
 	RoleAdmin    UserRole = "admin"
 	RoleOperator UserRole = "operator"
 )
+
+func (s StudentStatus) IsValid() bool {
+	switch s {
+	case StudentActive, StudentInactive, StudentSuspended:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s SubscriptionStatus) IsValid() bool {
+	switch s {
+	case SubscriptionActive, SubscriptionEnded, SubscriptionCanceled, SubscriptionSuspended:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s PaymentStatus) IsValid() bool {
+	switch s {
+	case PaymentConfirmed, PaymentReversed:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s PaymentKind) IsValid() bool {
+	switch s {
+	case PaymentFull, PaymentPartial, PaymentAdvance, PaymentCredit:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s PaymentMethod) IsValid() bool {
+	switch s {
+	case PaymentCash, PaymentPix, PaymentCard, PaymentTransfer, PaymentOther:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s BillingPeriodStatus) IsValid() bool {
+	switch s {
+	case BillingOpen, BillingPaid, BillingPartial, BillingOverdue:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s UserRole) IsValid() bool {
+	switch s {
+	case RoleAdmin, RoleOperator:
+		return true
+	default:
+		return false
+	}
+}

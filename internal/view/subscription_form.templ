@@ -63,7 +63,7 @@ templ SubscriptionFormPage(data SubscriptionFormData) {
 			<div class="grid gap-4 md:grid-cols-2">
 				<label class="grid gap-2 text-sm text-slate-200">
 					Status
-					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="status">
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="status" required>
 						<option value="active" selected?={data.Status == "" || data.Status == "active"}>Ativa</option>
 						<option value="ended" selected?={data.Status == "ended"}>Encerrada</option>
 						<option value="canceled" selected?={data.Status == "canceled"}>Cancelada</option>

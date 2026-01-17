@@ -137,6 +137,21 @@ func (s *PaymentService) register(ctx context.Context, payment domain.Payment) (
 	if payment.Kind == "" {
 		payment.Kind = domain.PaymentFull
 	}
+	if !payment.Method.IsValid() {
+		err := errors.New("metodo de pagamento invalido")
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
+		return domain.Payment{}, err
+	}
+	if !payment.Status.IsValid() {
+		err := errors.New("status de pagamento invalido")
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
+		return domain.Payment{}, err
+	}
+	if !payment.Kind.IsValid() {
+		err := errors.New("tipo de pagamento invalido")
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
+		return domain.Payment{}, err
+	}
 
 	today := dateOnly(s.now())
 	if _, err := s.ensurePeriods(ctx, subscription, plan, today); err != nil {
@@ -199,6 +214,9 @@ func (s *PaymentService) Update(ctx context.Context, payment domain.Payment) (do
 	if payment.SubscriptionID == "" {
 		payment.SubscriptionID = current.SubscriptionID
 	}
+	if payment.Method == "" {
+		payment.Method = current.Method
+	}
 	if payment.AmountCents == 0 {
 		payment.AmountCents = current.AmountCents
 	}
@@ -211,6 +229,21 @@ func (s *PaymentService) Update(ctx context.Context, payment domain.Payment) (do
 	payment.Kind = current.Kind
 	payment.CreditCents = current.CreditCents
 	payment.IdempotencyKey = current.IdempotencyKey
+	if !payment.Method.IsValid() {
+		err := errors.New("metodo de pagamento invalido")
+		recordAuditFailure(ctx, s.audit, "payment.update", "payment", payment.ID, nil, err)
+		return domain.Payment{}, err
+	}
+	if !payment.Status.IsValid() {
+		err := errors.New("status de pagamento invalido")
+		recordAuditFailure(ctx, s.audit, "payment.update", "payment", payment.ID, nil, err)
+		return domain.Payment{}, err
+	}
+	if !payment.Kind.IsValid() {
+		err := errors.New("tipo de pagamento invalido")
+		recordAuditFailure(ctx, s.audit, "payment.update", "payment", payment.ID, nil, err)
+		return domain.Payment{}, err
+	}
 
 	if payment.SubscriptionID != current.SubscriptionID || payment.AmountCents != current.AmountCents || !sameDayTime(payment.PaidAt, current.PaidAt) {
 		err := errors.New("para alterar valor ou data, estorne e registre um novo pagamento")

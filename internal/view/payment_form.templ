@@ -37,7 +37,7 @@ templ PaymentFormPage(data PaymentFormData) {
 			<div class="grid gap-4 md:grid-cols-2">
 				<label class="grid gap-2 text-sm text-slate-200">
 					Metodo
-					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="method">
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="method" required>
 						<option value="cash" selected?={data.Method == "" || data.Method == "cash"}>Dinheiro</option>
 						<option value="pix" selected?={data.Method == "pix"}>Pix</option>
 						<option value="card" selected?={data.Method == "card"}>Cartao</option>
@@ -47,7 +47,7 @@ templ PaymentFormPage(data PaymentFormData) {
 				</label>
 				<label class="grid gap-2 text-sm text-slate-200">
 					Status
-					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="status">
+					<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="status" required>
 						<option value="confirmed" selected?={data.Status == "" || data.Status == "confirmed"}>Confirmado</option>
 						<option value="reversed" selected?={data.Status == "reversed"}>Estornado</option>
 					</select>

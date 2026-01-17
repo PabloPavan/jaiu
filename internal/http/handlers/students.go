@@ -285,16 +285,14 @@ func parseStudentForm(r *http.Request, data *view.StudentFormData) (domain.Stude
 }
 
 func parseStudentStatus(value string) (domain.StudentStatus, error) {
-	switch strings.ToLower(value) {
-	case "", string(domain.StudentActive):
+	status := domain.StudentStatus(strings.ToLower(value))
+	if status == "" {
 		return domain.StudentActive, nil
-	case string(domain.StudentInactive):
-		return domain.StudentInactive, nil
-	case string(domain.StudentSuspended):
-		return domain.StudentSuspended, nil
-	default:
+	}
+	if !status.IsValid() {
 		return "", errors.New("Status invalido.")
 	}
+	return status, nil
 }
 
 func statusFilter(value string) []domain.StudentStatus {

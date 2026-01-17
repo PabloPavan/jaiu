@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
@@ -21,8 +22,15 @@ func NewStudentService(repo ports.StudentRepository, subscriptions ports.Subscri
 }
 
 func (s *StudentService) Register(ctx context.Context, student domain.Student) (domain.Student, error) {
+	student.FullName = strings.TrimSpace(student.FullName)
+	if student.FullName == "" {
+		return domain.Student{}, errors.New("nome completo e obrigatorio")
+	}
 	if student.Status == "" {
 		student.Status = domain.StudentActive
+	}
+	if !student.Status.IsValid() {
+		return domain.Student{}, errors.New("status do aluno invalido")
 	}
 
 	now := s.now()
@@ -44,6 +52,19 @@ func (s *StudentService) Register(ctx context.Context, student domain.Student) (
 }
 
 func (s *StudentService) Update(ctx context.Context, student domain.Student) (domain.Student, error) {
+	if student.ID == "" {
+		return domain.Student{}, errors.New("aluno invalido")
+	}
+	student.FullName = strings.TrimSpace(student.FullName)
+	if student.FullName == "" {
+		return domain.Student{}, errors.New("nome completo e obrigatorio")
+	}
+	if student.Status == "" {
+		student.Status = domain.StudentActive
+	}
+	if !student.Status.IsValid() {
+		return domain.Student{}, errors.New("status do aluno invalido")
+	}
 	student.UpdatedAt = s.now()
 	metadata := map[string]any{
 		"status": string(student.Status),

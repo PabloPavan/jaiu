@@ -176,7 +176,7 @@ func PaymentFormPage(data PaymentFormData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" required></label></div><div class=\"grid gap-4 md:grid-cols-2\"><label class=\"grid gap-2 text-sm text-slate-200\">Metodo <select class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"method\"><option value=\"cash\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" required></label></div><div class=\"grid gap-4 md:grid-cols-2\"><label class=\"grid gap-2 text-sm text-slate-200\">Metodo <select class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"method\" required><option value=\"cash\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -226,7 +226,7 @@ func PaymentFormPage(data PaymentFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, ">Outro</option></select></label> <label class=\"grid gap-2 text-sm text-slate-200\">Status <select class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"status\"><option value=\"confirmed\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, ">Outro</option></select></label> <label class=\"grid gap-2 text-sm text-slate-200\">Status <select class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"status\" required><option value=\"confirmed\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PabloPavan/jaiu/internal/adapter/postgres"
+	"github.com/PabloPavan/jaiu/internal/domain"
 	"github.com/PabloPavan/jaiu/internal/service"
 )
 
@@ -23,6 +24,10 @@ func main() {
 
 	if *email == "" || *password == "" {
 		log.Fatal("email and password are required")
+	}
+	roleValue := domain.UserRole(*role)
+	if !roleValue.IsValid() {
+		log.Fatal("invalid role: use admin or operator")
 	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
@@ -55,7 +60,7 @@ SET name = EXCLUDED.name,
     updated_at = now()
 `
 
-	if _, err := pool.Exec(ctx, query, *name, *email, hash, *role, *active); err != nil {
+	if _, err := pool.Exec(ctx, query, *name, *email, hash, string(roleValue), *active); err != nil {
 		log.Fatalf("insert user failed: %v", err)
 	}
 

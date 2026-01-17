@@ -69,6 +69,11 @@ func (s *SubscriptionService) Create(ctx context.Context, subscription domain.Su
 	if subscription.Status == "" {
 		subscription.Status = domain.SubscriptionActive
 	}
+	if !subscription.Status.IsValid() {
+		err := errors.New("status invalido")
+		recordAuditFailure(ctx, s.audit, "subscription.create", "subscription", subscription.ID, metadata, err)
+		return domain.Subscription{}, err
+	}
 
 	if subscription.StartDate.IsZero() {
 		subscription.StartDate = dateOnly(s.now())
@@ -134,6 +139,11 @@ func (s *SubscriptionService) Update(ctx context.Context, subscription domain.Su
 	}
 	if subscription.Status == "" {
 		subscription.Status = domain.SubscriptionActive
+	}
+	if !subscription.Status.IsValid() {
+		err := errors.New("status invalido")
+		recordAuditFailure(ctx, s.audit, "subscription.update", "subscription", subscription.ID, metadata, err)
+		return domain.Subscription{}, err
 	}
 
 	if subscription.PaymentDay < 1 || subscription.PaymentDay > 31 {
