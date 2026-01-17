@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PabloPavan/jaiu/internal/auditctx"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/view"
 )
@@ -39,7 +40,8 @@ func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.services.Auth.Authenticate(r.Context(), email, password)
+	ctx := auditctx.WithActor(r.Context(), auditctx.Actor{Email: email})
+	user, err := h.services.Auth.Authenticate(ctx, email, password)
 	if err != nil {
 		if errors.Is(err, ports.ErrUnauthorized) || errors.Is(err, ports.ErrNotFound) {
 			viewData.Error = "Credenciais invalidas."
@@ -62,8 +64,6 @@ func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.recordAuditWithActor(r, user.ID, string(user.Role), "user.login", "user", user.ID, nil)
-
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.config.CookieName,
 		Value:    token,
@@ -78,23 +78,29 @@ func (h *Handler) LoginPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	var actor ports.Session
+	var session ports.Session
 	if h.sessions != nil {
 		if cookie, err := r.Cookie(h.config.CookieName); err == nil {
-			if session, err := h.sessions.Get(r.Context(), cookie.Value); err == nil {
-				actor = session
+			if loaded, err := h.sessions.Get(r.Context(), cookie.Value); err == nil {
+				session = loaded
 			}
 		}
+	}
+	ctx := r.Context()
+	if session.UserID != "" {
+		ctx = auditctx.WithActor(ctx, auditctx.Actor{
+			ID:   session.UserID,
+			Role: string(session.Role),
+		})
+	}
+	if h.services.Auth != nil {
+		_ = h.services.Auth.Logout(ctx, session)
 	}
 
 	if h.sessions != nil {
 		if cookie, err := r.Cookie(h.config.CookieName); err == nil {
 			_ = h.sessions.Delete(r.Context(), cookie.Value)
 		}
-	}
-
-	if actor.UserID != "" {
-		h.recordAuditWithActor(r, actor.UserID, string(actor.Role), "user.logout", "user", actor.UserID, nil)
 	}
 
 	http.SetCookie(w, &http.Cookie{

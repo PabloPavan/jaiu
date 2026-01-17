@@ -12,11 +12,12 @@ import (
 type StudentService struct {
 	repo          ports.StudentRepository
 	subscriptions ports.SubscriptionRepository
+	audit         ports.AuditRepository
 	now           func() time.Time
 }
 
-func NewStudentService(repo ports.StudentRepository, subscriptions ports.SubscriptionRepository) *StudentService {
-	return &StudentService{repo: repo, subscriptions: subscriptions, now: time.Now}
+func NewStudentService(repo ports.StudentRepository, subscriptions ports.SubscriptionRepository, audit ports.AuditRepository) *StudentService {
+	return &StudentService{repo: repo, subscriptions: subscriptions, audit: audit, now: time.Now}
 }
 
 func (s *StudentService) Register(ctx context.Context, student domain.Student) (domain.Student, error) {
@@ -28,20 +29,39 @@ func (s *StudentService) Register(ctx context.Context, student domain.Student) (
 	student.CreatedAt = now
 	student.UpdatedAt = now
 
-	return s.repo.Create(ctx, student)
+	metadata := map[string]any{
+		"status": string(student.Status),
+	}
+	recordAuditAttempt(ctx, s.audit, "student.create", "student", student.ID, metadata)
+
+	created, err := s.repo.Create(ctx, student)
+	if err != nil {
+		recordAuditFailure(ctx, s.audit, "student.create", "student", student.ID, metadata, err)
+		return domain.Student{}, err
+	}
+	recordAuditSuccess(ctx, s.audit, "student.create", "student", created.ID, metadata)
+	return created, nil
 }
 
 func (s *StudentService) Update(ctx context.Context, student domain.Student) (domain.Student, error) {
 	student.UpdatedAt = s.now()
+	metadata := map[string]any{
+		"status": string(student.Status),
+	}
+	recordAuditAttempt(ctx, s.audit, "student.update", "student", student.ID, metadata)
+
 	updated, err := s.repo.Update(ctx, student)
 	if err != nil {
+		recordAuditFailure(ctx, s.audit, "student.update", "student", student.ID, metadata, err)
 		return domain.Student{}, err
 	}
 	if updated.Status == domain.StudentInactive || updated.Status == domain.StudentSuspended {
 		if err := s.endSubscriptionsForStudent(ctx, updated.ID); err != nil {
+			recordAuditFailure(ctx, s.audit, "student.update", "student", updated.ID, metadata, err)
 			return updated, err
 		}
 	}
+	recordAuditSuccess(ctx, s.audit, "student.update", "student", updated.ID, metadata)
 	return updated, nil
 }
 
@@ -60,7 +80,16 @@ func (s *StudentService) FindByID(ctx context.Context, studentID string) (domain
 }
 
 func (s *StudentService) Deactivate(ctx context.Context, studentID string) (domain.Student, error) {
-	return s.SetStatus(ctx, studentID, domain.StudentInactive)
+	recordAuditAttempt(ctx, s.audit, "student.deactivate", "student", studentID, nil)
+	updated, err := s.SetStatus(ctx, studentID, domain.StudentInactive)
+	if err != nil {
+		recordAuditFailure(ctx, s.audit, "student.deactivate", "student", studentID, nil, err)
+		return domain.Student{}, err
+	}
+	recordAuditSuccess(ctx, s.audit, "student.deactivate", "student", updated.ID, map[string]any{
+		"status": string(updated.Status),
+	})
+	return updated, nil
 }
 
 func (s *StudentService) Search(ctx context.Context, filter ports.StudentFilter) ([]domain.Student, error) {

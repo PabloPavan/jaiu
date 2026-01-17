@@ -9,6 +9,7 @@ type PaymentDependencies struct {
 	BillingPeriods BillingPeriodRepository
 	Balances       SubscriptionBalanceRepository
 	Allocations    PaymentAllocationRepository
+	Audit          AuditRepository
 }
 
 type PaymentTxRunner interface {

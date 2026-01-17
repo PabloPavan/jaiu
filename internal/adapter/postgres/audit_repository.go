@@ -6,19 +6,29 @@ import (
 	"errors"
 
 	"github.com/PabloPavan/jaiu/internal/domain"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type AuditRepository struct {
-	pool *pgxpool.Pool
+	exec auditExecer
+}
+
+type auditExecer interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
 }
 
 func NewAuditRepository(pool *pgxpool.Pool) *AuditRepository {
-	return &AuditRepository{pool: pool}
+	return &AuditRepository{exec: pool}
+}
+
+func NewAuditRepositoryWithTx(tx pgx.Tx) *AuditRepository {
+	return &AuditRepository{exec: tx}
 }
 
 func (r *AuditRepository) Record(ctx context.Context, event domain.AuditEvent) error {
-	if r == nil || r.pool == nil {
+	if r == nil || r.exec == nil {
 		return errors.New("audit repository unavailable")
 	}
 
@@ -38,7 +48,7 @@ func (r *AuditRepository) Record(ctx context.Context, event domain.AuditEvent) e
 			return err
 		}
 	}
-	_, err = r.pool.Exec(ctx, `
+	_, err = r.exec.Exec(ctx, `
 		INSERT INTO audit_events (
 			actor_id,
 			actor_role,

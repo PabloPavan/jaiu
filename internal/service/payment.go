@@ -16,6 +16,7 @@ type PaymentService struct {
 	periods       ports.BillingPeriodRepository
 	balances      ports.SubscriptionBalanceRepository
 	allocations   ports.PaymentAllocationRepository
+	audit         ports.AuditRepository
 	txRunner      ports.PaymentTxRunner
 	now           func() time.Time
 }
@@ -27,6 +28,7 @@ func NewPaymentService(
 	periods ports.BillingPeriodRepository,
 	balances ports.SubscriptionBalanceRepository,
 	allocations ports.PaymentAllocationRepository,
+	audit ports.AuditRepository,
 	txRunner ports.PaymentTxRunner,
 ) *PaymentService {
 	return &PaymentService{
@@ -36,6 +38,7 @@ func NewPaymentService(
 		periods:       periods,
 		balances:      balances,
 		allocations:   allocations,
+		audit:         audit,
 		txRunner:      txRunner,
 		now:           time.Now,
 	}
@@ -52,6 +55,7 @@ func (s *PaymentService) Register(ctx context.Context, payment domain.Payment) (
 				periods:       deps.BillingPeriods,
 				balances:      deps.Balances,
 				allocations:   deps.Allocations,
+				audit:         deps.Audit,
 				now:           s.now,
 			}
 			var err error
@@ -68,37 +72,59 @@ func (s *PaymentService) Register(ctx context.Context, payment domain.Payment) (
 }
 
 func (s *PaymentService) register(ctx context.Context, payment domain.Payment) (domain.Payment, error) {
+	metadata := map[string]any{
+		"amount_cents":    payment.AmountCents,
+		"method":          string(payment.Method),
+		"subscription_id": payment.SubscriptionID,
+		"idempotency_key": payment.IdempotencyKey,
+	}
+	recordAuditAttempt(ctx, s.audit, "payment.create", "payment", payment.ID, metadata)
+
 	if payment.SubscriptionID == "" {
-		return domain.Payment{}, errors.New("assinatura e obrigatoria")
+		err := errors.New("assinatura e obrigatoria")
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
+		return domain.Payment{}, err
 	}
 	if payment.AmountCents <= 0 {
-		return domain.Payment{}, errors.New("valor deve ser maior que zero")
+		err := errors.New("valor deve ser maior que zero")
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
+		return domain.Payment{}, err
 	}
 
 	if s.subscriptions == nil || s.plans == nil || s.periods == nil || s.allocations == nil {
-		return domain.Payment{}, errors.New("dependencias de pagamentos indisponiveis")
+		err := errors.New("dependencias de pagamentos indisponiveis")
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
+		return domain.Payment{}, err
 	}
 
 	if payment.IdempotencyKey != "" {
 		existing, err := s.repo.FindByIdempotencyKey(ctx, payment.IdempotencyKey)
 		if err == nil {
+			idemMetadata := copyMetadata(metadata)
+			idemMetadata["idempotent"] = true
+			recordAuditSuccess(ctx, s.audit, "payment.create", "payment", existing.ID, idemMetadata)
 			return existing, nil
 		}
 		if err != nil && !errors.Is(err, ports.ErrNotFound) {
+			recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
 			return domain.Payment{}, err
 		}
 	}
 
 	subscription, err := s.subscriptions.FindByID(ctx, payment.SubscriptionID)
 	if err != nil {
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
 		return domain.Payment{}, err
 	}
 	if subscription.Status != domain.SubscriptionActive {
-		return domain.Payment{}, errors.New("assinatura inativa")
+		err := errors.New("assinatura inativa")
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
+		return domain.Payment{}, err
 	}
 
 	plan, err := s.plans.FindByID(ctx, subscription.PlanID)
 	if err != nil {
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
 		return domain.Payment{}, err
 	}
 
@@ -114,6 +140,7 @@ func (s *PaymentService) register(ctx context.Context, payment domain.Payment) (
 
 	today := dateOnly(s.now())
 	if _, err := s.ensurePeriods(ctx, subscription, plan, today); err != nil {
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
 		return domain.Payment{}, err
 	}
 
@@ -122,15 +149,20 @@ func (s *PaymentService) register(ctx context.Context, payment domain.Payment) (
 		if errors.Is(err, ports.ErrConflict) && payment.IdempotencyKey != "" {
 			existing, findErr := s.repo.FindByIdempotencyKey(ctx, payment.IdempotencyKey)
 			if findErr == nil {
+				idemMetadata := copyMetadata(metadata)
+				idemMetadata["idempotent"] = true
+				recordAuditSuccess(ctx, s.audit, "payment.create", "payment", existing.ID, idemMetadata)
 				return existing, nil
 			}
 			return domain.Payment{}, findErr
 		}
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", payment.ID, metadata, err)
 		return domain.Payment{}, err
 	}
 
 	result, err := s.applyPayment(ctx, created, subscription, today)
 	if err != nil {
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", created.ID, metadata, err)
 		return created, err
 	}
 
@@ -138,19 +170,29 @@ func (s *PaymentService) register(ctx context.Context, payment domain.Payment) (
 	created.CreditCents = result.CreditCents
 	updated, err := s.repo.Update(ctx, created)
 	if err != nil {
+		recordAuditFailure(ctx, s.audit, "payment.create", "payment", created.ID, metadata, err)
 		return created, err
 	}
 
+	successMetadata := copyMetadata(metadata)
+	successMetadata["credit_cents"] = updated.CreditCents
+	successMetadata["kind"] = string(updated.Kind)
+	successMetadata["status"] = string(updated.Status)
+	recordAuditSuccess(ctx, s.audit, "payment.create", "payment", updated.ID, successMetadata)
 	return updated, nil
 }
 
 func (s *PaymentService) Update(ctx context.Context, payment domain.Payment) (domain.Payment, error) {
 	if payment.ID == "" {
-		return domain.Payment{}, errors.New("pagamento invalido")
+		err := errors.New("pagamento invalido")
+		recordAuditFailure(ctx, s.audit, "payment.update", "payment", payment.ID, nil, err)
+		return domain.Payment{}, err
 	}
+	recordAuditAttempt(ctx, s.audit, "payment.update", "payment", payment.ID, nil)
 
 	current, err := s.repo.FindByID(ctx, payment.ID)
 	if err != nil {
+		recordAuditFailure(ctx, s.audit, "payment.update", "payment", payment.ID, nil, err)
 		return domain.Payment{}, err
 	}
 
@@ -171,13 +213,30 @@ func (s *PaymentService) Update(ctx context.Context, payment domain.Payment) (do
 	payment.IdempotencyKey = current.IdempotencyKey
 
 	if payment.SubscriptionID != current.SubscriptionID || payment.AmountCents != current.AmountCents || !sameDayTime(payment.PaidAt, current.PaidAt) {
-		return domain.Payment{}, errors.New("para alterar valor ou data, estorne e registre um novo pagamento")
+		err := errors.New("para alterar valor ou data, estorne e registre um novo pagamento")
+		recordAuditFailure(ctx, s.audit, "payment.update", "payment", payment.ID, nil, err)
+		return domain.Payment{}, err
 	}
 	if payment.Status != current.Status {
-		return domain.Payment{}, errors.New("use o estorno para alterar o status")
+		err := errors.New("use o estorno para alterar o status")
+		recordAuditFailure(ctx, s.audit, "payment.update", "payment", payment.ID, nil, err)
+		return domain.Payment{}, err
 	}
 
-	return s.repo.Update(ctx, payment)
+	updated, err := s.repo.Update(ctx, payment)
+	if err != nil {
+		recordAuditFailure(ctx, s.audit, "payment.update", "payment", payment.ID, nil, err)
+		return domain.Payment{}, err
+	}
+	recordAuditSuccess(ctx, s.audit, "payment.update", "payment", updated.ID, map[string]any{
+		"amount_cents":    updated.AmountCents,
+		"credit_cents":    updated.CreditCents,
+		"kind":            string(updated.Kind),
+		"method":          string(updated.Method),
+		"status":          string(updated.Status),
+		"subscription_id": updated.SubscriptionID,
+	})
+	return updated, nil
 }
 
 func (s *PaymentService) FindByID(ctx context.Context, paymentID string) (domain.Payment, error) {
@@ -185,29 +244,40 @@ func (s *PaymentService) FindByID(ctx context.Context, paymentID string) (domain
 }
 
 func (s *PaymentService) Reverse(ctx context.Context, paymentID string) (domain.Payment, error) {
+	recordAuditAttempt(ctx, s.audit, "payment.reverse", "payment", paymentID, nil)
+
 	payment, err := s.repo.FindByID(ctx, paymentID)
 	if err != nil {
+		recordAuditFailure(ctx, s.audit, "payment.reverse", "payment", paymentID, nil, err)
 		return domain.Payment{}, err
 	}
 	if payment.Status == domain.PaymentReversed {
+		recordAuditSuccess(ctx, s.audit, "payment.reverse", "payment", payment.ID, map[string]any{
+			"status": string(payment.Status),
+		})
 		return payment, nil
 	}
 
 	if s.allocations != nil && s.periods != nil {
 		if s.subscriptions == nil {
-			return domain.Payment{}, errors.New("assinaturas indisponiveis")
+			err := errors.New("assinaturas indisponiveis")
+			recordAuditFailure(ctx, s.audit, "payment.reverse", "payment", payment.ID, nil, err)
+			return domain.Payment{}, err
 		}
 		subscription, err := s.subscriptions.FindByID(ctx, payment.SubscriptionID)
 		if err != nil {
+			recordAuditFailure(ctx, s.audit, "payment.reverse", "payment", payment.ID, nil, err)
 			return domain.Payment{}, err
 		}
 		if err := s.rollbackPayment(ctx, payment, subscription); err != nil {
+			recordAuditFailure(ctx, s.audit, "payment.reverse", "payment", payment.ID, nil, err)
 			return domain.Payment{}, err
 		}
 	}
 
 	if payment.CreditCents > 0 && s.balances != nil {
 		if _, err := s.balances.Add(ctx, payment.SubscriptionID, -payment.CreditCents); err != nil {
+			recordAuditFailure(ctx, s.audit, "payment.reverse", "payment", payment.ID, nil, err)
 			return domain.Payment{}, err
 		}
 		payment.CreditCents = 0
@@ -215,7 +285,16 @@ func (s *PaymentService) Reverse(ctx context.Context, paymentID string) (domain.
 
 	payment.Status = domain.PaymentReversed
 	payment.Kind = domain.PaymentFull
-	return s.repo.Update(ctx, payment)
+	updated, err := s.repo.Update(ctx, payment)
+	if err != nil {
+		recordAuditFailure(ctx, s.audit, "payment.reverse", "payment", payment.ID, nil, err)
+		return domain.Payment{}, err
+	}
+	recordAuditSuccess(ctx, s.audit, "payment.reverse", "payment", updated.ID, map[string]any{
+		"status":          string(updated.Status),
+		"subscription_id": updated.SubscriptionID,
+	})
+	return updated, nil
 }
 
 func (s *PaymentService) ListBySubscription(ctx context.Context, subscriptionID string) ([]domain.Payment, error) {

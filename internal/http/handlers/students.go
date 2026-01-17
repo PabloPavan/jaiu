@@ -86,7 +86,7 @@ func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	created, err := h.services.Students.Register(r.Context(), student)
+	_, err = h.services.Students.Register(r.Context(), student)
 	if err != nil {
 		data.Error = "Nao foi possivel salvar o aluno."
 		if isHTMX(r) {
@@ -96,9 +96,6 @@ func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 		return
 	}
-	h.recordAudit(r, "student.create", "student", created.ID, map[string]any{
-		"status": string(created.Status),
-	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/students")
@@ -156,7 +153,7 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	student.ID = studentID
-	updated, err := h.services.Students.Update(r.Context(), student)
+	_, err = h.services.Students.Update(r.Context(), student)
 	if err != nil {
 		data.Error = "Nao foi possivel atualizar o aluno."
 		if isHTMX(r) {
@@ -166,9 +163,6 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 		return
 	}
-	h.recordAudit(r, "student.update", "student", updated.ID, map[string]any{
-		"status": string(updated.Status),
-	})
 
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", "/students")
@@ -186,7 +180,7 @@ func (h *Handler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updated, err := h.services.Students.Deactivate(r.Context(), studentID)
+	_, err := h.services.Students.Deactivate(r.Context(), studentID)
 	if err != nil {
 		if errors.Is(err, ports.ErrNotFound) {
 			http.NotFound(w, r)
@@ -196,9 +190,6 @@ func (h *Handler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao excluir aluno.", http.StatusInternalServerError)
 		return
 	}
-	h.recordAudit(r, "student.deactivate", "student", updated.ID, map[string]any{
-		"status": string(updated.Status),
-	})
 
 	if isHTMX(r) {
 		data := h.buildStudentsData(r)

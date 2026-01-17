@@ -41,6 +41,7 @@ func (r *PaymentTxRunner) RunSerializable(ctx context.Context, fn func(context.C
 			BillingPeriods: NewBillingPeriodRepositoryWithQueries(queries),
 			Balances:       NewSubscriptionBalanceRepositoryWithQueries(queries),
 			Allocations:    NewPaymentAllocationRepositoryWithQueries(queries),
+			Audit:          NewAuditRepositoryWithTx(tx),
 		}
 
 		err = fn(ctx, deps)

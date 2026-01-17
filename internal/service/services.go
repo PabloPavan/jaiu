@@ -22,15 +22,16 @@ type Dependencies struct {
 	PaymentTx      ports.PaymentTxRunner
 	Reports        ports.ReportRepository
 	Users          ports.UserRepository
+	Audit          ports.AuditRepository
 }
 
 func New(deps Dependencies) *Services {
 	return &Services{
-		Students:      NewStudentService(deps.Students, deps.Subscriptions),
-		Plans:         NewPlanService(deps.Plans, deps.Subscriptions),
-		Subscriptions: NewSubscriptionService(deps.Subscriptions, deps.Plans, deps.Students),
-		Payments:      NewPaymentService(deps.Payments, deps.Subscriptions, deps.Plans, deps.BillingPeriods, deps.Balances, deps.Allocations, deps.PaymentTx),
+		Students:      NewStudentService(deps.Students, deps.Subscriptions, deps.Audit),
+		Plans:         NewPlanService(deps.Plans, deps.Subscriptions, deps.Audit),
+		Subscriptions: NewSubscriptionService(deps.Subscriptions, deps.Plans, deps.Students, deps.Audit),
+		Payments:      NewPaymentService(deps.Payments, deps.Subscriptions, deps.Plans, deps.BillingPeriods, deps.Balances, deps.Allocations, deps.Audit, deps.PaymentTx),
 		Reports:       NewReportService(deps.Reports),
-		Auth:          NewAuthService(deps.Users),
+		Auth:          NewAuthService(deps.Users, deps.Audit),
 	}
 }

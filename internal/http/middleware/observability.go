@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/PabloPavan/jaiu/internal/auditctx"
 	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -36,6 +37,10 @@ func Observability() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 			ctx, span := tracer.Start(ctx, "http.request", trace.WithSpanKind(trace.SpanKindServer))
+			ctx = auditctx.WithRequest(ctx, auditctx.RequestInfo{
+				IP:        clientIP(r),
+				UserAgent: r.UserAgent(),
+			})
 			ctx, activity := withUserActivity(ctx)
 			r = r.WithContext(ctx)
 			start := time.Now()

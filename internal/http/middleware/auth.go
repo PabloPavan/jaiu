@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/PabloPavan/jaiu/internal/auditctx"
 	"github.com/PabloPavan/jaiu/internal/ports"
 )
 
@@ -42,6 +43,10 @@ func RequireSession(store ports.SessionStore, cookieName string) func(http.Handl
 			}
 
 			ctx := context.WithValue(r.Context(), sessionKey, session)
+			ctx = auditctx.WithActor(ctx, auditctx.Actor{
+				ID:   session.UserID,
+				Role: string(session.Role),
+			})
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

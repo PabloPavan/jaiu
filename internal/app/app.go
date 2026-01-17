@@ -67,7 +67,6 @@ func New(cfg Config) (*App, error) {
 	var studentService handlers.StudentService
 	var subscriptionService handlers.SubscriptionService
 	var paymentService handlers.PaymentService
-	var auditService handlers.AuditService
 	var sessionStore ports.SessionStore
 	sessionConfig := handlers.SessionConfig{
 		CookieName: cfg.SessionCookieName,
@@ -86,24 +85,22 @@ func New(cfg Config) (*App, error) {
 
 	if pool != nil {
 		userRepo := postgres.NewUserRepository(pool)
-		authService = service.NewAuthService(userRepo)
+		auditRepo := postgres.NewAuditRepository(pool)
+		authService = service.NewAuthService(userRepo, auditRepo)
 
 		planRepo := postgres.NewPlanRepository(pool)
 		studentRepo := postgres.NewStudentRepository(pool)
 		subscriptionRepo := postgres.NewSubscriptionRepository(pool)
-		planService = service.NewPlanService(planRepo, subscriptionRepo)
-		studentService = service.NewStudentService(studentRepo, subscriptionRepo)
-		subscriptionService = service.NewSubscriptionService(subscriptionRepo, planRepo, studentRepo)
+		planService = service.NewPlanService(planRepo, subscriptionRepo, auditRepo)
+		studentService = service.NewStudentService(studentRepo, subscriptionRepo, auditRepo)
+		subscriptionService = service.NewSubscriptionService(subscriptionRepo, planRepo, studentRepo, auditRepo)
 
 		paymentRepo := postgres.NewPaymentRepository(pool)
 		periodRepo := postgres.NewBillingPeriodRepository(pool)
 		balanceRepo := postgres.NewSubscriptionBalanceRepository(pool)
 		allocationRepo := postgres.NewPaymentAllocationRepository(pool)
 		paymentTx := postgres.NewPaymentTxRunner(pool)
-		paymentService = service.NewPaymentService(paymentRepo, subscriptionRepo, planRepo, periodRepo, balanceRepo, allocationRepo, paymentTx)
-
-		auditRepo := postgres.NewAuditRepository(pool)
-		auditService = service.NewAuditService(auditRepo)
+		paymentService = service.NewPaymentService(paymentRepo, subscriptionRepo, planRepo, periodRepo, balanceRepo, allocationRepo, auditRepo, paymentTx)
 	}
 
 	if redisClient != nil {
@@ -116,7 +113,6 @@ func New(cfg Config) (*App, error) {
 		Students:      studentService,
 		Subscriptions: subscriptionService,
 		Payments:      paymentService,
-		Audit:         auditService,
 	}, sessionStore, sessionConfig)
 
 	return &App{
