@@ -118,3 +118,28 @@ func (h *Handler) renderFormError(w http.ResponseWriter, r *http.Request, title 
 	}
 	h.renderPage(w, r, page(title, component))
 }
+
+func (h *Handler) renderHTMXOrPage(w http.ResponseWriter, r *http.Request, title string, pageComponent, htmxComponent templ.Component) {
+	if isHTMX(r) {
+		h.renderComponent(w, r, htmxComponent)
+		return
+	}
+	h.renderPage(w, r, page(title, pageComponent))
+}
+
+func (h *Handler) renderHTMXOrRedirect(w http.ResponseWriter, r *http.Request, location string, render func()) {
+	if isHTMX(r) {
+		render()
+		return
+	}
+	http.Redirect(w, r, location, http.StatusSeeOther)
+}
+
+func (h *Handler) redirectHTMXOrRedirect(w http.ResponseWriter, r *http.Request, location string) {
+	if isHTMX(r) {
+		w.Header().Set("HX-Redirect", location)
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	http.Redirect(w, r, location, http.StatusSeeOther)
+}

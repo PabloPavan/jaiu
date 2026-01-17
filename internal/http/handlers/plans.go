@@ -52,13 +52,7 @@ func (h *Handler) PlansCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", "/plans")
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	http.Redirect(w, r, "/plans", http.StatusSeeOther)
+	h.redirectHTMXOrRedirect(w, r, "/plans")
 }
 
 func (h *Handler) PlansEdit(w http.ResponseWriter, r *http.Request) {
@@ -107,13 +101,7 @@ func (h *Handler) PlansUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", "/plans")
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	http.Redirect(w, r, "/plans", http.StatusSeeOther)
+	h.redirectHTMXOrRedirect(w, r, "/plans")
 }
 
 func (h *Handler) PlansDelete(w http.ResponseWriter, r *http.Request) {
@@ -134,13 +122,10 @@ func (h *Handler) PlansDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
+	h.renderHTMXOrRedirect(w, r, "/plans", func() {
 		data := h.buildPlansData(r)
 		h.renderComponent(w, r, view.PlansList(data))
-		return
-	}
-
-	http.Redirect(w, r, "/plans", http.StatusSeeOther)
+	})
 }
 
 func formatCents(cents int64) string {

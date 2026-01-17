@@ -18,11 +18,7 @@ import (
 
 func (h *Handler) SubscriptionsIndex(w http.ResponseWriter, r *http.Request) {
 	data := h.buildSubscriptionsData(r)
-	if isHTMX(r) {
-		h.renderComponent(w, r, view.SubscriptionsList(data))
-		return
-	}
-	h.renderPage(w, r, page("Assinaturas", view.SubscriptionsPage(data)))
+	h.renderHTMXOrPage(w, r, "Assinaturas", view.SubscriptionsPage(data), view.SubscriptionsList(data))
 }
 
 func (h *Handler) SubscriptionsNew(w http.ResponseWriter, r *http.Request) {
@@ -52,13 +48,7 @@ func (h *Handler) SubscriptionsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", "/subscriptions")
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	http.Redirect(w, r, "/subscriptions", http.StatusSeeOther)
+	h.redirectHTMXOrRedirect(w, r, "/subscriptions")
 }
 
 func (h *Handler) SubscriptionsEdit(w http.ResponseWriter, r *http.Request) {
@@ -107,13 +97,7 @@ func (h *Handler) SubscriptionsUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", "/subscriptions")
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	http.Redirect(w, r, "/subscriptions", http.StatusSeeOther)
+	h.redirectHTMXOrRedirect(w, r, "/subscriptions")
 }
 
 func (h *Handler) SubscriptionsCancel(w http.ResponseWriter, r *http.Request) {
@@ -134,13 +118,10 @@ func (h *Handler) SubscriptionsCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
+	h.renderHTMXOrRedirect(w, r, "/subscriptions", func() {
 		data := h.buildSubscriptionsData(r)
 		h.renderComponent(w, r, view.SubscriptionsList(data))
-		return
-	}
-
-	http.Redirect(w, r, "/subscriptions", http.StatusSeeOther)
+	})
 }
 
 func (h *Handler) buildSubscriptionsData(r *http.Request) view.SubscriptionsPageData {

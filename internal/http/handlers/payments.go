@@ -19,11 +19,7 @@ import (
 
 func (h *Handler) PaymentsIndex(w http.ResponseWriter, r *http.Request) {
 	data := h.buildPaymentsData(r)
-	if isHTMX(r) {
-		h.renderComponent(w, r, view.PaymentsList(data))
-		return
-	}
-	h.renderPage(w, r, page("Pagamentos", view.PaymentsPage(data)))
+	h.renderHTMXOrPage(w, r, "Pagamentos", view.PaymentsPage(data), view.PaymentsList(data))
 }
 
 func (h *Handler) PaymentsNew(w http.ResponseWriter, r *http.Request) {
@@ -53,13 +49,7 @@ func (h *Handler) PaymentsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", "/payments")
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	http.Redirect(w, r, "/payments", http.StatusSeeOther)
+	h.redirectHTMXOrRedirect(w, r, "/payments")
 }
 
 func (h *Handler) PaymentsEdit(w http.ResponseWriter, r *http.Request) {
@@ -108,13 +98,7 @@ func (h *Handler) PaymentsUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", "/payments")
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	http.Redirect(w, r, "/payments", http.StatusSeeOther)
+	h.redirectHTMXOrRedirect(w, r, "/payments")
 }
 
 func (h *Handler) PaymentsReverse(w http.ResponseWriter, r *http.Request) {
@@ -135,13 +119,10 @@ func (h *Handler) PaymentsReverse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
+	h.renderHTMXOrRedirect(w, r, "/payments", func() {
 		data := h.buildPaymentsData(r)
 		h.renderComponent(w, r, view.PaymentsList(data))
-		return
-	}
-
-	http.Redirect(w, r, "/payments", http.StatusSeeOther)
+	})
 }
 
 func (h *Handler) buildPaymentsData(r *http.Request) view.PaymentsPageData {

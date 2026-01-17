@@ -15,12 +15,7 @@ import (
 
 func (h *Handler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
 	data := h.buildStudentsData(r)
-	if isHTMX(r) {
-		h.renderComponent(w, r, view.StudentsList(data))
-		return
-	}
-
-	h.renderPage(w, r, page("Alunos", view.StudentsPage(data)))
+	h.renderHTMXOrPage(w, r, "Alunos", view.StudentsPage(data), view.StudentsList(data))
 }
 
 func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
@@ -85,13 +80,7 @@ func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", "/students")
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	http.Redirect(w, r, "/students", http.StatusSeeOther)
+	h.redirectHTMXOrRedirect(w, r, "/students")
 }
 
 func (h *Handler) StudentsEdit(w http.ResponseWriter, r *http.Request) {
@@ -140,13 +129,7 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", "/students")
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	http.Redirect(w, r, "/students", http.StatusSeeOther)
+	h.redirectHTMXOrRedirect(w, r, "/students")
 }
 
 func (h *Handler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
@@ -167,13 +150,10 @@ func (h *Handler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isHTMX(r) {
+	h.renderHTMXOrRedirect(w, r, "/students", func() {
 		data := h.buildStudentsData(r)
 		h.renderComponent(w, r, view.StudentsList(data))
-		return
-	}
-
-	http.Redirect(w, r, "/students", http.StatusSeeOther)
+	})
 }
 
 func studentFormCreateData() view.StudentFormData {
