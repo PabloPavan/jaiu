@@ -28,14 +28,14 @@ RETURNING id, student_id, plan_id, start_date, end_date, status, price_cents, cr
 `
 
 type CreateSubscriptionParams struct {
-	StudentID  pgtype.UUID `json:"student_id"`
-	PlanID     pgtype.UUID `json:"plan_id"`
-	StartDate  pgtype.Date `json:"start_date"`
-	EndDate    pgtype.Date `json:"end_date"`
-	Status     string      `json:"status"`
-	PriceCents int64       `json:"price_cents"`
-	PaymentDay int32       `json:"payment_day"`
-	AutoRenew  bool        `json:"auto_renew"`
+	StudentID  pgtype.UUID        `json:"student_id"`
+	PlanID     pgtype.UUID        `json:"plan_id"`
+	StartDate  pgtype.Date        `json:"start_date"`
+	EndDate    pgtype.Date        `json:"end_date"`
+	Status     SubscriptionStatus `json:"status"`
+	PriceCents int64              `json:"price_cents"`
+	PaymentDay int32              `json:"payment_day"`
+	AutoRenew  bool               `json:"auto_renew"`
 }
 
 func (q *Queries) CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error) {
@@ -261,13 +261,13 @@ RETURNING id, student_id, plan_id, start_date, end_date, status, price_cents, cr
 `
 
 type UpdateSubscriptionParams struct {
-	ID         pgtype.UUID `json:"id"`
-	StartDate  pgtype.Date `json:"start_date"`
-	EndDate    pgtype.Date `json:"end_date"`
-	Status     string      `json:"status"`
-	PriceCents int64       `json:"price_cents"`
-	PaymentDay int32       `json:"payment_day"`
-	AutoRenew  bool        `json:"auto_renew"`
+	ID         pgtype.UUID        `json:"id"`
+	StartDate  pgtype.Date        `json:"start_date"`
+	EndDate    pgtype.Date        `json:"end_date"`
+	Status     SubscriptionStatus `json:"status"`
+	PriceCents int64              `json:"price_cents"`
+	PaymentDay int32              `json:"payment_day"`
+	AutoRenew  bool               `json:"auto_renew"`
 }
 
 func (q *Queries) UpdateSubscription(ctx context.Context, arg UpdateSubscriptionParams) (Subscription, error) {

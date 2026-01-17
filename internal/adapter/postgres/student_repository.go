@@ -30,7 +30,7 @@ func (r *StudentRepository) Create(ctx context.Context, student domain.Student) 
 		Address:   textTo(student.Address),
 		Notes:     textTo(student.Notes),
 		PhotoUrl:  textTo(student.PhotoURL),
-		Status:    string(student.Status),
+		Status:    sqlc.StudentStatus(student.Status),
 	}
 
 	created, err := r.queries.CreateStudent(ctx, params)
@@ -58,7 +58,7 @@ func (r *StudentRepository) Update(ctx context.Context, student domain.Student) 
 		Address:   textTo(student.Address),
 		Notes:     textTo(student.Notes),
 		PhotoUrl:  textTo(student.PhotoURL),
-		Status:    string(student.Status),
+		Status:    sqlc.StudentStatus(student.Status),
 	}
 
 	updated, err := r.queries.UpdateStudent(ctx, params)
@@ -92,10 +92,10 @@ func (r *StudentRepository) Search(ctx context.Context, filter ports.StudentFilt
 		limit = 50
 	}
 
-	statuses := make([]string, 0, len(filter.Statuses))
+	statuses := make([]sqlc.StudentStatus, 0, len(filter.Statuses))
 	for _, status := range filter.Statuses {
 		if status != "" {
-			statuses = append(statuses, string(status))
+			statuses = append(statuses, sqlc.StudentStatus(status))
 		}
 	}
 

@@ -36,7 +36,7 @@ func (r *BillingPeriodRepository) Create(ctx context.Context, period domain.Bill
 		PeriodEnd:       dateTo(&period.PeriodEnd),
 		AmountDueCents:  period.AmountDueCents,
 		AmountPaidCents: period.AmountPaidCents,
-		Status:          string(period.Status),
+		Status:          sqlc.BillingPeriodStatus(period.Status),
 	}
 
 	created, err := r.queries.CreateBillingPeriod(ctx, params)
@@ -60,7 +60,7 @@ func (r *BillingPeriodRepository) Update(ctx context.Context, period domain.Bill
 	params := sqlc.UpdateBillingPeriodParams{
 		ID:              id,
 		AmountPaidCents: period.AmountPaidCents,
-		Status:          string(period.Status),
+		Status:          sqlc.BillingPeriodStatus(period.Status),
 	}
 
 	updated, err := r.queries.UpdateBillingPeriod(ctx, params)

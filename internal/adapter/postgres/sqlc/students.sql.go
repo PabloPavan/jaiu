@@ -30,16 +30,16 @@ RETURNING id, full_name, birth_date, gender, phone, email, cpf, address, notes, 
 `
 
 type CreateStudentParams struct {
-	FullName  string      `json:"full_name"`
-	BirthDate pgtype.Date `json:"birth_date"`
-	Gender    pgtype.Text `json:"gender"`
-	Phone     pgtype.Text `json:"phone"`
-	Email     pgtype.Text `json:"email"`
-	Cpf       pgtype.Text `json:"cpf"`
-	Address   pgtype.Text `json:"address"`
-	Notes     pgtype.Text `json:"notes"`
-	PhotoUrl  pgtype.Text `json:"photo_url"`
-	Status    string      `json:"status"`
+	FullName  string        `json:"full_name"`
+	BirthDate pgtype.Date   `json:"birth_date"`
+	Gender    pgtype.Text   `json:"gender"`
+	Phone     pgtype.Text   `json:"phone"`
+	Email     pgtype.Text   `json:"email"`
+	Cpf       pgtype.Text   `json:"cpf"`
+	Address   pgtype.Text   `json:"address"`
+	Notes     pgtype.Text   `json:"notes"`
+	PhotoUrl  pgtype.Text   `json:"photo_url"`
+	Status    StudentStatus `json:"status"`
 }
 
 func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (Student, error) {
@@ -103,16 +103,16 @@ const searchStudents = `-- name: SearchStudents :many
 SELECT id, full_name, birth_date, gender, phone, email, cpf, address, notes, photo_url, status, created_at, updated_at
 FROM students
 WHERE ($1 = '' OR full_name ILIKE '%' || $1 || '%' OR phone ILIKE '%' || $1 || '%' OR cpf ILIKE '%' || $1 || '%')
-  AND (COALESCE(array_length($2::text[], 1), 0) = 0 OR status = ANY($2::text[]))
+  AND (COALESCE(array_length($2::student_status[], 1), 0) = 0 OR status = ANY($2::student_status[]))
 ORDER BY full_name
 LIMIT $3 OFFSET $4
 `
 
 type SearchStudentsParams struct {
-	Column1 interface{} `json:"column_1"`
-	Column2 []string    `json:"column_2"`
-	Limit   int32       `json:"limit"`
-	Offset  int32       `json:"offset"`
+	Column1 interface{}     `json:"column_1"`
+	Column2 []StudentStatus `json:"column_2"`
+	Limit   int32           `json:"limit"`
+	Offset  int32           `json:"offset"`
 }
 
 func (q *Queries) SearchStudents(ctx context.Context, arg SearchStudentsParams) ([]Student, error) {
@@ -173,17 +173,17 @@ RETURNING id, full_name, birth_date, gender, phone, email, cpf, address, notes, 
 `
 
 type UpdateStudentParams struct {
-	ID        pgtype.UUID `json:"id"`
-	FullName  string      `json:"full_name"`
-	BirthDate pgtype.Date `json:"birth_date"`
-	Gender    pgtype.Text `json:"gender"`
-	Phone     pgtype.Text `json:"phone"`
-	Email     pgtype.Text `json:"email"`
-	Cpf       pgtype.Text `json:"cpf"`
-	Address   pgtype.Text `json:"address"`
-	Notes     pgtype.Text `json:"notes"`
-	PhotoUrl  pgtype.Text `json:"photo_url"`
-	Status    string      `json:"status"`
+	ID        pgtype.UUID   `json:"id"`
+	FullName  string        `json:"full_name"`
+	BirthDate pgtype.Date   `json:"birth_date"`
+	Gender    pgtype.Text   `json:"gender"`
+	Phone     pgtype.Text   `json:"phone"`
+	Email     pgtype.Text   `json:"email"`
+	Cpf       pgtype.Text   `json:"cpf"`
+	Address   pgtype.Text   `json:"address"`
+	Notes     pgtype.Text   `json:"notes"`
+	PhotoUrl  pgtype.Text   `json:"photo_url"`
+	Status    StudentStatus `json:"status"`
 }
 
 func (q *Queries) UpdateStudent(ctx context.Context, arg UpdateStudentParams) (Student, error) {

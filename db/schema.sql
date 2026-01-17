@@ -1,5 +1,13 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+CREATE TYPE student_status AS ENUM ('active', 'inactive', 'suspended');
+CREATE TYPE subscription_status AS ENUM ('active', 'ended', 'canceled', 'suspended');
+CREATE TYPE payment_status AS ENUM ('confirmed', 'reversed');
+CREATE TYPE payment_method AS ENUM ('cash', 'pix', 'card', 'transfer', 'other');
+CREATE TYPE payment_kind AS ENUM ('full', 'partial', 'advance', 'credit');
+CREATE TYPE billing_period_status AS ENUM ('open', 'paid', 'partial', 'overdue');
+CREATE TYPE user_role AS ENUM ('admin', 'operator');
+
 CREATE TABLE students (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name text NOT NULL,
@@ -11,7 +19,7 @@ CREATE TABLE students (
   address text,
   notes text,
   photo_url text,
-  status text NOT NULL DEFAULT 'active',
+  status student_status NOT NULL DEFAULT 'active',
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -33,7 +41,7 @@ CREATE TABLE subscriptions (
   plan_id uuid NOT NULL REFERENCES plans(id),
   start_date date NOT NULL,
   end_date date NOT NULL,
-  status text NOT NULL DEFAULT 'active',
+  status subscription_status NOT NULL DEFAULT 'active',
   price_cents bigint NOT NULL,
   payment_day integer NOT NULL,
   auto_renew boolean NOT NULL DEFAULT false,
@@ -46,11 +54,11 @@ CREATE TABLE payments (
   subscription_id uuid NOT NULL REFERENCES subscriptions(id),
   paid_at timestamptz NOT NULL,
   amount_cents bigint NOT NULL,
-  method text NOT NULL,
+  method payment_method NOT NULL,
   reference text,
   notes text,
-  status text NOT NULL DEFAULT 'confirmed',
-  kind text NOT NULL DEFAULT 'full',
+  status payment_status NOT NULL DEFAULT 'confirmed',
+  kind payment_kind NOT NULL DEFAULT 'full',
   credit_cents bigint NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -68,7 +76,7 @@ CREATE TABLE billing_periods (
   period_end date NOT NULL,
   amount_due_cents bigint NOT NULL,
   amount_paid_cents bigint NOT NULL DEFAULT 0,
-  status text NOT NULL DEFAULT 'open',
+  status billing_period_status NOT NULL DEFAULT 'open',
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -99,7 +107,7 @@ CREATE TABLE users (
   name text NOT NULL,
   email text NOT NULL UNIQUE,
   password_hash text NOT NULL,
-  role text NOT NULL,
+  role user_role NOT NULL,
   active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()

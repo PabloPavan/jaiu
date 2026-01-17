@@ -32,19 +32,19 @@ func (r *PaymentRepository) Create(ctx context.Context, payment domain.Payment) 
 		return domain.Payment{}, err
 	}
 
-	kind := string(payment.Kind)
+	kind := sqlc.PaymentKind(payment.Kind)
 	if kind == "" {
-		kind = string(domain.PaymentFull)
+		kind = sqlc.PaymentKind(domain.PaymentFull)
 	}
 
 	params := sqlc.CreatePaymentParams{
 		SubscriptionID: subscriptionID,
 		PaidAt:         pgtype.Timestamptz{Time: payment.PaidAt, Valid: true},
 		AmountCents:    payment.AmountCents,
-		Method:         string(payment.Method),
+		Method:         sqlc.PaymentMethod(payment.Method),
 		Reference:      textTo(payment.Reference),
 		Notes:          textTo(payment.Notes),
-		Status:         string(payment.Status),
+		Status:         sqlc.PaymentStatus(payment.Status),
 		Kind:           kind,
 		CreditCents:    payment.CreditCents,
 		IdempotencyKey: textTo(payment.IdempotencyKey),
@@ -73,9 +73,9 @@ func (r *PaymentRepository) Update(ctx context.Context, payment domain.Payment) 
 		return domain.Payment{}, err
 	}
 
-	kind := string(payment.Kind)
+	kind := sqlc.PaymentKind(payment.Kind)
 	if kind == "" {
-		kind = string(domain.PaymentFull)
+		kind = sqlc.PaymentKind(domain.PaymentFull)
 	}
 
 	params := sqlc.UpdatePaymentParams{
@@ -83,10 +83,10 @@ func (r *PaymentRepository) Update(ctx context.Context, payment domain.Payment) 
 		SubscriptionID: subscriptionID,
 		PaidAt:         pgtype.Timestamptz{Time: payment.PaidAt, Valid: true},
 		AmountCents:    payment.AmountCents,
-		Method:         string(payment.Method),
+		Method:         sqlc.PaymentMethod(payment.Method),
 		Reference:      textTo(payment.Reference),
 		Notes:          textTo(payment.Notes),
-		Status:         string(payment.Status),
+		Status:         sqlc.PaymentStatus(payment.Status),
 		Kind:           kind,
 		CreditCents:    payment.CreditCents,
 	}

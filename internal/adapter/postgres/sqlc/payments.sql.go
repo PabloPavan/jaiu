@@ -33,11 +33,11 @@ type CreatePaymentParams struct {
 	SubscriptionID pgtype.UUID        `json:"subscription_id"`
 	PaidAt         pgtype.Timestamptz `json:"paid_at"`
 	AmountCents    int64              `json:"amount_cents"`
-	Method         string             `json:"method"`
+	Method         PaymentMethod      `json:"method"`
 	Reference      pgtype.Text        `json:"reference"`
 	Notes          pgtype.Text        `json:"notes"`
-	Status         string             `json:"status"`
-	Kind           string             `json:"kind"`
+	Status         PaymentStatus      `json:"status"`
+	Kind           PaymentKind        `json:"kind"`
 	CreditCents    int64              `json:"credit_cents"`
 	IdempotencyKey pgtype.Text        `json:"idempotency_key"`
 }
@@ -224,11 +224,11 @@ type UpdatePaymentParams struct {
 	SubscriptionID pgtype.UUID        `json:"subscription_id"`
 	PaidAt         pgtype.Timestamptz `json:"paid_at"`
 	AmountCents    int64              `json:"amount_cents"`
-	Method         string             `json:"method"`
+	Method         PaymentMethod      `json:"method"`
 	Reference      pgtype.Text        `json:"reference"`
 	Notes          pgtype.Text        `json:"notes"`
-	Status         string             `json:"status"`
-	Kind           string             `json:"kind"`
+	Status         PaymentStatus      `json:"status"`
+	Kind           PaymentKind        `json:"kind"`
 	CreditCents    int64              `json:"credit_cents"`
 }
 

@@ -5,19 +5,339 @@
 package sqlc
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type BillingPeriodStatus string
+
+const (
+	BillingPeriodStatusOpen    BillingPeriodStatus = "open"
+	BillingPeriodStatusPaid    BillingPeriodStatus = "paid"
+	BillingPeriodStatusPartial BillingPeriodStatus = "partial"
+	BillingPeriodStatusOverdue BillingPeriodStatus = "overdue"
+)
+
+func (e *BillingPeriodStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = BillingPeriodStatus(s)
+	case string:
+		*e = BillingPeriodStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for BillingPeriodStatus: %T", src)
+	}
+	return nil
+}
+
+type NullBillingPeriodStatus struct {
+	BillingPeriodStatus BillingPeriodStatus `json:"billing_period_status"`
+	Valid               bool                `json:"valid"` // Valid is true if BillingPeriodStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullBillingPeriodStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.BillingPeriodStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.BillingPeriodStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullBillingPeriodStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.BillingPeriodStatus), nil
+}
+
+type PaymentKind string
+
+const (
+	PaymentKindFull    PaymentKind = "full"
+	PaymentKindPartial PaymentKind = "partial"
+	PaymentKindAdvance PaymentKind = "advance"
+	PaymentKindCredit  PaymentKind = "credit"
+)
+
+func (e *PaymentKind) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PaymentKind(s)
+	case string:
+		*e = PaymentKind(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PaymentKind: %T", src)
+	}
+	return nil
+}
+
+type NullPaymentKind struct {
+	PaymentKind PaymentKind `json:"payment_kind"`
+	Valid       bool        `json:"valid"` // Valid is true if PaymentKind is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPaymentKind) Scan(value interface{}) error {
+	if value == nil {
+		ns.PaymentKind, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PaymentKind.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPaymentKind) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PaymentKind), nil
+}
+
+type PaymentMethod string
+
+const (
+	PaymentMethodCash     PaymentMethod = "cash"
+	PaymentMethodPix      PaymentMethod = "pix"
+	PaymentMethodCard     PaymentMethod = "card"
+	PaymentMethodTransfer PaymentMethod = "transfer"
+	PaymentMethodOther    PaymentMethod = "other"
+)
+
+func (e *PaymentMethod) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PaymentMethod(s)
+	case string:
+		*e = PaymentMethod(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PaymentMethod: %T", src)
+	}
+	return nil
+}
+
+type NullPaymentMethod struct {
+	PaymentMethod PaymentMethod `json:"payment_method"`
+	Valid         bool          `json:"valid"` // Valid is true if PaymentMethod is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPaymentMethod) Scan(value interface{}) error {
+	if value == nil {
+		ns.PaymentMethod, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PaymentMethod.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPaymentMethod) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PaymentMethod), nil
+}
+
+type PaymentStatus string
+
+const (
+	PaymentStatusConfirmed PaymentStatus = "confirmed"
+	PaymentStatusReversed  PaymentStatus = "reversed"
+)
+
+func (e *PaymentStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PaymentStatus(s)
+	case string:
+		*e = PaymentStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PaymentStatus: %T", src)
+	}
+	return nil
+}
+
+type NullPaymentStatus struct {
+	PaymentStatus PaymentStatus `json:"payment_status"`
+	Valid         bool          `json:"valid"` // Valid is true if PaymentStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPaymentStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.PaymentStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PaymentStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPaymentStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PaymentStatus), nil
+}
+
+type StudentStatus string
+
+const (
+	StudentStatusActive    StudentStatus = "active"
+	StudentStatusInactive  StudentStatus = "inactive"
+	StudentStatusSuspended StudentStatus = "suspended"
+)
+
+func (e *StudentStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = StudentStatus(s)
+	case string:
+		*e = StudentStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for StudentStatus: %T", src)
+	}
+	return nil
+}
+
+type NullStudentStatus struct {
+	StudentStatus StudentStatus `json:"student_status"`
+	Valid         bool          `json:"valid"` // Valid is true if StudentStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullStudentStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.StudentStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.StudentStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullStudentStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.StudentStatus), nil
+}
+
+type SubscriptionStatus string
+
+const (
+	SubscriptionStatusActive    SubscriptionStatus = "active"
+	SubscriptionStatusEnded     SubscriptionStatus = "ended"
+	SubscriptionStatusCanceled  SubscriptionStatus = "canceled"
+	SubscriptionStatusSuspended SubscriptionStatus = "suspended"
+)
+
+func (e *SubscriptionStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = SubscriptionStatus(s)
+	case string:
+		*e = SubscriptionStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for SubscriptionStatus: %T", src)
+	}
+	return nil
+}
+
+type NullSubscriptionStatus struct {
+	SubscriptionStatus SubscriptionStatus `json:"subscription_status"`
+	Valid              bool               `json:"valid"` // Valid is true if SubscriptionStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullSubscriptionStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.SubscriptionStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.SubscriptionStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullSubscriptionStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.SubscriptionStatus), nil
+}
+
+type UserRole string
+
+const (
+	UserRoleAdmin    UserRole = "admin"
+	UserRoleOperator UserRole = "operator"
+)
+
+func (e *UserRole) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserRole(s)
+	case string:
+		*e = UserRole(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserRole: %T", src)
+	}
+	return nil
+}
+
+type NullUserRole struct {
+	UserRole UserRole `json:"user_role"`
+	Valid    bool     `json:"valid"` // Valid is true if UserRole is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserRole) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserRole, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserRole.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserRole) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserRole), nil
+}
+
+type AuditEvent struct {
+	ID         pgtype.UUID        `json:"id"`
+	ActorID    pgtype.UUID        `json:"actor_id"`
+	ActorRole  pgtype.Text        `json:"actor_role"`
+	Action     string             `json:"action"`
+	EntityType string             `json:"entity_type"`
+	EntityID   pgtype.UUID        `json:"entity_id"`
+	Metadata   []byte             `json:"metadata"`
+	Ip         pgtype.Text        `json:"ip"`
+	UserAgent  pgtype.Text        `json:"user_agent"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
 type BillingPeriod struct {
-	ID              pgtype.UUID        `json:"id"`
-	SubscriptionID  pgtype.UUID        `json:"subscription_id"`
-	PeriodStart     pgtype.Date        `json:"period_start"`
-	PeriodEnd       pgtype.Date        `json:"period_end"`
-	AmountDueCents  int64              `json:"amount_due_cents"`
-	AmountPaidCents int64              `json:"amount_paid_cents"`
-	Status          string             `json:"status"`
-	CreatedAt       pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	ID              pgtype.UUID         `json:"id"`
+	SubscriptionID  pgtype.UUID         `json:"subscription_id"`
+	PeriodStart     pgtype.Date         `json:"period_start"`
+	PeriodEnd       pgtype.Date         `json:"period_end"`
+	AmountDueCents  int64               `json:"amount_due_cents"`
+	AmountPaidCents int64               `json:"amount_paid_cents"`
+	Status          BillingPeriodStatus `json:"status"`
+	CreatedAt       pgtype.Timestamptz  `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz  `json:"updated_at"`
 }
 
 type Payment struct {
@@ -25,12 +345,12 @@ type Payment struct {
 	SubscriptionID pgtype.UUID        `json:"subscription_id"`
 	PaidAt         pgtype.Timestamptz `json:"paid_at"`
 	AmountCents    int64              `json:"amount_cents"`
-	Method         string             `json:"method"`
+	Method         PaymentMethod      `json:"method"`
 	Reference      pgtype.Text        `json:"reference"`
 	Notes          pgtype.Text        `json:"notes"`
-	Status         string             `json:"status"`
+	Status         PaymentStatus      `json:"status"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	Kind           string             `json:"kind"`
+	Kind           PaymentKind        `json:"kind"`
 	CreditCents    int64              `json:"credit_cents"`
 	IdempotencyKey pgtype.Text        `json:"idempotency_key"`
 }
@@ -64,7 +384,7 @@ type Student struct {
 	Address   pgtype.Text        `json:"address"`
 	Notes     pgtype.Text        `json:"notes"`
 	PhotoUrl  pgtype.Text        `json:"photo_url"`
-	Status    string             `json:"status"`
+	Status    StudentStatus      `json:"status"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
@@ -75,7 +395,7 @@ type Subscription struct {
 	PlanID     pgtype.UUID        `json:"plan_id"`
 	StartDate  pgtype.Date        `json:"start_date"`
 	EndDate    pgtype.Date        `json:"end_date"`
-	Status     string             `json:"status"`
+	Status     SubscriptionStatus `json:"status"`
 	PriceCents int64              `json:"price_cents"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
@@ -94,7 +414,7 @@ type User struct {
 	Name         string             `json:"name"`
 	Email        string             `json:"email"`
 	PasswordHash string             `json:"password_hash"`
-	Role         string             `json:"role"`
+	Role         UserRole           `json:"role"`
 	Active       bool               `json:"active"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`

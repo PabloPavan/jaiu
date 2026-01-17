@@ -23,11 +23,11 @@ RETURNING id, name, email, password_hash, role, active, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	Name         string `json:"name"`
-	Email        string `json:"email"`
-	PasswordHash string `json:"password_hash"`
-	Role         string `json:"role"`
-	Active       bool   `json:"active"`
+	Name         string   `json:"name"`
+	Email        string   `json:"email"`
+	PasswordHash string   `json:"password_hash"`
+	Role         UserRole `json:"role"`
+	Active       bool     `json:"active"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {

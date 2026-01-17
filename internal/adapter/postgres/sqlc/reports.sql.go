@@ -95,8 +95,8 @@ ORDER BY status
 `
 
 type StudentsByStatusRow struct {
-	Status string `json:"status"`
-	Total  int64  `json:"total"`
+	Status StudentStatus `json:"status"`
+	Total  int64         `json:"total"`
 }
 
 func (q *Queries) StudentsByStatus(ctx context.Context) ([]StudentsByStatusRow, error) {

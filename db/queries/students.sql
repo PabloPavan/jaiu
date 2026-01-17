@@ -39,6 +39,6 @@ SELECT * FROM students WHERE id = $1 LIMIT 1;
 SELECT *
 FROM students
 WHERE ($1 = '' OR full_name ILIKE '%' || $1 || '%' OR phone ILIKE '%' || $1 || '%' OR cpf ILIKE '%' || $1 || '%')
-  AND (COALESCE(array_length($2::text[], 1), 0) = 0 OR status = ANY($2::text[]))
+  AND (COALESCE(array_length($2::student_status[], 1), 0) = 0 OR status = ANY($2::student_status[]))
 ORDER BY full_name
 LIMIT $3 OFFSET $4;

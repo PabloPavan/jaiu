@@ -24,7 +24,7 @@ func (r *UserRepository) Create(ctx context.Context, user domain.User) (domain.U
 		Name:         user.Name,
 		Email:        user.Email,
 		PasswordHash: user.PasswordHash,
-		Role:         string(user.Role),
+		Role:         sqlc.UserRole(user.Role),
 		Active:       user.Active,
 	}
 

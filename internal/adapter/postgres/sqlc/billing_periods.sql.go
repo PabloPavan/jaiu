@@ -26,12 +26,12 @@ RETURNING id, subscription_id, period_start, period_end, amount_due_cents, amoun
 `
 
 type CreateBillingPeriodParams struct {
-	SubscriptionID  pgtype.UUID `json:"subscription_id"`
-	PeriodStart     pgtype.Date `json:"period_start"`
-	PeriodEnd       pgtype.Date `json:"period_end"`
-	AmountDueCents  int64       `json:"amount_due_cents"`
-	AmountPaidCents int64       `json:"amount_paid_cents"`
-	Status          string      `json:"status"`
+	SubscriptionID  pgtype.UUID         `json:"subscription_id"`
+	PeriodStart     pgtype.Date         `json:"period_start"`
+	PeriodEnd       pgtype.Date         `json:"period_end"`
+	AmountDueCents  int64               `json:"amount_due_cents"`
+	AmountPaidCents int64               `json:"amount_paid_cents"`
+	Status          BillingPeriodStatus `json:"status"`
 }
 
 func (q *Queries) CreateBillingPeriod(ctx context.Context, arg CreateBillingPeriodParams) (BillingPeriod, error) {
@@ -160,9 +160,9 @@ RETURNING id, subscription_id, period_start, period_end, amount_due_cents, amoun
 `
 
 type UpdateBillingPeriodParams struct {
-	ID              pgtype.UUID `json:"id"`
-	AmountPaidCents int64       `json:"amount_paid_cents"`
-	Status          string      `json:"status"`
+	ID              pgtype.UUID         `json:"id"`
+	AmountPaidCents int64               `json:"amount_paid_cents"`
+	Status          BillingPeriodStatus `json:"status"`
 }
 
 func (q *Queries) UpdateBillingPeriod(ctx context.Context, arg UpdateBillingPeriodParams) (BillingPeriod, error) {
