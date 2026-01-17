@@ -68,32 +68,20 @@ func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 	student, err := parseStudentForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.StudentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.StudentFormPage(data))
 		return
 	}
 
 	if h.services.Students == nil {
 		data.Error = "Servico de alunos indisponivel."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.StudentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.StudentFormPage(data))
 		return
 	}
 
 	_, err = h.services.Students.Register(r.Context(), student)
 	if err != nil {
 		data.Error = "Nao foi possivel salvar o aluno."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.StudentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.StudentFormPage(data))
 		return
 	}
 
@@ -134,21 +122,13 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 	student, err := parseStudentForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.StudentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.StudentFormPage(data))
 		return
 	}
 
 	if h.services.Students == nil {
 		data.Error = "Servico de alunos indisponivel."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.StudentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.StudentFormPage(data))
 		return
 	}
 
@@ -156,11 +136,7 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 	_, err = h.services.Students.Update(r.Context(), student)
 	if err != nil {
 		data.Error = "Nao foi possivel atualizar o aluno."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.StudentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.StudentFormPage(data))
 		return
 	}
 

@@ -36,32 +36,20 @@ func (h *Handler) PaymentsCreate(w http.ResponseWriter, r *http.Request) {
 	payment, err := h.parsePaymentForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PaymentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PaymentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PaymentFormPage(data))
 		return
 	}
 
 	if h.services.Payments == nil {
 		data.Error = "Servico de pagamentos indisponivel."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PaymentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PaymentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PaymentFormPage(data))
 		return
 	}
 
 	_, err = h.services.Payments.Register(r.Context(), payment)
 	if err != nil {
 		data.Error = "Nao foi possivel salvar o pagamento."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PaymentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PaymentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PaymentFormPage(data))
 		return
 	}
 
@@ -102,21 +90,13 @@ func (h *Handler) PaymentsUpdate(w http.ResponseWriter, r *http.Request) {
 	payment, err := h.parsePaymentForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PaymentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PaymentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PaymentFormPage(data))
 		return
 	}
 
 	if h.services.Payments == nil {
 		data.Error = "Servico de pagamentos indisponivel."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PaymentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PaymentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PaymentFormPage(data))
 		return
 	}
 
@@ -124,11 +104,7 @@ func (h *Handler) PaymentsUpdate(w http.ResponseWriter, r *http.Request) {
 	_, err = h.services.Payments.Update(r.Context(), payment)
 	if err != nil {
 		data.Error = "Nao foi possivel atualizar o pagamento."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PaymentFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PaymentFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PaymentFormPage(data))
 		return
 	}
 

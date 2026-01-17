@@ -35,32 +35,20 @@ func (h *Handler) SubscriptionsCreate(w http.ResponseWriter, r *http.Request) {
 	subscription, err := h.parseSubscriptionForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.SubscriptionFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.SubscriptionFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.SubscriptionFormPage(data))
 		return
 	}
 
 	if h.services.Subscriptions == nil {
 		data.Error = "Servico de assinaturas indisponivel."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.SubscriptionFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.SubscriptionFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.SubscriptionFormPage(data))
 		return
 	}
 
 	_, err = h.services.Subscriptions.Create(r.Context(), subscription)
 	if err != nil {
 		data.Error = "Nao foi possivel salvar a assinatura."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.SubscriptionFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.SubscriptionFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.SubscriptionFormPage(data))
 		return
 	}
 
@@ -101,21 +89,13 @@ func (h *Handler) SubscriptionsUpdate(w http.ResponseWriter, r *http.Request) {
 	subscription, err := h.parseSubscriptionForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.SubscriptionFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.SubscriptionFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.SubscriptionFormPage(data))
 		return
 	}
 
 	if h.services.Subscriptions == nil {
 		data.Error = "Servico de assinaturas indisponivel."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.SubscriptionFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.SubscriptionFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.SubscriptionFormPage(data))
 		return
 	}
 
@@ -123,11 +103,7 @@ func (h *Handler) SubscriptionsUpdate(w http.ResponseWriter, r *http.Request) {
 	_, err = h.services.Subscriptions.Update(r.Context(), subscription)
 	if err != nil {
 		data.Error = "Nao foi possivel atualizar a assinatura."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.SubscriptionFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.SubscriptionFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.SubscriptionFormPage(data))
 		return
 	}
 

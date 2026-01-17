@@ -110,3 +110,11 @@ func (h *Handler) renderComponent(w http.ResponseWriter, r *http.Request, compon
 		observability.Logger(r.Context()).Error("failed to render component", "err", err)
 	}
 }
+
+func (h *Handler) renderFormError(w http.ResponseWriter, r *http.Request, title string, component templ.Component) {
+	if isHTMX(r) {
+		h.renderComponent(w, r, component)
+		return
+	}
+	h.renderPage(w, r, page(title, component))
+}

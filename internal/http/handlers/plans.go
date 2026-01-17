@@ -35,32 +35,20 @@ func (h *Handler) PlansCreate(w http.ResponseWriter, r *http.Request) {
 	plan, err := parsePlanForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PlanFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PlanFormPage(data))
 		return
 	}
 
 	if h.services.Plans == nil {
 		data.Error = "Servico de planos indisponivel."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PlanFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PlanFormPage(data))
 		return
 	}
 
 	_, err = h.services.Plans.Create(r.Context(), plan)
 	if err != nil {
 		data.Error = "Nao foi possivel salvar o plano."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PlanFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PlanFormPage(data))
 		return
 	}
 
@@ -101,21 +89,13 @@ func (h *Handler) PlansUpdate(w http.ResponseWriter, r *http.Request) {
 	plan, err := parsePlanForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PlanFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PlanFormPage(data))
 		return
 	}
 
 	if h.services.Plans == nil {
 		data.Error = "Servico de planos indisponivel."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PlanFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PlanFormPage(data))
 		return
 	}
 
@@ -123,11 +103,7 @@ func (h *Handler) PlansUpdate(w http.ResponseWriter, r *http.Request) {
 	_, err = h.services.Plans.Update(r.Context(), plan)
 	if err != nil {
 		data.Error = "Nao foi possivel atualizar o plano."
-		if isHTMX(r) {
-			h.renderComponent(w, r, view.PlanFormPage(data))
-			return
-		}
-		h.renderPage(w, r, page(data.Title, view.PlanFormPage(data)))
+		h.renderFormError(w, r, data.Title, view.PlanFormPage(data))
 		return
 	}
 
