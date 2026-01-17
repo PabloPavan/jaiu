@@ -163,20 +163,20 @@ func PaymentFormPage(data PaymentFormData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" required></label> <label class=\"grid gap-2 text-sm text-slate-200\">Valor (R$) <input class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" type=\"text\" name=\"amount\" placeholder=\"Ex: 149,90\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" required></label> <label class=\"grid gap-2 text-sm text-slate-200\">Valor (R$) <input class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" type=\"text\" name=\"amount\" inputmode=\"decimal\" pattern=\"[0-9]{1,3}(\\.[0-9]{3})*,[0-9]{2}\" placeholder=\"Ex: 149,90\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(data.Amount)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/payment_form.templ`, Line: 34, Col: 150}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/payment_form.templ`, Line: 34, Col: 213}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" required></label></div><div class=\"grid gap-4 md:grid-cols-2\"><label class=\"grid gap-2 text-sm text-slate-200\">Metodo <select class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"method\" required><option value=\"cash\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" x-on:input=\"$el.value = ensureMoneyCents($el.value)\" x-on:blur=\"$el.value = ensureMoneyCents($el.value)\" required></label></div><div class=\"grid gap-4 md:grid-cols-2\"><label class=\"grid gap-2 text-sm text-slate-200\">Metodo <select class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"method\" required><option value=\"cash\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

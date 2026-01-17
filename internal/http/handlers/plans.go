@@ -133,7 +133,8 @@ func formatCents(cents int64) string {
 }
 
 func formatCentsInput(cents int64) string {
-	return fmt.Sprintf("%.2f", float64(cents)/100)
+	value := fmt.Sprintf("%.2f", float64(cents)/100)
+	return strings.ReplaceAll(value, ".", ",")
 }
 
 func formatBRL(cents int64) string {
@@ -212,7 +213,12 @@ func parsePriceCents(value string) (int64, error) {
 		return 0, errors.New("preco vazio")
 	}
 
-	clean = strings.ReplaceAll(clean, ",", ".")
+	if strings.Contains(clean, ",") {
+		clean = strings.ReplaceAll(clean, ".", "")
+		clean = strings.ReplaceAll(clean, ",", ".")
+	} else {
+		clean = strings.ReplaceAll(clean, ",", ".")
+	}
 	parsed, err := strconv.ParseFloat(clean, 64)
 	if err != nil {
 		return 0, err

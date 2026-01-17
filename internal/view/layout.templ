@@ -10,8 +10,57 @@ templ BaseLayout(title string, currentUser *UserInfo, content templ.Component) {
 			<script src="https://cdn.tailwindcss.com"></script>
 			<link rel="stylesheet" href="/static/css/app.css"/>
 			<script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+			<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 		</head>
-		<body class="min-h-screen bg-slate-950 text-slate-100">
+		<body
+			class="min-h-screen bg-slate-950 text-slate-100"
+			x-data="{
+				requiredMessage: 'Campo obrigatorio.',
+				defaultPatternMessage: 'Use ponto para milhar e virgula para centavos, ex: 1.234,56.',
+				ensureMoneyCents(value) {
+					if (value === null || value === undefined) {
+						return '';
+					}
+					const digits = String(value).replace(/\D/g, '');
+					if (digits.length === 0) {
+						return '';
+					}
+					const padded = digits.padStart(3, '0');
+					const integerPart = padded.slice(0, -2);
+					const cents = padded.slice(-2);
+					const integerValue = parseInt(integerPart, 10) || 0;
+					const integerFormatted = integerValue
+						.toString()
+						.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+					return integerFormatted + ',' + cents;
+				},
+				handleInvalid(event) {
+					const field = event.target;
+					if (!field || !field.validity) {
+						return;
+					}
+					if (field.validity.valueMissing) {
+						field.setCustomValidity(field.dataset.requiredMessage || this.requiredMessage);
+						return;
+					}
+					if (field.validity.patternMismatch) {
+						const message = field.dataset.patternMessage || this.defaultPatternMessage;
+						if (message) {
+							field.setCustomValidity(message);
+							return;
+						}
+					}
+					field.setCustomValidity('');
+				},
+				clearValidity(event) {
+					event.target.setCustomValidity('');
+				},
+			}"
+			x-init="document.addEventListener('htmx:afterSwap', (event) => { if (window.Alpine) { window.Alpine.initTree(event.target) } })"
+			x-on:invalid.capture="if ($event.target.matches('input[required], select[required], textarea[required]')) { handleInvalid($event) }"
+			x-on:input.capture="if ($event.target.matches('input[required], select[required], textarea[required]')) { clearValidity($event) }"
+			x-on:change.capture="if ($event.target.matches('input[required], select[required], textarea[required]')) { clearValidity($event) }"
+		>
 			<div class="bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900">
 				@Nav(currentUser)
 				<main id="page-content" class="mx-auto max-w-6xl px-6 py-10">

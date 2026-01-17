@@ -117,20 +117,20 @@ func PlanFormPage(data PlanFormData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" required></label> <label class=\"grid gap-2 text-sm text-slate-200\">Preco (R$) <input class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" type=\"number\" name=\"price\" min=\"0\" step=\"0.01\" placeholder=\"149.90\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" required></label> <label class=\"grid gap-2 text-sm text-slate-200\">Preco (R$) <input class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" type=\"text\" name=\"price\" inputmode=\"decimal\" pattern=\"[0-9]{1,3}(\\.[0-9]{3})*,[0-9]{2}\" placeholder=\"149,90\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(data.Price)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/plan_form.templ`, Line: 28, Col: 166}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/plan_form.templ`, Line: 28, Col: 207}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" required></label></div><label class=\"grid gap-2 text-sm text-slate-200\">Descricao <textarea class=\"min-h-[110px] rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"description\" placeholder=\"Opcional\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" x-on:input=\"$el.value = ensureMoneyCents($el.value)\" x-on:blur=\"$el.value = ensureMoneyCents($el.value)\" required></label></div><label class=\"grid gap-2 text-sm text-slate-200\">Descricao <textarea class=\"min-h-[110px] rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" name=\"description\" placeholder=\"Opcional\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

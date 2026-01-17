@@ -475,6 +475,5 @@ func paymentMethodLabel(method domain.PaymentMethod) string {
 }
 
 func formatAmountInput(cents int64) string {
-	value := formatCentsInput(cents)
-	return strings.ReplaceAll(value, ".", ",")
+	return formatCentsInput(cents)
 }

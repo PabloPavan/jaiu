@@ -338,20 +338,20 @@ func SubscriptionFormPage(data SubscriptionFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, ">Suspensa</option></select></label> <label class=\"grid gap-2 text-sm text-slate-200\">Preco negociado (R$) <input class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" type=\"text\" name=\"price\" placeholder=\"Ex: 149,90\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, ">Suspensa</option></select></label> <label class=\"grid gap-2 text-sm text-slate-200\">Preco negociado (R$) <input class=\"rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2\" type=\"text\" name=\"price\" inputmode=\"decimal\" pattern=\"[0-9]{1,3}(\\.[0-9]{3})*,[0-9]{2}\" placeholder=\"Ex: 149,90\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(data.Price)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/subscription_form.templ`, Line: 75, Col: 148}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/subscription_form.templ`, Line: 75, Col: 211}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\"></label></div><p class=\"text-xs text-slate-500\">Se o vencimento estiver vazio, usamos a duracao do plano.</p><div class=\"flex flex-wrap items-center gap-3\"><button class=\"rounded-full bg-emerald-400/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/30\" type=\"submit\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\" x-on:input=\"$el.value = ensureMoneyCents($el.value)\" x-on:blur=\"$el.value = ensureMoneyCents($el.value)\"></label></div><p class=\"text-xs text-slate-500\">Se o vencimento estiver vazio, usamos a duracao do plano.</p><div class=\"flex flex-wrap items-center gap-3\"><button class=\"rounded-full bg-emerald-400/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/30\" type=\"submit\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
