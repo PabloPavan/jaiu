@@ -17,6 +17,7 @@ type Handler struct {
 	services Services
 	sessions ports.SessionStore
 	config   SessionConfig
+	images   ImageConfig
 }
 
 type Services struct {

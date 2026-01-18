@@ -35,12 +35,21 @@ templ StudentsList(data StudentsPageData) {
 				for _, item := range data.Items {
 					<div class="rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3">
 						<div class="flex flex-wrap items-center justify-between gap-3">
-							<div>
-								<p class="text-sm text-slate-100">{item.FullName}</p>
-								<p class="mt-1 text-xs text-slate-400">{item.Phone} {item.Email}</p>
-								if item.BirthDate != "" {
-									<p class="mt-1 text-xs text-slate-500">Nascimento: {item.BirthDate}</p>
-								}
+							<div class="flex items-center gap-3">
+								<div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold text-slate-200">
+									if item.PhotoURL != "" {
+										<img class="h-full w-full object-cover" src={item.PhotoURL} alt={"Foto de " + item.FullName}/>
+									} else {
+										<span>{item.Initials}</span>
+									}
+								</div>
+								<div>
+									<p class="text-sm text-slate-100">{item.FullName}</p>
+									<p class="mt-1 text-xs text-slate-400">{item.Phone} {item.Email}</p>
+									if item.BirthDate != "" {
+										<p class="mt-1 text-xs text-slate-500">Nascimento: {item.BirthDate}</p>
+									}
+								</div>
 							</div>
 							<div class="flex items-center gap-2 text-xs">
 								<span class={item.StatusClass}>{item.StatusLabel}</span>

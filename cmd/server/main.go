@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -29,10 +31,11 @@ func main() {
 	}
 
 	cfg := app.Config{
-		Addr:          envOr("ADDR", ":8080"),
-		DatabaseURL:   os.Getenv("DATABASE_URL"),
-		RedisAddr:     os.Getenv("REDIS_ADDR"),
-		RedisPassword: os.Getenv("REDIS_PASSWORD"),
+		Addr:           envOr("ADDR", ":8080"),
+		DatabaseURL:    os.Getenv("DATABASE_URL"),
+		RedisAddr:      os.Getenv("REDIS_ADDR"),
+		RedisPassword:  os.Getenv("REDIS_PASSWORD"),
+		ImageUploadDir: os.Getenv("IMAGE_UPLOAD_DIR"),
 	}
 
 	application, err := app.New(cfg)
@@ -46,6 +49,22 @@ func main() {
 		os.Exit(1)
 	}
 	defer application.Close()
+
+	workerCount := envInt("IMAGE_WORKERS", 1)
+	if application.OutboxDispatcher != nil {
+		go func() {
+			if err := application.OutboxDispatcher.Run(ctx); err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+				logger.Error("image outbox dispatcher stopped", "err", err)
+			}
+		}()
+	}
+	if application.ImageKit != nil && application.ImageQueue != nil && workerCount > 0 {
+		go func() {
+			if err := application.ImageKit.StartWorkers(ctx, workerCount); err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+				logger.Error("image workers stopped", "err", err)
+			}
+		}()
+	}
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,
@@ -76,6 +95,16 @@ func main() {
 func envOr(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return fallback
+}
+
+func envInt(key string, fallback int) int {
+	if value := os.Getenv(key); value != "" {
+		parsed, err := strconv.Atoi(value)
+		if err == nil {
+			return parsed
+		}
 	}
 	return fallback
 }

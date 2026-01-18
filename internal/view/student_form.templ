@@ -10,7 +10,7 @@ templ StudentFormPage(data StudentFormData) {
 			<a class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-emerald-400/40" href="/students">Voltar</a>
 		</div>
 
-		<form class="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" method="post" action={data.Action} hx-post={data.Action} hx-target="#page-content" hx-swap="innerHTML">
+		<form class="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" method="post" action={data.Action} enctype="multipart/form-data" hx-post={data.Action} hx-encoding="multipart/form-data" hx-target="#page-content" hx-swap="innerHTML" x-data="photoUpload($el)" data-photo-object-key={data.PhotoObjectKey} data-photo-url={data.PhotoURL}>
 			if data.Error != "" {
 				<div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">{data.Error}</div>
 			}
@@ -60,10 +60,18 @@ templ StudentFormPage(data StudentFormData) {
 				Observacoes
 				<textarea class="min-h-[110px] rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" name="notes" placeholder="Anotacoes adicionais">{data.Notes}</textarea>
 			</label>
+			<input type="hidden" name="photo_object_key" value={data.PhotoObjectKey} x-model="photoObjectKey"/>
 			<label class="grid gap-2 text-sm text-slate-200">
-				Foto (URL)
-				<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="text" name="photo_url" placeholder="https://..." value={data.PhotoURL}/>
+				Foto
+				<input class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2" type="file" name="photo" accept="image/*" x-ref="photoInput" x-on:change="handleFile($event)"/>
 			</label>
+			<div class="flex flex-wrap items-center gap-3 text-xs text-slate-300">
+				<div class="h-16 w-16 overflow-hidden rounded-xl border border-slate-700 bg-slate-950/60" x-show="previewUrl">
+					<img class="h-full w-full object-cover" x-bind:src="previewUrl" alt="Foto do aluno"/>
+				</div>
+				<span class="text-rose-200" x-show="error" x-text="error"></span>
+				<button class="rounded-full border border-slate-700 px-3 py-1 text-[11px] uppercase tracking-wide text-slate-300 hover:border-emerald-400/40" type="button" x-on:click="clear()">Remover</button>
+			</div>
 			<div class="flex flex-wrap items-center gap-3">
 				<button class="rounded-full bg-emerald-400/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/30" type="submit">{data.SubmitLabel}</button>
 			</div>

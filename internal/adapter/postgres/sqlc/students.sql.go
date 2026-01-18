@@ -21,25 +21,25 @@ INSERT INTO students (
   cpf,
   address,
   notes,
-  photo_url,
+  photo_object_key,
   status
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 )
-RETURNING id, full_name, birth_date, gender, phone, email, cpf, address, notes, photo_url, status, created_at, updated_at
+RETURNING id, full_name, birth_date, gender, phone, email, cpf, address, notes, photo_object_key, status, created_at, updated_at
 `
 
 type CreateStudentParams struct {
-	FullName  string        `json:"full_name"`
-	BirthDate pgtype.Date   `json:"birth_date"`
-	Gender    pgtype.Text   `json:"gender"`
-	Phone     pgtype.Text   `json:"phone"`
-	Email     pgtype.Text   `json:"email"`
-	Cpf       pgtype.Text   `json:"cpf"`
-	Address   pgtype.Text   `json:"address"`
-	Notes     pgtype.Text   `json:"notes"`
-	PhotoUrl  pgtype.Text   `json:"photo_url"`
-	Status    StudentStatus `json:"status"`
+	FullName       string        `json:"full_name"`
+	BirthDate      pgtype.Date   `json:"birth_date"`
+	Gender         pgtype.Text   `json:"gender"`
+	Phone          pgtype.Text   `json:"phone"`
+	Email          pgtype.Text   `json:"email"`
+	Cpf            pgtype.Text   `json:"cpf"`
+	Address        pgtype.Text   `json:"address"`
+	Notes          pgtype.Text   `json:"notes"`
+	PhotoObjectKey pgtype.Text   `json:"photo_object_key"`
+	Status         StudentStatus `json:"status"`
 }
 
 func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (Student, error) {
@@ -52,7 +52,7 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (S
 		arg.Cpf,
 		arg.Address,
 		arg.Notes,
-		arg.PhotoUrl,
+		arg.PhotoObjectKey,
 		arg.Status,
 	)
 	var i Student
@@ -66,7 +66,7 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (S
 		&i.Cpf,
 		&i.Address,
 		&i.Notes,
-		&i.PhotoUrl,
+		&i.PhotoObjectKey,
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -75,7 +75,7 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (S
 }
 
 const getStudent = `-- name: GetStudent :one
-SELECT id, full_name, birth_date, gender, phone, email, cpf, address, notes, photo_url, status, created_at, updated_at FROM students WHERE id = $1 LIMIT 1
+SELECT id, full_name, birth_date, gender, phone, email, cpf, address, notes, photo_object_key, status, created_at, updated_at FROM students WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetStudent(ctx context.Context, id pgtype.UUID) (Student, error) {
@@ -91,7 +91,7 @@ func (q *Queries) GetStudent(ctx context.Context, id pgtype.UUID) (Student, erro
 		&i.Cpf,
 		&i.Address,
 		&i.Notes,
-		&i.PhotoUrl,
+		&i.PhotoObjectKey,
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -100,7 +100,7 @@ func (q *Queries) GetStudent(ctx context.Context, id pgtype.UUID) (Student, erro
 }
 
 const searchStudents = `-- name: SearchStudents :many
-SELECT id, full_name, birth_date, gender, phone, email, cpf, address, notes, photo_url, status, created_at, updated_at
+SELECT id, full_name, birth_date, gender, phone, email, cpf, address, notes, photo_object_key, status, created_at, updated_at
 FROM students
 WHERE ($1 = '' OR full_name ILIKE '%' || $1 || '%' OR phone ILIKE '%' || $1 || '%' OR cpf ILIKE '%' || $1 || '%')
   AND (COALESCE(array_length($2::student_status[], 1), 0) = 0 OR status = ANY($2::student_status[]))
@@ -139,7 +139,7 @@ func (q *Queries) SearchStudents(ctx context.Context, arg SearchStudentsParams) 
 			&i.Cpf,
 			&i.Address,
 			&i.Notes,
-			&i.PhotoUrl,
+			&i.PhotoObjectKey,
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -165,25 +165,25 @@ SET
   cpf = $7,
   address = $8,
   notes = $9,
-  photo_url = $10,
+  photo_object_key = $10,
   status = $11,
   updated_at = now()
 WHERE id = $1
-RETURNING id, full_name, birth_date, gender, phone, email, cpf, address, notes, photo_url, status, created_at, updated_at
+RETURNING id, full_name, birth_date, gender, phone, email, cpf, address, notes, photo_object_key, status, created_at, updated_at
 `
 
 type UpdateStudentParams struct {
-	ID        pgtype.UUID   `json:"id"`
-	FullName  string        `json:"full_name"`
-	BirthDate pgtype.Date   `json:"birth_date"`
-	Gender    pgtype.Text   `json:"gender"`
-	Phone     pgtype.Text   `json:"phone"`
-	Email     pgtype.Text   `json:"email"`
-	Cpf       pgtype.Text   `json:"cpf"`
-	Address   pgtype.Text   `json:"address"`
-	Notes     pgtype.Text   `json:"notes"`
-	PhotoUrl  pgtype.Text   `json:"photo_url"`
-	Status    StudentStatus `json:"status"`
+	ID             pgtype.UUID   `json:"id"`
+	FullName       string        `json:"full_name"`
+	BirthDate      pgtype.Date   `json:"birth_date"`
+	Gender         pgtype.Text   `json:"gender"`
+	Phone          pgtype.Text   `json:"phone"`
+	Email          pgtype.Text   `json:"email"`
+	Cpf            pgtype.Text   `json:"cpf"`
+	Address        pgtype.Text   `json:"address"`
+	Notes          pgtype.Text   `json:"notes"`
+	PhotoObjectKey pgtype.Text   `json:"photo_object_key"`
+	Status         StudentStatus `json:"status"`
 }
 
 func (q *Queries) UpdateStudent(ctx context.Context, arg UpdateStudentParams) (Student, error) {
@@ -197,7 +197,7 @@ func (q *Queries) UpdateStudent(ctx context.Context, arg UpdateStudentParams) (S
 		arg.Cpf,
 		arg.Address,
 		arg.Notes,
-		arg.PhotoUrl,
+		arg.PhotoObjectKey,
 		arg.Status,
 	)
 	var i Student
@@ -211,7 +211,7 @@ func (q *Queries) UpdateStudent(ctx context.Context, arg UpdateStudentParams) (S
 		&i.Cpf,
 		&i.Address,
 		&i.Notes,
-		&i.PhotoUrl,
+		&i.PhotoObjectKey,
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,

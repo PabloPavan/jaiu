@@ -2,13 +2,14 @@ package outbox
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/PabloPavan/jaiu/imagekit/queue"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 )
 
 type SQLStore struct {
-	DB          *sql.DB
+	DB          *pgxpool.Pool
 	Table       string
 	MaxAttempts int
 	LockTimeout time.Duration
@@ -33,7 +34,7 @@ func (s *SQLStore) Insert(ctx context.Context, tx Tx, msg queue.Message) error {
 		return err
 	}
 	query := fmt.Sprintf(`INSERT INTO %s (payload, available_at) VALUES ($1, now())`, s.table())
-	_, err = tx.ExecContext(ctx, query, payload)
+	_, err = tx.Exec(ctx, query, payload)
 	return err
 }
 
@@ -54,14 +55,14 @@ func (s *SQLStore) Claim(ctx context.Context, limit int) ([]Record, error) {
 	}
 
 	query := s.claimQuery(lockTimeout)
-	tx, err := s.DB.BeginTx(ctx, nil)
+	tx, err := s.DB.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := tx.QueryContext(ctx, query, maxAttempts, limit)
+	rows, err := tx.Query(ctx, query, maxAttempts, limit)
 	if err != nil {
-		_ = tx.Rollback()
+		_ = tx.Rollback(ctx)
 		return nil, err
 	}
 
@@ -70,19 +71,19 @@ func (s *SQLStore) Claim(ctx context.Context, limit int) ([]Record, error) {
 		var rec Record
 		if err := rows.Scan(&rec.ID, &rec.Payload, &rec.Attempts); err != nil {
 			rows.Close()
-			_ = tx.Rollback()
+			_ = tx.Rollback(ctx)
 			return nil, err
 		}
 		records = append(records, rec)
 	}
 	if err := rows.Err(); err != nil {
 		rows.Close()
-		_ = tx.Rollback()
+		_ = tx.Rollback(ctx)
 		return nil, err
 	}
 	rows.Close()
 
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		return nil, err
 	}
 
@@ -94,7 +95,7 @@ func (s *SQLStore) Delete(ctx context.Context, id int64) error {
 		return errors.New("outbox db is required")
 	}
 	query := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, s.table())
-	_, err := s.DB.ExecContext(ctx, query, id)
+	_, err := s.DB.Exec(ctx, query, id)
 	return err
 }
 
@@ -103,7 +104,7 @@ func (s *SQLStore) Reschedule(ctx context.Context, id int64, next time.Time, las
 		return errors.New("outbox db is required")
 	}
 	query := fmt.Sprintf(`UPDATE %s SET available_at = $2, locked_at = NULL, last_error = $3 WHERE id = $1`, s.table())
-	_, err := s.DB.ExecContext(ctx, query, id, next, lastErr)
+	_, err := s.DB.Exec(ctx, query, id, next, lastErr)
 	return err
 }
 

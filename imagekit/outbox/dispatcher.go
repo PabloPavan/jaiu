@@ -15,7 +15,6 @@ const (
 	defaultRetryDelay   = 10 * time.Second
 )
 
-// Dispatcher publishes outbox entries into the queue with retries.
 type Dispatcher struct {
 	Store        Store
 	Queue        queue.Queue
@@ -24,7 +23,6 @@ type Dispatcher struct {
 	RetryDelay   time.Duration
 }
 
-// Run continuously publishes outbox entries until the context is canceled.
 func (d *Dispatcher) Run(ctx context.Context) error {
 	if d.Store == nil {
 		return errors.New("outbox store is required")

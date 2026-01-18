@@ -3,14 +3,17 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
+	"github.com/PabloPavan/jaiu/imagekit/outbox"
 	"github.com/PabloPavan/jaiu/internal/domain"
 	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/view"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 )
 
 func (h *Handler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +44,8 @@ func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
 					BirthDate:   formatDateBR(student.BirthDate),
 					Phone:       student.Phone,
 					Email:       student.Email,
+					PhotoURL:    h.photoURLForKey(student.PhotoObjectKey),
+					Initials:    studentInitials(student.FullName),
 					Status:      string(student.Status),
 					StatusLabel: label,
 					StatusClass: className,
@@ -60,7 +65,7 @@ func (h *Handler) StudentsNew(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 	data := studentFormCreateData()
-	student, err := parseStudentForm(r, &data)
+	student, err := h.parseStudentForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
 		h.renderFormError(w, r, data.Title, view.StudentFormPage(data))
@@ -101,14 +106,14 @@ func (h *Handler) StudentsEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := studentFormEditData(student)
+	data := studentFormEditData(student, h.photoURLForKey(student.PhotoObjectKey))
 	h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 }
 
 func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 	studentID := chi.URLParam(r, "studentID")
-	data := studentFormEditData(domain.Student{ID: studentID})
-	student, err := parseStudentForm(r, &data)
+	data := studentFormEditData(domain.Student{ID: studentID}, "")
+	student, err := h.parseStudentForm(r, &data)
 	if err != nil {
 		data.Error = err.Error()
 		h.renderFormError(w, r, data.Title, view.StudentFormPage(data))
@@ -165,28 +170,33 @@ func studentFormCreateData() view.StudentFormData {
 	}
 }
 
-func studentFormEditData(student domain.Student) view.StudentFormData {
+func studentFormEditData(student domain.Student, photoURL string) view.StudentFormData {
 	return view.StudentFormData{
-		Title:        "Editar aluno",
-		Action:       "/students/" + student.ID,
-		SubmitLabel:  "Salvar",
-		DeleteAction: "/students/" + student.ID + "/delete",
-		ShowDelete:   student.ID != "",
-		FullName:     student.FullName,
-		BirthDate:    formatDateInputBR(student.BirthDate),
-		Gender:       student.Gender,
-		Phone:        student.Phone,
-		Email:        student.Email,
-		CPF:          student.CPF,
-		Address:      student.Address,
-		Notes:        student.Notes,
-		PhotoURL:     student.PhotoURL,
-		Status:       string(student.Status),
+		Title:          "Editar aluno",
+		Action:         "/students/" + student.ID,
+		SubmitLabel:    "Salvar",
+		DeleteAction:   "/students/" + student.ID + "/delete",
+		ShowDelete:     student.ID != "",
+		FullName:       student.FullName,
+		BirthDate:      formatDateInputBR(student.BirthDate),
+		Gender:         student.Gender,
+		Phone:          student.Phone,
+		Email:          student.Email,
+		CPF:            student.CPF,
+		Address:        student.Address,
+		Notes:          student.Notes,
+		PhotoObjectKey: student.PhotoObjectKey,
+		PhotoURL:       photoURL,
+		Status:         string(student.Status),
 	}
 }
 
-func parseStudentForm(r *http.Request, data *view.StudentFormData) (domain.Student, error) {
-	if err := r.ParseForm(); err != nil {
+func (h *Handler) parseStudentForm(r *http.Request, data *view.StudentFormData) (domain.Student, error) {
+	maxMemory := h.images.MaxMemory
+	if maxMemory == 0 {
+		maxMemory = 32 << 20
+	}
+	if err := r.ParseMultipartForm(maxMemory); err != nil {
 		return domain.Student{}, errors.New("Nao foi possivel ler o formulario.")
 	}
 
@@ -216,7 +226,42 @@ func parseStudentForm(r *http.Request, data *view.StudentFormData) (domain.Stude
 	cpf := strings.TrimSpace(r.FormValue("cpf"))
 	address := strings.TrimSpace(r.FormValue("address"))
 	notes := strings.TrimSpace(r.FormValue("notes"))
-	photoURL := strings.TrimSpace(r.FormValue("photo_url"))
+	photoObjectKey := strings.TrimSpace(r.FormValue("photo_object_key"))
+	uploadedObjectKey := ""
+	file, header, err := r.FormFile("photo")
+	if err == nil {
+		defer file.Close()
+		if h.images.Uploader == nil {
+			return domain.Student{}, errors.New("Upload de foto indisponivel.")
+		}
+
+		ctx := r.Context()
+		var tx pgx.Tx
+		if h.images.TxBeginner != nil {
+			tx, err = h.images.TxBeginner.BeginTx(ctx, pgx.TxOptions{})
+			if err != nil {
+				return domain.Student{}, errors.New("Nao foi possivel iniciar o upload da foto.")
+			}
+			ctx = outbox.ContextWithTx(ctx, tx)
+		}
+
+		uploadedObjectKey, err = h.images.Uploader.UploadImage(ctx, file, header)
+		if tx != nil {
+			if err != nil {
+				_ = tx.Rollback(ctx)
+			} else if commitErr := tx.Commit(ctx); commitErr != nil {
+				return domain.Student{}, errors.New("Nao foi possivel salvar a foto.")
+			}
+		}
+		if err != nil {
+			return domain.Student{}, errors.New("Nao foi possivel salvar a foto.")
+		}
+	} else if !errors.Is(err, http.ErrMissingFile) {
+		return domain.Student{}, errors.New("Nao foi possivel ler a foto.")
+	}
+	if uploadedObjectKey != "" {
+		photoObjectKey = uploadedObjectKey
+	}
 
 	data.Gender = gender
 	data.Phone = phone
@@ -224,19 +269,20 @@ func parseStudentForm(r *http.Request, data *view.StudentFormData) (domain.Stude
 	data.CPF = cpf
 	data.Address = address
 	data.Notes = notes
-	data.PhotoURL = photoURL
+	data.PhotoObjectKey = photoObjectKey
+	data.PhotoURL = h.photoURLForKey(photoObjectKey)
 
 	return domain.Student{
-		FullName:  fullName,
-		BirthDate: birthDate,
-		Gender:    gender,
-		Phone:     phone,
-		Email:     email,
-		CPF:       cpf,
-		Address:   address,
-		Notes:     notes,
-		PhotoURL:  photoURL,
-		Status:    status,
+		FullName:       fullName,
+		BirthDate:      birthDate,
+		Gender:         gender,
+		Phone:          phone,
+		Email:          email,
+		CPF:            cpf,
+		Address:        address,
+		Notes:          notes,
+		PhotoObjectKey: photoObjectKey,
+		Status:         status,
 	}, nil
 }
 
@@ -318,6 +364,8 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 					BirthDate:   formatDateBR(student.BirthDate),
 					Phone:       student.Phone,
 					Email:       student.Email,
+					PhotoURL:    h.photoURLForKey(student.PhotoObjectKey),
+					Initials:    studentInitials(student.FullName),
 					Status:      string(student.Status),
 					StatusLabel: label,
 					StatusClass: className,
@@ -328,6 +376,50 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 	}
 
 	return data
+}
+
+func (h *Handler) photoURLForKey(objectKey string) string {
+	trimmed := strings.TrimSpace(objectKey)
+	if trimmed == "" {
+		return ""
+	}
+	lower := strings.ToLower(trimmed)
+	if strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://") {
+		return trimmed
+	}
+	baseURL := strings.TrimRight(h.images.BaseURL, "/")
+	if baseURL == "" {
+		baseURL = "/uploads"
+	}
+	if strings.Contains(path.Base(trimmed), ".") {
+		return baseURL + "/" + trimmed
+	}
+	originalKey := h.images.OriginalKey
+	if originalKey == "" {
+		originalKey = "original.jpg"
+	}
+	return baseURL + "/" + path.Join(trimmed, originalKey)
+}
+
+func studentInitials(name string) string {
+	parts := strings.Fields(name)
+	if len(parts) == 0 {
+		return ""
+	}
+	first := initialFrom(parts[0])
+	if len(parts) == 1 {
+		return first
+	}
+	last := initialFrom(parts[len(parts)-1])
+	return first + last
+}
+
+func initialFrom(value string) string {
+	runes := []rune(strings.TrimSpace(value))
+	if len(runes) == 0 {
+		return ""
+	}
+	return strings.ToUpper(string(runes[0]))
 }
 
 func formatDateBR(value *time.Time) string {

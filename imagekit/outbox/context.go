@@ -2,13 +2,14 @@ package outbox
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type txKey struct{}
 
 type Tx interface {
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error)
 }
 
 func ContextWithTx(ctx context.Context, tx Tx) context.Context {

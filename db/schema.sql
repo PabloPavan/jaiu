@@ -18,7 +18,7 @@ CREATE TABLE students (
   cpf text,
   address text,
   notes text,
-  photo_url text,
+  photo_object_key text,
   status student_status NOT NULL DEFAULT 'active',
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()

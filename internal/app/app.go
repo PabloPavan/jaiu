@@ -6,6 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/PabloPavan/jaiu/imagekit"
+	"github.com/PabloPavan/jaiu/imagekit/outbox"
+	"github.com/PabloPavan/jaiu/imagekit/queue"
+	"github.com/PabloPavan/jaiu/imagekit/storage"
 	"github.com/PabloPavan/jaiu/internal/adapter/postgres"
 	redisadapter "github.com/PabloPavan/jaiu/internal/adapter/redis"
 	"github.com/PabloPavan/jaiu/internal/http/handlers"
@@ -22,15 +26,19 @@ type Config struct {
 	RedisAddr         string
 	RedisPassword     string
 	RedisDB           int
+	ImageUploadDir    string
 	SessionCookieName string
 	SessionTTL        time.Duration
 	SessionSecure     bool
 }
 
 type App struct {
-	Router http.Handler
-	DB     *pgxpool.Pool
-	Redis  *redis.Client
+	Router           http.Handler
+	DB               *pgxpool.Pool
+	Redis            *redis.Client
+	ImageKit         *imagekit.Kit
+	ImageQueue       queue.Queue
+	OutboxDispatcher *outbox.Dispatcher
 }
 
 func New(cfg Config) (*App, error) {
@@ -83,6 +91,46 @@ func New(cfg Config) (*App, error) {
 		sessionConfig.SameSite = http.SameSiteLaxMode
 	}
 
+	uploadDir := cfg.ImageUploadDir
+	if uploadDir == "" {
+		uploadDir = "tmp/uploads"
+	}
+	localStorage, err := storage.NewLocalStorage(uploadDir)
+	if err != nil {
+		return nil, fmt.Errorf("init image storage: %w", err)
+	}
+
+	queueName := "imagekit:queue"
+	var imageQueue queue.Queue
+	if redisClient != nil {
+		imageQueue = queue.NewRedisQueue(redisClient, queueName)
+	}
+
+	var outboxStore *outbox.SQLStore
+	var outboxDispatcher *outbox.Dispatcher
+	var imageEnqueuer imagekit.Enqueuer
+
+	if pool != nil {
+		outboxStore = &outbox.SQLStore{DB: pool}
+		imageEnqueuer = &outbox.Writer{Store: outboxStore}
+		if imageQueue != nil {
+			outboxDispatcher = &outbox.Dispatcher{
+				Store: outboxStore,
+				Queue: imageQueue,
+			}
+		}
+	}
+
+	if imageEnqueuer == nil {
+		if imageQueue != nil {
+			imageEnqueuer = imageQueue
+		} else {
+			imageEnqueuer = noopEnqueuer{}
+		}
+	}
+
+	imageKit := imagekit.NewWithEnqueuer(localStorage, imageQueue, imageEnqueuer, nil, "")
+
 	if pool != nil {
 		userRepo := postgres.NewUserRepository(pool)
 		auditRepo := postgres.NewAuditRepository(pool)
@@ -107,6 +155,11 @@ func New(cfg Config) (*App, error) {
 		sessionStore = redisadapter.NewSessionStore(redisClient)
 	}
 
+	var txBeginner handlers.TxBeginner
+	if pool != nil {
+		txBeginner = pool
+	}
+
 	h := handlers.New(handlers.Services{
 		Auth:          authService,
 		Plans:         planService,
@@ -114,11 +167,20 @@ func New(cfg Config) (*App, error) {
 		Subscriptions: subscriptionService,
 		Payments:      paymentService,
 	}, sessionStore, sessionConfig)
+	h.SetImageConfig(handlers.ImageConfig{
+		Uploader:    imageKit,
+		BaseURL:     "/uploads",
+		OriginalKey: "original.jpg",
+		TxBeginner:  txBeginner,
+	})
 
 	return &App{
-		Router: router.New(h, sessionStore, sessionConfig.CookieName),
-		DB:     pool,
-		Redis:  redisClient,
+		Router:           router.New(h, sessionStore, sessionConfig.CookieName, uploadDir),
+		DB:               pool,
+		Redis:            redisClient,
+		ImageKit:         imageKit,
+		ImageQueue:       imageQueue,
+		OutboxDispatcher: outboxDispatcher,
 	}, nil
 }
 

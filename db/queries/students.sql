@@ -8,7 +8,7 @@ INSERT INTO students (
   cpf,
   address,
   notes,
-  photo_url,
+  photo_object_key,
   status
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
@@ -26,7 +26,7 @@ SET
   cpf = $7,
   address = $8,
   notes = $9,
-  photo_url = $10,
+  photo_object_key = $10,
   status = $11,
   updated_at = now()
 WHERE id = $1

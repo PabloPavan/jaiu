@@ -51,6 +51,8 @@ type StudentItem struct {
 	BirthDate   string
 	Phone       string
 	Email       string
+	PhotoURL    string
+	Initials    string
 	Status      string
 	StatusLabel string
 	StatusClass string
@@ -63,22 +65,23 @@ type StudentsPageData struct {
 }
 
 type StudentFormData struct {
-	Title        string
-	Action       string
-	SubmitLabel  string
-	DeleteAction string
-	ShowDelete   bool
-	FullName     string
-	BirthDate    string
-	Gender       string
-	Phone        string
-	Email        string
-	CPF          string
-	Address      string
-	Notes        string
-	PhotoURL     string
-	Status       string
-	Error        string
+	Title          string
+	Action         string
+	SubmitLabel    string
+	DeleteAction   string
+	ShowDelete     bool
+	FullName       string
+	BirthDate      string
+	Gender         string
+	Phone          string
+	Email          string
+	CPF            string
+	Address        string
+	Notes          string
+	PhotoObjectKey string
+	PhotoURL       string
+	Status         string
+	Error          string
 }
 
 type StudentOption struct {

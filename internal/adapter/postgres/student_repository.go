@@ -21,16 +21,16 @@ func NewStudentRepository(pool *pgxpool.Pool) *StudentRepository {
 
 func (r *StudentRepository) Create(ctx context.Context, student domain.Student) (domain.Student, error) {
 	params := sqlc.CreateStudentParams{
-		FullName:  student.FullName,
-		BirthDate: dateTo(student.BirthDate),
-		Gender:    textTo(student.Gender),
-		Phone:     textTo(student.Phone),
-		Email:     textTo(student.Email),
-		Cpf:       textTo(student.CPF),
-		Address:   textTo(student.Address),
-		Notes:     textTo(student.Notes),
-		PhotoUrl:  textTo(student.PhotoURL),
-		Status:    sqlc.StudentStatus(student.Status),
+		FullName:       student.FullName,
+		BirthDate:      dateTo(student.BirthDate),
+		Gender:         textTo(student.Gender),
+		Phone:          textTo(student.Phone),
+		Email:          textTo(student.Email),
+		Cpf:            textTo(student.CPF),
+		Address:        textTo(student.Address),
+		Notes:          textTo(student.Notes),
+		PhotoObjectKey: textTo(student.PhotoObjectKey),
+		Status:         sqlc.StudentStatus(student.Status),
 	}
 
 	created, err := r.queries.CreateStudent(ctx, params)
@@ -48,17 +48,17 @@ func (r *StudentRepository) Update(ctx context.Context, student domain.Student) 
 	}
 
 	params := sqlc.UpdateStudentParams{
-		ID:        id,
-		FullName:  student.FullName,
-		BirthDate: dateTo(student.BirthDate),
-		Gender:    textTo(student.Gender),
-		Phone:     textTo(student.Phone),
-		Email:     textTo(student.Email),
-		Cpf:       textTo(student.CPF),
-		Address:   textTo(student.Address),
-		Notes:     textTo(student.Notes),
-		PhotoUrl:  textTo(student.PhotoURL),
-		Status:    sqlc.StudentStatus(student.Status),
+		ID:             id,
+		FullName:       student.FullName,
+		BirthDate:      dateTo(student.BirthDate),
+		Gender:         textTo(student.Gender),
+		Phone:          textTo(student.Phone),
+		Email:          textTo(student.Email),
+		Cpf:            textTo(student.CPF),
+		Address:        textTo(student.Address),
+		Notes:          textTo(student.Notes),
+		PhotoObjectKey: textTo(student.PhotoObjectKey),
+		Status:         sqlc.StudentStatus(student.Status),
 	}
 
 	updated, err := r.queries.UpdateStudent(ctx, params)
@@ -121,18 +121,18 @@ func (r *StudentRepository) Search(ctx context.Context, filter ports.StudentFilt
 
 func mapStudent(student sqlc.Student) domain.Student {
 	return domain.Student{
-		ID:        uuidToString(student.ID),
-		FullName:  student.FullName,
-		BirthDate: dateFrom(student.BirthDate),
-		Gender:    textFrom(student.Gender),
-		Phone:     textFrom(student.Phone),
-		Email:     textFrom(student.Email),
-		CPF:       textFrom(student.Cpf),
-		Address:   textFrom(student.Address),
-		Notes:     textFrom(student.Notes),
-		PhotoURL:  textFrom(student.PhotoUrl),
-		Status:    domain.StudentStatus(student.Status),
-		CreatedAt: timeFrom(student.CreatedAt),
-		UpdatedAt: timeFrom(student.UpdatedAt),
+		ID:             uuidToString(student.ID),
+		FullName:       student.FullName,
+		BirthDate:      dateFrom(student.BirthDate),
+		Gender:         textFrom(student.Gender),
+		Phone:          textFrom(student.Phone),
+		Email:          textFrom(student.Email),
+		CPF:            textFrom(student.Cpf),
+		Address:        textFrom(student.Address),
+		Notes:          textFrom(student.Notes),
+		PhotoObjectKey: textFrom(student.PhotoObjectKey),
+		Status:         domain.StudentStatus(student.Status),
+		CreatedAt:      timeFrom(student.CreatedAt),
+		UpdatedAt:      timeFrom(student.UpdatedAt),
 	}
 }

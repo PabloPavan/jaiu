@@ -340,6 +340,16 @@ type BillingPeriod struct {
 	UpdatedAt       pgtype.Timestamptz  `json:"updated_at"`
 }
 
+type ImagekitOutbox struct {
+	ID          int64              `json:"id"`
+	Payload     []byte             `json:"payload"`
+	Attempts    int32              `json:"attempts"`
+	LockedAt    pgtype.Timestamptz `json:"locked_at"`
+	AvailableAt pgtype.Timestamptz `json:"available_at"`
+	LastError   pgtype.Text        `json:"last_error"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
 type Payment struct {
 	ID             pgtype.UUID        `json:"id"`
 	SubscriptionID pgtype.UUID        `json:"subscription_id"`
@@ -374,19 +384,19 @@ type Plan struct {
 }
 
 type Student struct {
-	ID        pgtype.UUID        `json:"id"`
-	FullName  string             `json:"full_name"`
-	BirthDate pgtype.Date        `json:"birth_date"`
-	Gender    pgtype.Text        `json:"gender"`
-	Phone     pgtype.Text        `json:"phone"`
-	Email     pgtype.Text        `json:"email"`
-	Cpf       pgtype.Text        `json:"cpf"`
-	Address   pgtype.Text        `json:"address"`
-	Notes     pgtype.Text        `json:"notes"`
-	PhotoUrl  pgtype.Text        `json:"photo_url"`
-	Status    StudentStatus      `json:"status"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID             pgtype.UUID        `json:"id"`
+	FullName       string             `json:"full_name"`
+	BirthDate      pgtype.Date        `json:"birth_date"`
+	Gender         pgtype.Text        `json:"gender"`
+	Phone          pgtype.Text        `json:"phone"`
+	Email          pgtype.Text        `json:"email"`
+	Cpf            pgtype.Text        `json:"cpf"`
+	Address        pgtype.Text        `json:"address"`
+	Notes          pgtype.Text        `json:"notes"`
+	PhotoObjectKey pgtype.Text        `json:"photo_object_key"`
+	Status         StudentStatus      `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Subscription struct {
