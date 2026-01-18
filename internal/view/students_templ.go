@@ -119,7 +119,7 @@ func StudentsList(data StudentsPageData) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div id=\"students-list\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div id=\"students-list\" data-sse-topic=\"students\" data-sse-url=\"/students\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

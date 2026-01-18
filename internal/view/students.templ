@@ -27,7 +27,7 @@ templ StudentsPage(data StudentsPageData) {
 }
 
 templ StudentsList(data StudentsPageData) {
-	<div id="students-list">
+	<div id="students-list" data-sse-topic="students" data-sse-url="/students">
 		if len(data.Items) == 0 {
 			<div class="mt-6 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 p-6 text-sm text-slate-400">Nenhum aluno encontrado.</div>
 		} else {

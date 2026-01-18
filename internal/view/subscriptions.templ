@@ -34,7 +34,7 @@ templ SubscriptionsPage(data SubscriptionsPageData) {
 }
 
 templ SubscriptionsList(data SubscriptionsPageData) {
-	<div id="subscriptions-list">
+	<div id="subscriptions-list" data-sse-topic="subscriptions" data-sse-url="/subscriptions">
 		if len(data.Items) == 0 {
 			<div class="mt-6 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 p-6 text-sm text-slate-400">Nenhuma assinatura encontrada.</div>
 		} else {

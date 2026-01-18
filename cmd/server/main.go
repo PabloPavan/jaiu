@@ -37,6 +37,7 @@ func main() {
 		RedisPassword:  os.Getenv("REDIS_PASSWORD"),
 		RedisDB:        envInt("REDIS_DB", 0),
 		ImageUploadDir: os.Getenv("IMAGE_UPLOAD_DIR"),
+		Context:        ctx,
 	}
 
 	application, err := app.New(cfg)

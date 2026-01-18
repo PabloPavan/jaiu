@@ -32,7 +32,7 @@ templ PaymentsPage(data PaymentsPageData) {
 }
 
 templ PaymentsList(data PaymentsPageData) {
-	<div id="payments-list">
+	<div id="payments-list" data-sse-topic="payments" data-sse-url="/payments">
 		if len(data.Items) == 0 {
 			<div class="mt-6 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 p-6 text-sm text-slate-400">Nenhum pagamento encontrado.</div>
 		} else {

@@ -15,7 +15,7 @@ templ PlansPage(data PlansPageData) {
 }
 
 templ PlansList(data PlansPageData) {
-	<div id="plans-list">
+	<div id="plans-list" data-sse-topic="plans" data-sse-url="/plans">
 		if len(data.Items) == 0 {
 			<div class="rounded-2xl border border-dashed border-slate-700/70 bg-slate-900/40 p-6 text-sm text-slate-400">Nenhum plano ativo cadastrado ainda.</div>
 		} else {

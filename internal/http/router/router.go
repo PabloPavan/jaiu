@@ -11,12 +11,13 @@ import (
 	"github.com/PabloPavan/jaiu/internal/ports"
 )
 
-func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string) http.Handler {
+func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string, notifyCfg httpmw.NotifyConfig, eventHandler http.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(httpmw.Observability())
+	r.Use(httpmw.Notify(notifyCfg))
 	r.Use(middleware.Recoverer)
 
 	r.Get("/healthz", h.Health)
@@ -29,6 +30,10 @@ func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string) ht
 
 	r.Group(func(r chi.Router) {
 		r.Use(httpmw.RequireSession(sessions, cookieName))
+
+		if eventHandler != nil {
+			r.Get("/events", eventHandler.ServeHTTP)
+		}
 
 		r.Get("/", h.Home)
 

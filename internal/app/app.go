@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/PabloPavan/eventrail/sse"
 	"github.com/PabloPavan/jaiu/imagekit"
 	kitconfig "github.com/PabloPavan/jaiu/imagekit/config"
 	"github.com/PabloPavan/jaiu/internal/adapter/postgres"
@@ -28,19 +29,27 @@ type Config struct {
 	SessionCookieName string
 	SessionTTL        time.Duration
 	SessionSecure     bool
+	Context           context.Context
 }
 
 type App struct {
-	Router   http.Handler
-	DB       *pgxpool.Pool
-	Redis    *redis.Client
-	ImageKit *imagekit.Kit
+	Router      http.Handler
+	DB          *pgxpool.Pool
+	Redis       *redis.Client
+	ImageKit    *imagekit.Kit
+	EventServer *sse.Server
 }
 
 func New(cfg Config) (*App, error) {
+	if cfg.Context == nil {
+		return nil, fmt.Errorf("app context is required")
+	}
+
+	baseCtx := cfg.Context
+
 	var pool *pgxpool.Pool
 	if cfg.DatabaseURL != "" {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(baseCtx, 5*time.Second)
 		defer cancel()
 
 		var err error
@@ -58,7 +67,7 @@ func New(cfg Config) (*App, error) {
 			DB:       cfg.RedisDB,
 		})
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(baseCtx, 5*time.Second)
 		defer cancel()
 
 		if err := redisClient.Ping(ctx).Err(); err != nil {
@@ -106,7 +115,7 @@ func New(cfg Config) (*App, error) {
 		imageCfg.LocalDir = "tmp/uploads/images"
 	}
 
-	imageCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	imageCtx, cancel := context.WithTimeout(baseCtx, 5*time.Second)
 	defer cancel()
 
 	imageKit, err := imagekit.New(imageCtx, imageCfg)
@@ -152,17 +161,31 @@ func New(cfg Config) (*App, error) {
 		OriginalKey:  imageCfg.OriginalKey,
 	})
 
+	eventServer, notifyCfg, err := newEventServer(baseCtx, redisClient, sessionStore, sessionConfig.CookieName)
+	if err != nil {
+		return nil, fmt.Errorf("init eventrail: %w", err)
+	}
+
+	var eventHandler http.Handler
+	if eventServer != nil {
+		eventHandler = eventServer.Handler()
+	}
+
 	return &App{
-		Router:   router.New(h, sessionStore, sessionConfig.CookieName),
-		DB:       pool,
-		Redis:    redisClient,
-		ImageKit: imageKit,
+		Router:      router.New(h, sessionStore, sessionConfig.CookieName, notifyCfg, eventHandler),
+		DB:          pool,
+		Redis:       redisClient,
+		ImageKit:    imageKit,
+		EventServer: eventServer,
 	}, nil
 }
 
 func (a *App) Close() {
 	if a.DB != nil {
 		a.DB.Close()
+	}
+	if a.EventServer != nil {
+		a.EventServer.Close()
 	}
 	if a.Redis != nil {
 		_ = a.Redis.Close()
