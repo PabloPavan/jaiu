@@ -11,7 +11,7 @@ import (
 	"github.com/PabloPavan/jaiu/internal/ports"
 )
 
-func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string, uploadDir string) http.Handler {
+func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -74,8 +74,8 @@ func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string, up
 		})
 	})
 
-	if uploadDir != "" {
-		r.Handle("/uploads/*", http.StripPrefix("/uploads", http.FileServer(http.Dir(uploadDir))))
+	if imageHandler := h.ImageHandler(); imageHandler != nil {
+		r.Handle("/images/*", http.StripPrefix("/images", imageHandler))
 	}
 	r.Handle("/static/*", http.StripPrefix("/static", http.FileServer(http.Dir("web/static"))))
 

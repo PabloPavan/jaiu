@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"path"
 	"strings"
 	"time"
 
@@ -42,7 +41,7 @@ func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
 					BirthDate:   formatDateBR(student.BirthDate),
 					Phone:       student.Phone,
 					Email:       student.Email,
-					PhotoURL:    h.photoURLForKey(student.PhotoObjectKey),
+					PhotoURL:    h.photoURLForVariant(student.PhotoObjectKey, "list"),
 					Initials:    studentInitials(student.FullName),
 					Status:      string(student.Status),
 					StatusLabel: label,
@@ -104,7 +103,7 @@ func (h *Handler) StudentsEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := studentFormEditData(student, h.photoURLForKey(student.PhotoObjectKey))
+	data := studentFormEditData(student, h.photoURLForVariant(student.PhotoObjectKey, "preview"))
 	h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 }
 
@@ -229,10 +228,10 @@ func (h *Handler) parseStudentForm(r *http.Request, data *view.StudentFormData) 
 	file, header, err := r.FormFile("photo")
 	if err == nil {
 		defer file.Close()
-		if h.images.Uploader == nil {
+		if h.images.ImageService == nil {
 			return domain.Student{}, errors.New("Upload de foto indisponivel.")
 		}
-		uploadedObjectKey, err = h.images.Uploader.UploadImage(r.Context(), file, header)
+		uploadedObjectKey, err = h.images.ImageService.UploadImage(r.Context(), file, header)
 		if err != nil {
 			return domain.Student{}, errors.New("Nao foi possivel salvar a foto.")
 		}
@@ -250,7 +249,7 @@ func (h *Handler) parseStudentForm(r *http.Request, data *view.StudentFormData) 
 	data.Address = address
 	data.Notes = notes
 	data.PhotoObjectKey = photoObjectKey
-	data.PhotoURL = h.photoURLForKey(photoObjectKey)
+	data.PhotoURL = h.photoURLForVariant(photoObjectKey, "preview")
 
 	return domain.Student{
 		FullName:       fullName,
@@ -344,7 +343,7 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 					BirthDate:   formatDateBR(student.BirthDate),
 					Phone:       student.Phone,
 					Email:       student.Email,
-					PhotoURL:    h.photoURLForKey(student.PhotoObjectKey),
+					PhotoURL:    h.photoURLForVariant(student.PhotoObjectKey, "list"),
 					Initials:    studentInitials(student.FullName),
 					Status:      string(student.Status),
 					StatusLabel: label,
@@ -358,27 +357,15 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 	return data
 }
 
-func (h *Handler) photoURLForKey(objectKey string) string {
-	trimmed := strings.TrimSpace(objectKey)
-	if trimmed == "" {
+func (h *Handler) photoURLForVariant(objectKey, variant string) string {
+	if objectKey == "" || variant == "" {
 		return ""
-	}
-	lower := strings.ToLower(trimmed)
-	if strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://") {
-		return trimmed
 	}
 	baseURL := strings.TrimRight(h.images.BaseURL, "/")
 	if baseURL == "" {
-		baseURL = "/uploads"
+		baseURL = "/images"
 	}
-	if strings.Contains(path.Base(trimmed), ".") {
-		return baseURL + "/" + trimmed
-	}
-	originalKey := h.images.OriginalKey
-	if originalKey == "" {
-		originalKey = "original.jpg"
-	}
-	return baseURL + "/" + path.Join(trimmed, originalKey)
+	return baseURL + "/" + strings.TrimSpace(objectKey) + "/" + variant
 }
 
 func studentInitials(name string) string {

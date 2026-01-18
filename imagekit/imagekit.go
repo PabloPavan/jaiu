@@ -10,6 +10,7 @@ import (
 	"path"
 
 	"github.com/PabloPavan/jaiu/imagekit/config"
+	imagekithttp "github.com/PabloPavan/jaiu/imagekit/http"
 	kitimage "github.com/PabloPavan/jaiu/imagekit/image"
 	"github.com/PabloPavan/jaiu/imagekit/outbox"
 	"github.com/PabloPavan/jaiu/imagekit/processor"
@@ -17,6 +18,7 @@ import (
 	"github.com/PabloPavan/jaiu/imagekit/storage"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/errgroup"
 )
@@ -41,6 +43,7 @@ type Kit struct {
 	processor    *processor.Processor
 	originalName string
 	txBeginner   TxBeginner
+	dispatcher   *outbox.Dispatcher
 }
 
 func New(ctx context.Context, cfg config.Config) (*Kit, error) {
@@ -140,6 +143,25 @@ func (k *Kit) SetTxBeginner(txBeginner TxBeginner) {
 	}
 }
 
+func (k *Kit) Handler() http.Handler {
+	return imagekithttp.NewHandler(k.storage)
+}
+
+func (k *Kit) EnableOutbox(pool *pgxpool.Pool) {
+	if pool == nil {
+		return
+	}
+	store := &outbox.SQLStore{DB: pool}
+	k.SetEnqueuer(&outbox.Writer{Store: store})
+	k.SetTxBeginner(pool)
+	if k.queue != nil {
+		k.dispatcher = &outbox.Dispatcher{
+			Store: store,
+			Queue: k.queue,
+		}
+	}
+}
+
 func (k *Kit) UploadImage(ctx context.Context, file multipart.File, header *multipart.FileHeader) (string, error) {
 	if k.txBeginner == nil {
 		return k.uploadImage(ctx, file, header)
@@ -205,6 +227,11 @@ func (k *Kit) StartWorkers(ctx context.Context, n int) error {
 	}
 
 	group, ctx := errgroup.WithContext(ctx)
+	if k.dispatcher != nil {
+		group.Go(func() error {
+			return k.dispatcher.Run(ctx)
+		})
+	}
 	for i := 0; i < n; i++ {
 		worker := &processor.Worker{
 			Queue:     k.queue,

@@ -7,9 +7,7 @@ import (
 	"time"
 
 	"github.com/PabloPavan/jaiu/imagekit"
-	"github.com/PabloPavan/jaiu/imagekit/outbox"
-	"github.com/PabloPavan/jaiu/imagekit/queue"
-	"github.com/PabloPavan/jaiu/imagekit/storage"
+	kitconfig "github.com/PabloPavan/jaiu/imagekit/config"
 	"github.com/PabloPavan/jaiu/internal/adapter/postgres"
 	redisadapter "github.com/PabloPavan/jaiu/internal/adapter/redis"
 	"github.com/PabloPavan/jaiu/internal/http/handlers"
@@ -33,12 +31,10 @@ type Config struct {
 }
 
 type App struct {
-	Router           http.Handler
-	DB               *pgxpool.Pool
-	Redis            *redis.Client
-	ImageKit         *imagekit.Kit
-	ImageQueue       queue.Queue
-	OutboxDispatcher *outbox.Dispatcher
+	Router   http.Handler
+	DB       *pgxpool.Pool
+	Redis    *redis.Client
+	ImageKit *imagekit.Kit
 }
 
 func New(cfg Config) (*App, error) {
@@ -91,47 +87,35 @@ func New(cfg Config) (*App, error) {
 		sessionConfig.SameSite = http.SameSiteLaxMode
 	}
 
-	uploadDir := cfg.ImageUploadDir
-	if uploadDir == "" {
-		uploadDir = "tmp/uploads"
+	imageCfg := kitconfig.Config{
+		StorageType: kitconfig.StorageLocal,
+		LocalDir:    cfg.ImageUploadDir,
+		QueueName:   "imagekit:queue",
+		OriginalKey: "original.jpg",
+		Sizes: []kitconfig.ImageSize{
+			{Name: "preview", Width: 640, Height: 640},
+			{Name: "list", Width: 96, Height: 96},
+		},
+		Redis: kitconfig.RedisConfig{
+			Addr:     cfg.RedisAddr,
+			Password: cfg.RedisPassword,
+			DB:       cfg.RedisDB,
+		},
 	}
-	localStorage, err := storage.NewLocalStorage(uploadDir)
+	if imageCfg.LocalDir == "" {
+		imageCfg.LocalDir = "tmp/uploads/images"
+	}
+
+	imageCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	imageKit, err := imagekit.New(imageCtx, imageCfg)
 	if err != nil {
-		return nil, fmt.Errorf("init image storage: %w", err)
+		return nil, fmt.Errorf("init imagekit: %w", err)
 	}
-
-	queueName := "imagekit:queue"
-	var imageQueue queue.Queue
-	if redisClient != nil {
-		imageQueue = queue.NewRedisQueue(redisClient, queueName)
-	}
-
-	var outboxStore *outbox.SQLStore
-	var outboxDispatcher *outbox.Dispatcher
-	var imageEnqueuer imagekit.Enqueuer
 
 	if pool != nil {
-		outboxStore = &outbox.SQLStore{DB: pool}
-		imageEnqueuer = &outbox.Writer{Store: outboxStore}
-		if imageQueue != nil {
-			outboxDispatcher = &outbox.Dispatcher{
-				Store: outboxStore,
-				Queue: imageQueue,
-			}
-		}
-	}
-
-	if imageEnqueuer == nil {
-		if imageQueue != nil {
-			imageEnqueuer = imageQueue
-		} else {
-			imageEnqueuer = noopEnqueuer{}
-		}
-	}
-
-	imageKit := imagekit.NewWithEnqueuer(localStorage, imageQueue, imageEnqueuer, nil, "")
-
-	if pool != nil {
+		imageKit.EnableOutbox(pool)
 		userRepo := postgres.NewUserRepository(pool)
 		auditRepo := postgres.NewAuditRepository(pool)
 		authService = service.NewAuthService(userRepo, auditRepo)
@@ -155,10 +139,6 @@ func New(cfg Config) (*App, error) {
 		sessionStore = redisadapter.NewSessionStore(redisClient)
 	}
 
-	if pool != nil {
-		imageKit.SetTxBeginner(pool)
-	}
-
 	h := handlers.New(handlers.Services{
 		Auth:          authService,
 		Plans:         planService,
@@ -167,18 +147,16 @@ func New(cfg Config) (*App, error) {
 		Payments:      paymentService,
 	}, sessionStore, sessionConfig)
 	h.SetImageConfig(handlers.ImageConfig{
-		Uploader:    imageKit,
-		BaseURL:     "/uploads",
-		OriginalKey: "original.jpg",
+		ImageService: imageKit,
+		BaseURL:      "/images",
+		OriginalKey:  imageCfg.OriginalKey,
 	})
 
 	return &App{
-		Router:           router.New(h, sessionStore, sessionConfig.CookieName, uploadDir),
-		DB:               pool,
-		Redis:            redisClient,
-		ImageKit:         imageKit,
-		ImageQueue:       imageQueue,
-		OutboxDispatcher: outboxDispatcher,
+		Router:   router.New(h, sessionStore, sessionConfig.CookieName),
+		DB:       pool,
+		Redis:    redisClient,
+		ImageKit: imageKit,
 	}, nil
 }
 

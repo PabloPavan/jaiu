@@ -35,6 +35,7 @@ func main() {
 		DatabaseURL:    os.Getenv("DATABASE_URL"),
 		RedisAddr:      os.Getenv("REDIS_ADDR"),
 		RedisPassword:  os.Getenv("REDIS_PASSWORD"),
+		RedisDB:        envInt("REDIS_DB", 0),
 		ImageUploadDir: os.Getenv("IMAGE_UPLOAD_DIR"),
 	}
 
@@ -51,14 +52,7 @@ func main() {
 	defer application.Close()
 
 	workerCount := envInt("IMAGE_WORKERS", 1)
-	if application.OutboxDispatcher != nil {
-		go func() {
-			if err := application.OutboxDispatcher.Run(ctx); err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
-				logger.Error("image outbox dispatcher stopped", "err", err)
-			}
-		}()
-	}
-	if application.ImageKit != nil && application.ImageQueue != nil && workerCount > 0 {
+	if application.ImageKit != nil && workerCount > 0 {
 		go func() {
 			if err := application.ImageKit.StartWorkers(ctx, workerCount); err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
 				logger.Error("image workers stopped", "err", err)
