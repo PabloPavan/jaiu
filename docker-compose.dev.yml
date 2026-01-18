@@ -6,11 +6,8 @@ services:
     ports:
       - "8080:8080"
       - "40000:40000"
-    environment:
-      ADDR: ":8080"
-      DATABASE_URL: "postgres://jaiu:${POSTGRES_PASSWORD}@db:5432/jaiu?sslmode=disable"
-      REDIS_ADDR: "redis:6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    env_file:
+      - .env
     volumes:
       - ./:/app
       - go-mod-cache:/go/pkg/mod
@@ -26,12 +23,8 @@ services:
       context: .
       target: dev
     command: ["go", "run", "./cmd/renewal-worker"]
-    environment:
-      DATABASE_URL: "postgres://jaiu:${POSTGRES_PASSWORD}@db:5432/jaiu?sslmode=disable"
-      APP_ENV: ${APP_ENV}
-      LOG_LEVEL: ${LOG_LEVEL}
-      RENEWAL_HOUR: ${RENEWAL_HOUR}
-      RENEWAL_MINUTE: ${RENEWAL_MINUTE}
+    env_file:
+      - .env
     volumes:
       - ./:/app
       - go-mod-cache:/go/pkg/mod
