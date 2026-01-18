@@ -42,7 +42,17 @@ func BaseLayout(title string, currentUser *UserInfo, content templ.Component) te
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " - Jaiu</title><script src=\"https://cdn.tailwindcss.com\"></script><link rel=\"stylesheet\" href=\"/static/css/app.css\"><script src=\"https://unpkg.com/htmx.org@1.9.12\" defer></script><script defer src=\"https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js\"></script><script defer src=\"/static/js/app.js\"></script></head><body class=\"min-h-screen bg-slate-950 text-slate-100\" x-data=\"{\n\t\t\t\trequiredMessage: 'Campo obrigatorio.',\n\t\t\t\tdefaultPatternMessage: 'Use ponto para milhar e virgula para centavos, ex: 1.234,56.',\n\t\t\t\tensureMoneyCents(value) {\n\t\t\t\t\tif (value === null || value === undefined) {\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\t\t\t\t\tconst digits = String(value).replace(/\\D/g, '');\n\t\t\t\t\tif (digits.length === 0) {\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\t\t\t\t\tconst padded = digits.padStart(3, '0');\n\t\t\t\t\tconst integerPart = padded.slice(0, -2);\n\t\t\t\t\tconst cents = padded.slice(-2);\n\t\t\t\t\tconst integerValue = parseInt(integerPart, 10) || 0;\n\t\t\t\t\tconst integerFormatted = integerValue\n\t\t\t\t\t\t.toString()\n\t\t\t\t\t\t.replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');\n\t\t\t\t\treturn integerFormatted + ',' + cents;\n\t\t\t\t},\n\t\t\t\thandleInvalid(event) {\n\t\t\t\t\tconst field = event.target;\n\t\t\t\t\tif (!field || !field.validity) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tif (field.validity.valueMissing) {\n\t\t\t\t\t\tfield.setCustomValidity(field.dataset.requiredMessage || this.requiredMessage);\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tif (field.validity.patternMismatch) {\n\t\t\t\t\t\tconst message = field.dataset.patternMessage || this.defaultPatternMessage;\n\t\t\t\t\t\tif (message) {\n\t\t\t\t\t\t\tfield.setCustomValidity(message);\n\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\tfield.setCustomValidity('');\n\t\t\t\t},\n\t\t\t\tclearValidity(event) {\n\t\t\t\t\tevent.target.setCustomValidity('');\n\t\t\t\t},\n\t\t\t}\" x-init=\"document.addEventListener('htmx:afterSwap', (event) => { if (window.Alpine) { window.Alpine.initTree(event.target) } })\" x-on:invalid.capture=\"if ($event.target.matches('input[required], select[required], textarea[required]')) { handleInvalid($event) }\" x-on:input.capture=\"if ($event.target.matches('input[required], select[required], textarea[required]')) { clearValidity($event) }\" x-on:change.capture=\"if ($event.target.matches('input[required], select[required], textarea[required]')) { clearValidity($event) }\"><div class=\"bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " - Jaiu</title>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if useCDNAssets() {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap\"><script src=\"https://cdn.tailwindcss.com\"></script>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<link rel=\"stylesheet\" href=\"/static/css/app.css\"><script src=\"https://unpkg.com/htmx.org@1.9.12\" defer></script><script defer src=\"https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js\"></script><script defer src=\"/static/js/app.js\"></script></head><body class=\"min-h-screen bg-slate-950 text-slate-100 antialiased\" x-data=\"{\n\t\t\t\trequiredMessage: 'Campo obrigatorio.',\n\t\t\t\tdefaultPatternMessage: 'Use ponto para milhar e virgula para centavos, ex: 1.234,56.',\n\t\t\t\tensureMoneyCents(value) {\n\t\t\t\t\tif (value === null || value === undefined) {\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\t\t\t\t\tconst digits = String(value).replace(/\\D/g, '');\n\t\t\t\t\tif (digits.length === 0) {\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\t\t\t\t\tconst padded = digits.padStart(3, '0');\n\t\t\t\t\tconst integerPart = padded.slice(0, -2);\n\t\t\t\t\tconst cents = padded.slice(-2);\n\t\t\t\t\tconst integerValue = parseInt(integerPart, 10) || 0;\n\t\t\t\t\tconst integerFormatted = integerValue\n\t\t\t\t\t\t.toString()\n\t\t\t\t\t\t.replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');\n\t\t\t\t\treturn integerFormatted + ',' + cents;\n\t\t\t\t},\n\t\t\t\thandleInvalid(event) {\n\t\t\t\t\tconst field = event.target;\n\t\t\t\t\tif (!field || !field.validity) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tif (field.validity.valueMissing) {\n\t\t\t\t\t\tfield.setCustomValidity(field.dataset.requiredMessage || this.requiredMessage);\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tif (field.validity.patternMismatch) {\n\t\t\t\t\t\tconst message = field.dataset.patternMessage || this.defaultPatternMessage;\n\t\t\t\t\t\tif (message) {\n\t\t\t\t\t\t\tfield.setCustomValidity(message);\n\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\tfield.setCustomValidity('');\n\t\t\t\t},\n\t\t\t\tclearValidity(event) {\n\t\t\t\t\tevent.target.setCustomValidity('');\n\t\t\t\t},\n\t\t\t}\" x-init=\"document.addEventListener('htmx:afterSwap', (event) => { if (window.Alpine) { window.Alpine.initTree(event.target) } })\" x-on:invalid.capture=\"if ($event.target.matches('input[required], select[required], textarea[required]')) { handleInvalid($event) }\" x-on:input.capture=\"if ($event.target.matches('input[required], select[required], textarea[required]')) { clearValidity($event) }\" x-on:change.capture=\"if ($event.target.matches('input[required], select[required], textarea[required]')) { clearValidity($event) }\"><div class=\"app-shell flex min-h-screen flex-col bg-slate-950 text-slate-100 lg:flex-row\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -50,7 +60,7 @@ func BaseLayout(title string, currentUser *UserInfo, content templ.Component) te
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<main id=\"page-content\" class=\"mx-auto max-w-6xl px-6 py-10\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex min-h-screen flex-1 flex-col\"><main id=\"page-content\" class=\"mx-auto w-full max-w-7xl px-6 py-8\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -60,7 +70,7 @@ func BaseLayout(title string, currentUser *UserInfo, content templ.Component) te
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</main></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

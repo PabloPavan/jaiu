@@ -29,35 +29,63 @@ func Nav(currentUser *UserInfo) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header class=\"border-b border-slate-800/70 bg-slate-950/60 backdrop-blur\"><div class=\"mx-auto flex max-w-6xl items-center justify-between px-6 py-5\"><div><p class=\"text-xs uppercase tracking-[0.3em] text-emerald-300\">Jaiu Martial Arts</p><p class=\"text-lg font-semibold\">Gestao de academia</p></div><nav class=\"flex flex-wrap items-center gap-4 text-sm text-slate-200\"><a class=\"hover:text-emerald-200\" href=\"/students\">Alunos</a> <a class=\"hover:text-emerald-200\" href=\"/plans\">Planos</a> <a class=\"hover:text-emerald-200\" href=\"/subscriptions\">Assinaturas</a> <a class=\"hover:text-emerald-200\" href=\"/payments\">Pagamentos</a> <a class=\"hover:text-emerald-200\" href=\"/reports\">Relatorios</a> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<aside class=\"w-full border-b border-slate-800/70 bg-slate-950/90 px-4 py-4 backdrop-blur lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:border-b-0 lg:border-r lg:px-6 lg:py-8\"><div class=\"flex flex-col gap-6 lg:h-full\"><div class=\"flex items-center justify-between gap-4\"><div class=\"flex items-center gap-3\"><div class=\"flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/30\"><span class=\"text-lg font-semibold\">J</span></div><div><p class=\"text-xs uppercase tracking-[0.32em] text-slate-400\">Jaiu</p><p class=\"text-lg font-semibold text-white\">Gestao de academia</p></div></div></div><nav class=\"flex gap-2 overflow-x-auto pb-2 text-sm text-slate-300 lg:flex-col lg:overflow-visible lg:pb-0\"><a class=\"group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white\" href=\"/\"><span class=\"h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400\"></span> Dashboard</a> <a class=\"group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white\" href=\"/students\"><span class=\"h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400\"></span> Alunos</a> <a class=\"group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white\" href=\"/plans\"><span class=\"h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400\"></span> Planos</a> <a class=\"group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white\" href=\"/subscriptions\"><span class=\"h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400\"></span> Assinaturas</a> <a class=\"group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white\" href=\"/payments\"><span class=\"h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400\"></span> Pagamentos</a> <a class=\"group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white\" href=\"/reports\"><span class=\"h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400\"></span> Relatorios</a></nav><div class=\"flex flex-col gap-3 border-t border-slate-800/70 pt-4 lg:mt-auto\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if currentUser != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<span class=\"text-slate-300\">Ola, ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"flex items-center gap-3 rounded-2xl border border-slate-800/70 bg-slate-900/60 px-3 py-3\"><div class=\"flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/15 text-blue-200\"><svg class=\"h-5 w-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><path d=\"M20 21c0-3.3137-3.134-6-7-6s-7 2.6863-7 6\"></path> <circle cx=\"13\" cy=\"8\" r=\"4\"></circle></svg></div><div class=\"min-w-0\"><p class=\"truncate text-sm font-semibold text-slate-100\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(currentUser.DisplayName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/nav.templ`, Line: 19, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/nav.templ`, Line: 53, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</span><form method=\"post\" action=\"/auth/logout\"><button class=\"rounded-full border border-emerald-400/60 px-3 py-1 text-emerald-200 hover:bg-emerald-400/10\" type=\"submit\">Sair</button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if currentUser.Role != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"text-xs text-slate-500\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var3 string
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(currentUser.Role)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/nav.templ`, Line: 55, Col: 59}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<p class=\"text-xs text-slate-500\">Usuario</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></div><form method=\"post\" action=\"/auth/logout\"><button class=\"w-full rounded-xl border border-blue-500/50 px-3 py-2 text-sm font-semibold text-blue-100 hover:bg-blue-500/10\" type=\"submit\">Sair</button></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<a class=\"rounded-full border border-emerald-400/60 px-3 py-1 text-emerald-200 hover:bg-emerald-400/10\" href=\"/auth/login\">Entrar</a>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<a class=\"inline-flex items-center justify-center rounded-xl border border-blue-500/50 px-3 py-2 text-sm font-semibold text-blue-100 hover:bg-blue-500/10\" href=\"/auth/login\">Entrar</a>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</nav></div></header>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></div></aside>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

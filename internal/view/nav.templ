@@ -1,30 +1,70 @@
 package view
 
 templ Nav(currentUser *UserInfo) {
-	<header class="border-b border-slate-800/70 bg-slate-950/60 backdrop-blur">
-		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-			<div>
-				<p class="text-xs uppercase tracking-[0.3em] text-emerald-300">Jaiu Martial Arts</p>
-				<p class="text-lg font-semibold">Gestao de academia</p>
+	<aside class="w-full border-b border-slate-800/70 bg-slate-950/90 px-4 py-4 backdrop-blur lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
+		<div class="flex flex-col gap-6 lg:h-full">
+			<div class="flex items-center justify-between gap-4">
+				<div class="flex items-center gap-3">
+					<div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/30">
+						<span class="text-lg font-semibold">J</span>
+					</div>
+					<div>
+						<p class="text-xs uppercase tracking-[0.32em] text-slate-400">Jaiu</p>
+						<p class="text-lg font-semibold text-white">Gestao de academia</p>
+					</div>
+				</div>
 			</div>
-			<nav class="flex flex-wrap items-center gap-4 text-sm text-slate-200">
-				<a class="hover:text-emerald-200" href="/students">Alunos</a>
-				<a class="hover:text-emerald-200" href="/plans">Planos</a>
-				<a class="hover:text-emerald-200" href="/subscriptions">Assinaturas</a>
-				<a class="hover:text-emerald-200" href="/payments">Pagamentos</a>
-				<a class="hover:text-emerald-200" href="/reports">Relatorios</a>
+			<nav class="flex gap-2 overflow-x-auto pb-2 text-sm text-slate-300 lg:flex-col lg:overflow-visible lg:pb-0">
+				<a class="group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white" href="/">
+					<span class="h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400"></span>
+					Dashboard
+				</a>
+				<a class="group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white" href="/students">
+					<span class="h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400"></span>
+					Alunos
+				</a>
+				<a class="group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white" href="/plans">
+					<span class="h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400"></span>
+					Planos
+				</a>
+				<a class="group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white" href="/subscriptions">
+					<span class="h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400"></span>
+					Assinaturas
+				</a>
+				<a class="group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white" href="/payments">
+					<span class="h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400"></span>
+					Pagamentos
+				</a>
+				<a class="group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 transition hover:bg-slate-900/70 hover:text-white" href="/reports">
+					<span class="h-2.5 w-2.5 rounded-full bg-slate-700 transition group-hover:bg-blue-400"></span>
+					Relatorios
+				</a>
+			</nav>
+			<div class="flex flex-col gap-3 border-t border-slate-800/70 pt-4 lg:mt-auto">
 				if currentUser != nil {
-					<span class="text-slate-300">
-						Ola,
-						{currentUser.DisplayName}
-					</span>
+					<div class="flex items-center gap-3 rounded-2xl border border-slate-800/70 bg-slate-900/60 px-3 py-3">
+						<div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/15 text-blue-200">
+							<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+								<path d="M20 21c0-3.3137-3.134-6-7-6s-7 2.6863-7 6"/>
+								<circle cx="13" cy="8" r="4"/>
+							</svg>
+						</div>
+						<div class="min-w-0">
+							<p class="truncate text-sm font-semibold text-slate-100">{currentUser.DisplayName}</p>
+							if currentUser.Role != "" {
+								<p class="text-xs text-slate-500">{currentUser.Role}</p>
+							} else {
+								<p class="text-xs text-slate-500">Usuario</p>
+							}
+						</div>
+					</div>
 					<form method="post" action="/auth/logout">
-						<button class="rounded-full border border-emerald-400/60 px-3 py-1 text-emerald-200 hover:bg-emerald-400/10" type="submit">Sair</button>
+						<button class="w-full rounded-xl border border-blue-500/50 px-3 py-2 text-sm font-semibold text-blue-100 hover:bg-blue-500/10" type="submit">Sair</button>
 					</form>
 				} else {
-					<a class="rounded-full border border-emerald-400/60 px-3 py-1 text-emerald-200 hover:bg-emerald-400/10" href="/auth/login">Entrar</a>
+					<a class="inline-flex items-center justify-center rounded-xl border border-blue-500/50 px-3 py-2 text-sm font-semibold text-blue-100 hover:bg-blue-500/10" href="/auth/login">Entrar</a>
 				}
-			</nav>
+			</div>
 		</div>
-	</header>
+	</aside>
 }

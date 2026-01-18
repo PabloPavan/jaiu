@@ -7,14 +7,19 @@ templ BaseLayout(title string, currentUser *UserInfo, content templ.Component) {
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>{title} - Jaiu</title>
-			<script src="https://cdn.tailwindcss.com"></script>
+			if useCDNAssets() {
+				<link rel="preconnect" href="https://fonts.googleapis.com"/>
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+				<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"/>
+				<script src="https://cdn.tailwindcss.com"></script>
+			}
 			<link rel="stylesheet" href="/static/css/app.css"/>
 			<script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
 			<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 			<script defer src="/static/js/app.js"></script>
 		</head>
 		<body
-			class="min-h-screen bg-slate-950 text-slate-100"
+			class="min-h-screen bg-slate-950 text-slate-100 antialiased"
 			x-data="{
 				requiredMessage: 'Campo obrigatorio.',
 				defaultPatternMessage: 'Use ponto para milhar e virgula para centavos, ex: 1.234,56.',
@@ -62,13 +67,15 @@ templ BaseLayout(title string, currentUser *UserInfo, content templ.Component) {
 			x-on:input.capture="if ($event.target.matches('input[required], select[required], textarea[required]')) { clearValidity($event) }"
 			x-on:change.capture="if ($event.target.matches('input[required], select[required], textarea[required]')) { clearValidity($event) }"
 		>
-			<div class="bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900">
+			<div class="app-shell flex min-h-screen flex-col bg-slate-950 text-slate-100 lg:flex-row">
 				@Nav(currentUser)
-				<main id="page-content" class="mx-auto max-w-6xl px-6 py-10">
-					if content != nil {
-						@content
-					}
-				</main>
+				<div class="flex min-h-screen flex-1 flex-col">
+					<main id="page-content" class="mx-auto w-full max-w-7xl px-6 py-8">
+						if content != nil {
+							@content
+						}
+					</main>
+				</div>
 			</div>
 		</body>
 	</html>

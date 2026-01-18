@@ -307,11 +307,11 @@ func normalizeStudentStatusValue(value string) string {
 func statusPresentation(status domain.StudentStatus) (string, string) {
 	switch status {
 	case domain.StudentInactive:
-		return "Inativo", "rounded-full bg-slate-700/50 px-3 py-1 text-slate-300"
+		return "Inativo", "inline-flex items-center rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1 text-[11px] font-semibold text-slate-400"
 	case domain.StudentSuspended:
-		return "Suspenso", "rounded-full bg-amber-400/10 px-3 py-1 text-amber-200"
+		return "Suspenso", "inline-flex items-center rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold text-amber-200"
 	default:
-		return "Ativo", "rounded-full bg-emerald-400/10 px-3 py-1 text-emerald-200"
+		return "Ativo", "inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold text-emerald-200"
 	}
 }
 

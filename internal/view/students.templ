@@ -1,68 +1,116 @@
 package view
 
-templ StudentsPage(data StudentsPageData) {
-	<section class="grid gap-6">
-		<div class="flex flex-wrap items-start justify-between gap-4">
-			<div>
-				<h1 class="text-2xl font-semibold">Alunos</h1>
-				<p class="mt-1 text-sm text-slate-300">Cadastre, edite e acompanhe o status de cada aluno.</p>
-			</div>
-			<a class="rounded-full bg-emerald-400/15 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-400/25" href="/students/new">Novo aluno</a>
-		</div>
+import "strconv"
 
-		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-			<form class="flex flex-wrap items-center gap-3" method="get" action="/students" hx-get="/students" hx-target="#students-list" hx-swap="outerHTML" hx-push-url="true">
-				<input class="w-full flex-1 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100" name="q" placeholder="Buscar por nome, telefone ou CPF" type="search" value={data.Query}/>
-				<select class="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100" name="status">
+templ StudentsPage(data StudentsPageData) {
+	<section class="space-y-6 reveal">
+		<div class="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-6 shadow-[0_0_0_1px_rgba(59,130,246,0.12)]">
+			<div class="flex flex-wrap items-center justify-between gap-4">
+				<div>
+					<p class="text-xs uppercase tracking-[0.35em] text-slate-400">Gestao de alunos</p>
+					<h1 class="mt-2 text-2xl font-semibold text-white">Alunos</h1>
+					<p class="mt-1 text-sm text-slate-400">Cadastre, edite e acompanhe o status de cada aluno.</p>
+				</div>
+				<a class="inline-flex items-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-400" href="/students/new">
+					<span class="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-base leading-none">+</span>
+					Novo aluno
+				</a>
+			</div>
+
+			<form class="mt-5 flex flex-wrap items-center gap-3" method="get" action="/students" hx-get="/students" hx-target="#students-list" hx-swap="outerHTML" hx-push-url="true">
+				<label class="relative flex min-w-[220px] flex-1 items-center">
+					<span class="pointer-events-none absolute left-3 text-slate-500">
+						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="11" cy="11" r="7"></circle>
+							<path d="M20 20l-3.5-3.5"></path>
+						</svg>
+					</span>
+					<input class="w-full rounded-xl border border-slate-800 bg-slate-950/70 px-10 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20" name="q" placeholder="Buscar por nome, telefone ou CPF" type="search" value={data.Query}/>
+				</label>
+				<select class="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20" name="status">
 					<option value="active" selected?={data.Status == "" || data.Status == "active"}>Ativos</option>
 					<option value="inactive" selected?={data.Status == "inactive"}>Inativos</option>
 					<option value="suspended" selected?={data.Status == "suspended"}>Suspensos</option>
 					<option value="all" selected?={data.Status == "all"}>Todos</option>
 				</select>
-				<button class="rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:border-emerald-400/40" type="submit">Filtrar</button>
+				<button class="rounded-xl border border-slate-800 px-4 py-2 text-sm text-slate-200 transition hover:border-blue-500/60 hover:text-white" type="submit">Filtrar</button>
 			</form>
-			@StudentsList(data)
 		</div>
+		@StudentsList(data)
 	</section>
 }
 
 templ StudentsList(data StudentsPageData) {
-	<div id="students-list" data-sse-topic="students" data-sse-url="/students">
+	<div id="students-list" data-sse-topic="students" data-sse-url="/students" class="reveal-delayed rounded-2xl border border-slate-800/70 bg-slate-900/60 shadow-[0_0_0_1px_rgba(59,130,246,0.08)]">
 		if len(data.Items) == 0 {
-			<div class="mt-6 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 p-6 text-sm text-slate-400">Nenhum aluno encontrado.</div>
+			<div class="flex flex-col items-center gap-3 px-6 py-12 text-center text-sm text-slate-400">
+				<div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10 text-blue-200 text-lg">+</div>
+				<p>Nenhum aluno encontrado.</p>
+				<a class="rounded-full border border-blue-500/50 px-4 py-2 text-xs font-semibold text-blue-100 hover:bg-blue-500/10" href="/students/new">Cadastrar aluno</a>
+			</div>
 		} else {
-			<div class="mt-6 grid gap-3">
-				for _, item := range data.Items {
-					<div class="rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3">
-						<div class="flex flex-wrap items-center justify-between gap-3">
-							<div class="flex items-center gap-3">
-								<div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-slate-700 bg-slate-900/60 text-xs font-semibold text-slate-200">
-									if item.PhotoURL != "" {
-										<img class="h-full w-full object-cover" src={item.PhotoURL} alt={"Foto de " + item.FullName}/>
+			<div class="overflow-x-auto">
+				<table class="min-w-full text-sm">
+					<thead class="bg-slate-950/50 text-[11px] uppercase tracking-[0.24em] text-slate-500">
+						<tr>
+							<th class="px-6 py-4 text-left font-semibold">Aluno</th>
+							<th class="px-6 py-4 text-left font-semibold">Contato</th>
+							<th class="px-6 py-4 text-left font-semibold">Nascimento</th>
+							<th class="px-6 py-4 text-left font-semibold">Status</th>
+							<th class="px-6 py-4 text-right font-semibold">Acoes</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-slate-800/70">
+						for index, item := range data.Items {
+							<tr class="row-reveal transition-colors hover:bg-slate-900/70" style={"--row:" + strconv.Itoa(index)}>
+								<td class="px-6 py-4">
+									<div class="flex items-center gap-3">
+										<div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-slate-800 bg-slate-950 text-xs font-semibold text-slate-200">
+											if item.PhotoURL != "" {
+												<img class="h-full w-full object-cover" src={item.PhotoURL} alt={"Foto de " + item.FullName}/>
+											} else {
+												<span>{item.Initials}</span>
+											}
+										</div>
+										<div>
+											<p class="text-sm font-semibold text-slate-100">{item.FullName}</p>
+											if item.Email != "" {
+												<p class="mt-1 text-xs text-slate-500">{item.Email}</p>
+											}
+										</div>
+									</div>
+								</td>
+								<td class="px-6 py-4 text-xs text-slate-300">
+									if item.Phone != "" {
+										<p>{item.Phone}</p>
 									} else {
-										<span>{item.Initials}</span>
+										<p class="text-slate-500">Sem telefone</p>
 									}
-								</div>
-								<div>
-									<p class="text-sm text-slate-100">{item.FullName}</p>
-									<p class="mt-1 text-xs text-slate-400">{item.Phone} {item.Email}</p>
+								</td>
+								<td class="px-6 py-4 text-xs text-slate-300">
 									if item.BirthDate != "" {
-										<p class="mt-1 text-xs text-slate-500">Nascimento: {item.BirthDate}</p>
+										<p>{item.BirthDate}</p>
+									} else {
+										<p class="text-slate-500">--</p>
 									}
-								</div>
-							</div>
-							<div class="flex items-center gap-2 text-xs">
-								<span class={item.StatusClass}>{item.StatusLabel}</span>
-								<a class="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:border-emerald-400/40" href={"/students/" + item.ID + "/edit"}>Editar</a>
-								<form method="post" action={"/students/" + item.ID + "/delete"} hx-post={"/students/" + item.ID + "/delete"} hx-target="#students-list" hx-swap="outerHTML" hx-confirm="Excluir este aluno?">
-									<input type="hidden" name="q" value={data.Query}/>
-									<input type="hidden" name="status" value={data.Status}/>
-									<button class="rounded-full border border-rose-400/60 px-3 py-1 text-rose-200 hover:bg-rose-400/10" type="submit">Excluir</button>
-								</form>
-							</div>
-						</div>
-					</div>
-				}
+								</td>
+								<td class="px-6 py-4 text-xs">
+									<span class={item.StatusClass}>{item.StatusLabel}</span>
+								</td>
+								<td class="px-6 py-4 text-right">
+									<div class="inline-flex flex-wrap items-center justify-end gap-2 text-xs">
+										<a class="rounded-full border border-slate-700 px-3 py-1 text-slate-200 transition hover:border-blue-500/60 hover:text-white" href={"/students/" + item.ID + "/edit"}>Editar</a>
+										<form method="post" action={"/students/" + item.ID + "/delete"} hx-post={"/students/" + item.ID + "/delete"} hx-target="#students-list" hx-swap="outerHTML" hx-confirm="Excluir este aluno?">
+											<input type="hidden" name="q" value={data.Query}/>
+											<input type="hidden" name="status" value={data.Status}/>
+											<button class="rounded-full border border-rose-500/60 px-3 py-1 text-rose-200 transition hover:bg-rose-500/10" type="submit">Excluir</button>
+										</form>
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
 			</div>
 		}
 	</div>

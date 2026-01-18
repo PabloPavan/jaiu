@@ -6,6 +6,9 @@
 *.test
 *.out
 
+#aux
+/stitch_gym_management_admin_dashboard/
+
 # Environment
 .env
 .env.*

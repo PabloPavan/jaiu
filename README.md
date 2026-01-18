@@ -73,13 +73,13 @@ O dev expoe o debug do delve em `localhost:40000`.
 
 ## Tailwind
 
-No MVP esta usando o CDN do Tailwind direto no template base. Quando quiser compilar:
+O layout usa o CDN do Tailwind apenas em ambientes locais (APP_ENV=local/dev/test). Para prod, gere o CSS:
 
 ```bash
 ./scripts/tailwind.sh
 ```
 
-Isso gera `web/static/css/app.css`. Depois, remova o script do CDN no template base.
+Isso gera `web/static/css/app.css`. Garanta que o build rode o script e que APP_ENV esteja como production/prod para nao carregar o CDN.
 
 ## templ
 
