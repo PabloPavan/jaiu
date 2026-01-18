@@ -15,6 +15,9 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOOS=linux \
     go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux \
+    go build -trimpath -ldflags="-s -w" -o /out/renewal-worker ./cmd/renewal-worker
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS dev
 WORKDIR /app
@@ -41,6 +44,7 @@ RUN apk add --no-cache ca-certificates tzdata \
   && addgroup -S app && adduser -S -G app app
 
 COPY --from=build /out/server /app/server
+COPY --from=build /out/renewal-worker /app/renewal-worker
 COPY web /app/web
 
 USER app

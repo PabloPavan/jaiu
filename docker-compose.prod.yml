@@ -15,3 +15,18 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  renewal-worker:
+    build:
+      context: .
+      target: runtime
+    command: ["/app/renewal-worker"]
+    environment:
+      DATABASE_URL: "postgres://jaiu:${POSTGRES_PASSWORD}@db:5432/jaiu?sslmode=disable"
+      APP_ENV: ${APP_ENV}
+      LOG_LEVEL: ${LOG_LEVEL}
+      RENEWAL_HOUR: ${RENEWAL_HOUR}
+      RENEWAL_MINUTE: ${RENEWAL_MINUTE}
+    depends_on:
+      db:
+        condition: service_healthy
