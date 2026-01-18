@@ -155,9 +155,8 @@ func New(cfg Config) (*App, error) {
 		sessionStore = redisadapter.NewSessionStore(redisClient)
 	}
 
-	var txBeginner handlers.TxBeginner
 	if pool != nil {
-		txBeginner = pool
+		imageKit.SetTxBeginner(pool)
 	}
 
 	h := handlers.New(handlers.Services{
@@ -171,7 +170,6 @@ func New(cfg Config) (*App, error) {
 		Uploader:    imageKit,
 		BaseURL:     "/uploads",
 		OriginalKey: "original.jpg",
-		TxBeginner:  txBeginner,
 	})
 
 	return &App{

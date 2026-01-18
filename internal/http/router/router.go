@@ -32,8 +32,6 @@ func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string, up
 
 		r.Get("/", h.Home)
 
-		r.Post("/images/upload", h.UploadImage)
-
 		r.Route("/students", func(r chi.Router) {
 			r.Get("/", h.StudentsIndex)
 			r.Get("/new", h.StudentsNew)

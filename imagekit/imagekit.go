@@ -11,10 +11,12 @@ import (
 
 	"github.com/PabloPavan/jaiu/imagekit/config"
 	kitimage "github.com/PabloPavan/jaiu/imagekit/image"
+	"github.com/PabloPavan/jaiu/imagekit/outbox"
 	"github.com/PabloPavan/jaiu/imagekit/processor"
 	"github.com/PabloPavan/jaiu/imagekit/queue"
 	"github.com/PabloPavan/jaiu/imagekit/storage"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/errgroup"
 )
@@ -28,12 +30,17 @@ type Enqueuer interface {
 	Enqueue(ctx context.Context, msg queue.Message) error
 }
 
+type TxBeginner interface {
+	BeginTx(ctx context.Context, opts pgx.TxOptions) (pgx.Tx, error)
+}
+
 type Kit struct {
 	storage      storage.ObjectStorage
 	queue        queue.Queue
 	enqueuer     Enqueuer
 	processor    *processor.Processor
 	originalName string
+	txBeginner   TxBeginner
 }
 
 func New(ctx context.Context, cfg config.Config) (*Kit, error) {
@@ -127,7 +134,34 @@ func (k *Kit) SetEnqueuer(enqueuer Enqueuer) {
 	}
 }
 
+func (k *Kit) SetTxBeginner(txBeginner TxBeginner) {
+	if txBeginner != nil {
+		k.txBeginner = txBeginner
+	}
+}
+
 func (k *Kit) UploadImage(ctx context.Context, file multipart.File, header *multipart.FileHeader) (string, error) {
+	if k.txBeginner == nil {
+		return k.uploadImage(ctx, file, header)
+	}
+	tx, err := k.txBeginner.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return "", err
+	}
+	ctx = outbox.ContextWithTx(ctx, tx)
+
+	objectKey, err := k.uploadImage(ctx, file, header)
+	if err != nil {
+		_ = tx.Rollback(ctx)
+		return "", err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return "", err
+	}
+	return objectKey, nil
+}
+
+func (k *Kit) uploadImage(ctx context.Context, file multipart.File, header *multipart.FileHeader) (string, error) {
 	if file == nil {
 		return "", errors.New("file is required")
 	}

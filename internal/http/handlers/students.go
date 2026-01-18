@@ -7,13 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PabloPavan/jaiu/imagekit/outbox"
 	"github.com/PabloPavan/jaiu/internal/domain"
 	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/view"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
 )
 
 func (h *Handler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
@@ -234,25 +232,7 @@ func (h *Handler) parseStudentForm(r *http.Request, data *view.StudentFormData) 
 		if h.images.Uploader == nil {
 			return domain.Student{}, errors.New("Upload de foto indisponivel.")
 		}
-
-		ctx := r.Context()
-		var tx pgx.Tx
-		if h.images.TxBeginner != nil {
-			tx, err = h.images.TxBeginner.BeginTx(ctx, pgx.TxOptions{})
-			if err != nil {
-				return domain.Student{}, errors.New("Nao foi possivel iniciar o upload da foto.")
-			}
-			ctx = outbox.ContextWithTx(ctx, tx)
-		}
-
-		uploadedObjectKey, err = h.images.Uploader.UploadImage(ctx, file, header)
-		if tx != nil {
-			if err != nil {
-				_ = tx.Rollback(ctx)
-			} else if commitErr := tx.Commit(ctx); commitErr != nil {
-				return domain.Student{}, errors.New("Nao foi possivel salvar a foto.")
-			}
-		}
+		uploadedObjectKey, err = h.images.Uploader.UploadImage(r.Context(), file, header)
 		if err != nil {
 			return domain.Student{}, errors.New("Nao foi possivel salvar a foto.")
 		}
