@@ -12,6 +12,7 @@ import (
 	"github.com/PabloPavan/jaiu/internal/adapter/postgres"
 	redisadapter "github.com/PabloPavan/jaiu/internal/adapter/redis"
 	"github.com/PabloPavan/jaiu/internal/http/handlers"
+	httpmw "github.com/PabloPavan/jaiu/internal/http/middleware"
 	"github.com/PabloPavan/jaiu/internal/http/router"
 	"github.com/PabloPavan/jaiu/internal/ports"
 	"github.com/PabloPavan/jaiu/internal/service"
@@ -169,6 +170,8 @@ func New(cfg Config) (*App, error) {
 	var eventHandler http.Handler
 	if eventServer != nil {
 		eventHandler = eventServer.Handler()
+		limiter := httpmw.NewEventLimiter(sessionConfig.CookieName)
+		eventHandler = limiter.Wrap(eventHandler)
 	}
 
 	return &App{

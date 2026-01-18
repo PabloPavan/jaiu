@@ -1,5 +1,10 @@
 (() => {
+  const sseKey = "__jaiuEventSource";
   let eventSource = null;
+  if (window[sseKey] && typeof window[sseKey].close === "function") {
+    window[sseKey].close();
+  }
+  window[sseKey] = null;
   function photoUpload(el) {
     const dataset = (el && el.dataset) || {};
     const initialObjectKey = dataset.photoObjectKey || "";
@@ -158,6 +163,7 @@
       return;
     }
     eventSource = new EventSource("/events");
+    window[sseKey] = eventSource;
     topics.forEach((topic) => {
       eventSource.addEventListener(`app.${topic}.changed`, (event) => {
         let data = null;
@@ -180,4 +186,65 @@
   const originId = getOriginId();
   setupOriginId(originId);
   setupSSE(originId);
+  function closeEventSource() {
+    if (!eventSource) {
+      return;
+    }
+    eventSource.close();
+    eventSource = null;
+    if (window[sseKey]) {
+      window[sseKey] = null;
+    }
+  }
+  function shouldCloseForLink(link) {
+    if (!link) {
+      return false;
+    }
+    const target = link.getAttribute("target");
+    if (target && target.toLowerCase() !== "_self") {
+      return false;
+    }
+    if (link.hasAttribute("download")) {
+      return false;
+    }
+    const href = link.getAttribute("href") || "";
+    if (!href || href.startsWith("#")) {
+      return false;
+    }
+    let url = null;
+    try {
+      url = new URL(href, window.location.href);
+    } catch (err) {
+      return false;
+    }
+    if (url.origin !== window.location.origin) {
+      return false;
+    }
+    if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) {
+      return false;
+    }
+    return true;
+  }
+  document.addEventListener("click", (event) => {
+    const link = event.target && event.target.closest ? event.target.closest("a") : null;
+    if (shouldCloseForLink(link)) {
+      closeEventSource();
+    }
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      closeEventSource();
+      return;
+    }
+    if (document.visibilityState === "visible") {
+      setupSSE(originId);
+    }
+  });
+  window.addEventListener("pagehide", closeEventSource);
+  window.addEventListener("beforeunload", closeEventSource);
+  window.addEventListener("pageshow", () => {
+    if (!eventSource) {
+      setupSSE(originId);
+    }
+  });
 })();
