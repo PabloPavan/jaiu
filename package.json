@@ -1,0 +1,23 @@
+{
+  "name": "jaiu",
+  "version": "1.0.0",
+  "description": "Sistema de gestao de academia (MVP) com Go + templ + HTMX + Tailwind + chi.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PabloPavan/jaiu.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PabloPavan/jaiu/issues"
+  },
+  "homepage": "https://github.com/PabloPavan/jaiu#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.5"
+  }
+}

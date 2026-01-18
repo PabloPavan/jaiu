@@ -1,7 +1,9 @@
+const path = require("path");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "../../internal/view/**/*.templ",
+    path.join(__dirname, "..", "..", "internal", "view", "**", "*.templ"),
   ],
   theme: {
     extend: {
