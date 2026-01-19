@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	AddSubscriptionBalance(ctx context.Context, arg AddSubscriptionBalanceParams) (SubscriptionBalance, error)
+	CountStudents(ctx context.Context, arg CountStudentsParams) (int64, error)
 	CreateBillingPeriod(ctx context.Context, arg CreateBillingPeriodParams) (BillingPeriod, error)
 	CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error)
 	CreatePaymentAllocation(ctx context.Context, arg CreatePaymentAllocationParams) error

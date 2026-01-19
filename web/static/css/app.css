@@ -632,6 +632,10 @@ body {
   margin-top: 0.75rem;
 }
 
+.mt-4 {
+  margin-top: 1rem;
+}
+
 .mt-5 {
   margin-top: 1.25rem;
 }
@@ -750,6 +754,10 @@ body {
 
 .min-w-\[240px\] {
   min-width: 240px;
+}
+
+.min-w-\[32px\] {
+  min-width: 32px;
 }
 
 .min-w-full {
@@ -894,6 +902,10 @@ body {
   border-color: rgb(59 130 246 / 0.5);
 }
 
+.border-blue-500\/60 {
+  border-color: rgb(59 130 246 / 0.6);
+}
+
 .border-emerald-400\/20 {
   border-color: rgb(52 211 153 / 0.2);
 }
@@ -929,6 +941,10 @@ body {
   border-color: rgb(30 41 59 / var(--tw-border-opacity, 1));
 }
 
+.border-slate-800\/60 {
+  border-color: rgb(30 41 59 / 0.6);
+}
+
 .border-slate-800\/70 {
   border-color: rgb(30 41 59 / 0.7);
 }
@@ -944,6 +960,10 @@ body {
 
 .bg-blue-500\/15 {
   background-color: rgb(59 130 246 / 0.15);
+}
+
+.bg-blue-500\/70 {
+  background-color: rgb(59 130 246 / 0.7);
 }
 
 .bg-emerald-400\/15 {
@@ -1168,6 +1188,11 @@ body {
   color: rgb(191 219 254 / var(--tw-text-opacity, 1));
 }
 
+.text-blue-400 {
+  --tw-text-opacity: 1;
+  color: rgb(96 165 250 / var(--tw-text-opacity, 1));
+}
+
 .text-emerald-100 {
   --tw-text-opacity: 1;
   color: rgb(209 250 229 / var(--tw-text-opacity, 1));
@@ -1321,6 +1346,11 @@ body {
   color: rgb(100 116 139 / var(--tw-text-opacity, 1));
 }
 
+.hover\:border-blue-400:hover {
+  --tw-border-opacity: 1;
+  border-color: rgb(96 165 250 / var(--tw-border-opacity, 1));
+}
+
 .hover\:border-blue-500\/60:hover {
   border-color: rgb(59 130 246 / 0.6);
 }
@@ -1382,6 +1412,16 @@ body {
   --tw-ring-color: rgb(59 130 246 / 0.2);
 }
 
+.disabled\:border-slate-800:disabled {
+  --tw-border-opacity: 1;
+  border-color: rgb(30 41 59 / var(--tw-border-opacity, 1));
+}
+
+.disabled\:text-slate-600:disabled {
+  --tw-text-opacity: 1;
+  color: rgb(71 85 105 / var(--tw-text-opacity, 1));
+}
+
 .group:hover .group-hover\:bg-blue-400 {
   --tw-bg-opacity: 1;
   background-color: rgb(96 165 250 / var(--tw-bg-opacity, 1));
@@ -1394,6 +1434,18 @@ body {
 
   .md\:grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .md\:flex-row {
+    flex-direction: row;
+  }
+
+  .md\:items-center {
+    align-items: center;
+  }
+
+  .md\:justify-between {
+    justify-content: space-between;
   }
 }
 

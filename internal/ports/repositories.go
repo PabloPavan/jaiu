@@ -12,6 +12,7 @@ type StudentRepository interface {
 	Update(ctx context.Context, student domain.Student) (domain.Student, error)
 	FindByID(ctx context.Context, id string) (domain.Student, error)
 	Search(ctx context.Context, filter StudentFilter) ([]domain.Student, error)
+	Count(ctx context.Context, filter StudentFilter) (int, error)
 }
 
 type StudentFilter struct {

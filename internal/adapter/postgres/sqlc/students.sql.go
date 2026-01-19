@@ -11,6 +11,24 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countStudents = `-- name: CountStudents :one
+SELECT COUNT(*) FROM students
+WHERE ($1 = '' OR full_name ILIKE '%' || $1 || '%' OR phone ILIKE '%' || $1 || '%' OR cpf ILIKE '%' || $1 || '%')
+  AND (COALESCE(array_length($2::student_status[], 1), 0) = 0 OR status = ANY($2::student_status[]))
+`
+
+type CountStudentsParams struct {
+	Column1 interface{}     `json:"column_1"`
+	Column2 []StudentStatus `json:"column_2"`
+}
+
+func (q *Queries) CountStudents(ctx context.Context, arg CountStudentsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countStudents, arg.Column1, arg.Column2)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createStudent = `-- name: CreateStudent :one
 INSERT INTO students (
   full_name,

@@ -42,6 +42,7 @@ type PlanService interface {
 }
 
 type StudentService interface {
+	Count(ctx context.Context, filter ports.StudentFilter) (int, error)
 	Search(ctx context.Context, filter ports.StudentFilter) ([]domain.Student, error)
 	FindByID(ctx context.Context, id string) (domain.Student, error)
 	Register(ctx context.Context, student domain.Student) (domain.Student, error)

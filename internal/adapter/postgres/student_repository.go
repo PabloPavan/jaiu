@@ -92,12 +92,7 @@ func (r *StudentRepository) Search(ctx context.Context, filter ports.StudentFilt
 		limit = 50
 	}
 
-	statuses := make([]sqlc.StudentStatus, 0, len(filter.Statuses))
-	for _, status := range filter.Statuses {
-		if status != "" {
-			statuses = append(statuses, sqlc.StudentStatus(status))
-		}
-	}
+	statuses := studentStatuses(filter.Statuses)
 
 	params := sqlc.SearchStudentsParams{
 		Column1: filter.Query,
@@ -117,6 +112,28 @@ func (r *StudentRepository) Search(ctx context.Context, filter ports.StudentFilt
 	}
 
 	return result, nil
+}
+
+func (r *StudentRepository) Count(ctx context.Context, filter ports.StudentFilter) (int, error) {
+	params := sqlc.CountStudentsParams{
+		Column1: filter.Query,
+		Column2: studentStatuses(filter.Statuses),
+	}
+	count, err := r.queries.CountStudents(ctx, params)
+	if err != nil {
+		return 0, err
+	}
+	return int(count), nil
+}
+
+func studentStatuses(statuses []domain.StudentStatus) []sqlc.StudentStatus {
+	result := make([]sqlc.StudentStatus, 0, len(statuses))
+	for _, status := range statuses {
+		if status != "" {
+			result = append(result, sqlc.StudentStatus(status))
+		}
+	}
+	return result
 }
 
 func mapStudent(student sqlc.Student) domain.Student {

@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/PabloPavan/jaiu/internal/view"
 	"github.com/go-chi/chi/v5"
 )
+
+const studentsPageSize = 5
 
 func (h *Handler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
 	data := h.buildStudentsData(r)
@@ -319,16 +322,57 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 	query := strings.TrimSpace(r.FormValue("q"))
 	status := normalizeStudentStatusValue(strings.TrimSpace(r.FormValue("status")))
 
+	page := 1
+	if value := strings.TrimSpace(r.FormValue("page")); value != "" {
+		if parsed, err := strconv.Atoi(value); err == nil && parsed > 0 {
+			page = parsed
+		}
+	}
+
+	statuses := statusFilter(status)
+
 	data := view.StudentsPageData{
-		Query:  query,
-		Status: status,
+		Query:      query,
+		Status:     status,
+		PageSize:   studentsPageSize,
+		Page:       page,
+		TotalPages: 1,
 	}
 
 	if h.services.Students != nil {
+		countFilter := ports.StudentFilter{
+			Query:    query,
+			Statuses: statuses,
+		}
+		total, err := h.services.Students.Count(r.Context(), countFilter)
+		if err != nil {
+			observability.Logger(r.Context()).Error("failed to count students", "err", err)
+		} else {
+			data.TotalItems = total
+		}
+
+		totalPages := 1
+		if data.TotalItems > 0 {
+			totalPages = (data.TotalItems + studentsPageSize - 1) / studentsPageSize
+		}
+		if totalPages == 0 {
+			totalPages = 1
+		}
+		if page < 1 {
+			page = 1
+		}
+		if page > totalPages {
+			page = totalPages
+		}
+		data.Page = page
+		data.TotalPages = totalPages
+
+		offset := (page - 1) * studentsPageSize
 		filter := ports.StudentFilter{
 			Query:    query,
-			Statuses: statusFilter(status),
-			Limit:    50,
+			Statuses: statuses,
+			Limit:    studentsPageSize,
+			Offset:   offset,
 		}
 		students, err := h.services.Students.Search(r.Context(), filter)
 		if err != nil {
@@ -350,6 +394,13 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 					StatusClass: className,
 				}
 				data.Items = append(data.Items, item)
+			}
+			if len(data.Items) > 0 {
+				data.StartIndex = offset + 1
+				data.EndIndex = offset + len(data.Items)
+				if data.EndIndex > data.TotalItems {
+					data.EndIndex = data.TotalItems
+				}
 			}
 		}
 	}

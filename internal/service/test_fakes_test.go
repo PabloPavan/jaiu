@@ -137,6 +137,17 @@ func (f *studentRepoFake) Search(ctx context.Context, filter ports.StudentFilter
 	return results, nil
 }
 
+func (f *studentRepoFake) Count(ctx context.Context, filter ports.StudentFilter) (int, error) {
+	countFilter := filter
+	countFilter.Limit = 0
+	countFilter.Offset = 0
+	students, err := f.Search(ctx, countFilter)
+	if err != nil {
+		return 0, err
+	}
+	return len(students), nil
+}
+
 type planRepoFake struct {
 	plans     map[string]domain.Plan
 	createErr error

@@ -117,6 +117,10 @@ func (s *StudentService) Search(ctx context.Context, filter ports.StudentFilter)
 	return s.repo.Search(ctx, filter)
 }
 
+func (s *StudentService) Count(ctx context.Context, filter ports.StudentFilter) (int, error) {
+	return s.repo.Count(ctx, filter)
+}
+
 func (s *StudentService) endSubscriptionsForStudent(ctx context.Context, studentID string) error {
 	if s.subscriptions == nil {
 		return errors.New("assinaturas indisponiveis")

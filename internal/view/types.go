@@ -59,9 +59,15 @@ type StudentItem struct {
 }
 
 type StudentsPageData struct {
-	Query  string
-	Status string
-	Items  []StudentItem
+	Query      string
+	Status     string
+	Page       int
+	PageSize   int
+	TotalItems int
+	TotalPages int
+	StartIndex int
+	EndIndex   int
+	Items      []StudentItem
 }
 
 type StudentFormData struct {

@@ -17,7 +17,7 @@ templ StudentsPage(data StudentsPageData) {
 				</a>
 			</div>
 
-			<form class="mt-5 flex flex-wrap items-center gap-3" method="get" action="/students" hx-get="/students" hx-target="#students-list" hx-swap="outerHTML" hx-push-url="true">
+			<form class="mt-5 flex flex-wrap items-center gap-3" id="students-filter-form" method="get" action="/students" hx-get="/students" hx-target="#students-list" hx-swap="outerHTML" hx-push-url="true">
 				<label class="relative flex min-w-[220px] flex-1 items-center">
 					<span class="pointer-events-none absolute left-3 text-slate-500">
 						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -49,8 +49,7 @@ templ StudentsList(data StudentsPageData) {
 				<a class="rounded-full border border-blue-500/50 px-4 py-2 text-xs font-semibold text-blue-100 hover:bg-blue-500/10" href="/students/new">Cadastrar aluno</a>
 			</div>
 		} else {
-			<div class="overflow-x-auto">
-				<table class="min-w-full text-sm">
+			<table class="min-w-full text-sm">
 					<thead class="bg-slate-950/50 text-[11px] uppercase tracking-[0.24em] text-slate-500">
 						<tr>
 							<th class="px-6 py-4 text-left font-semibold">Aluno</th>
@@ -110,7 +109,54 @@ templ StudentsList(data StudentsPageData) {
 							</tr>
 						}
 					</tbody>
-				</table>
+			</table>
+			<div class="mt-4 flex flex-col gap-3 border-t border-slate-800/60 pt-4 text-xs text-slate-400 md:flex-row md:items-center md:justify-between">
+				<p>
+					Mostrando
+					<span class="text-slate-100">{data.StartIndex}</span>
+					- <span class="text-slate-100">{data.EndIndex}</span>
+					de <span class="text-blue-400">{data.TotalItems}</span>
+					alunos
+				</p>
+				if data.TotalPages > 1 {
+					<nav class="flex flex-wrap items-center gap-2">
+						<button
+							class="inline-flex items-center justify-center rounded-full border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-blue-400 hover:text-white disabled:border-slate-800 disabled:text-slate-600"
+							type="submit"
+							form="students-filter-form"
+							name="page"
+							value={strconv.Itoa(data.Page - 1)}
+							disabled?={data.Page <= 1}
+						>Anterior</button>
+						for pageNumber := 1; pageNumber <= data.TotalPages; pageNumber++ {
+							if pageNumber == data.Page {
+								<button
+									class="min-w-[32px] rounded-full border border-blue-500/60 bg-blue-500/70 px-3 py-1 text-[11px] font-semibold text-white shadow-lg shadow-blue-500/30"
+									type="submit"
+									form="students-filter-form"
+									name="page"
+									value={strconv.Itoa(pageNumber)}
+								>{pageNumber}</button>
+							} else {
+								<button
+									class="min-w-[32px] rounded-full border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-400 transition hover:border-blue-500/60 hover:text-white"
+									type="submit"
+									form="students-filter-form"
+									name="page"
+									value={strconv.Itoa(pageNumber)}
+								>{pageNumber}</button>
+							}
+						}
+						<button
+							class="inline-flex items-center justify-center rounded-full border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-blue-400 hover:text-white disabled:border-slate-800 disabled:text-slate-600"
+							type="submit"
+							form="students-filter-form"
+							name="page"
+							value={strconv.Itoa(data.Page + 1)}
+							disabled?={data.Page >= data.TotalPages}
+						>Proximo</button>
+					</nav>
+				}
 			</div>
 		}
 	</div>
