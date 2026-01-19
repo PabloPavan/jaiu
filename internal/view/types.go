@@ -46,28 +46,35 @@ type PlanFormData struct {
 }
 
 type StudentItem struct {
-	ID          string
-	FullName    string
-	BirthDate   string
-	Phone       string
-	Email       string
-	PhotoURL    string
-	Initials    string
-	Status      string
-	StatusLabel string
-	StatusClass string
+	ID              string
+	FullName        string
+	BirthDate       string
+	Phone           string
+	Email           string
+	PhotoURL        string
+	Initials        string
+	Status          string
+	StatusLabel     string
+	StatusClass     string
+	PlanName        string
+	LastPaymentDate string
+	LastPaymentInfo string
 }
 
 type StudentsPageData struct {
-	Query      string
-	Status     string
-	Page       int
-	PageSize   int
-	TotalItems int
-	TotalPages int
-	StartIndex int
-	EndIndex   int
-	Items      []StudentItem
+	Query             string
+	Status            string
+	Page              int
+	PageSize          int
+	TotalItems        int
+	TotalPages        int
+	StartIndex        int
+	EndIndex          int
+	TotalStudents     int
+	ActiveStudents    int
+	InactiveStudents  int
+	SuspendedStudents int
+	Items             []StudentItem
 }
 
 type StudentFormData struct {

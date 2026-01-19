@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -318,6 +319,19 @@ func statusPresentation(status domain.StudentStatus) (string, string) {
 	}
 }
 
+func (h *Handler) fetchStudentCount(ctx context.Context, statuses []domain.StudentStatus) (int, error) {
+	if h.services.Students == nil {
+		return 0, nil
+	}
+	count, err := h.services.Students.Count(ctx, ports.StudentFilter{
+		Statuses: statuses,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 	query := strings.TrimSpace(r.FormValue("q"))
 	status := normalizeStudentStatusValue(strings.TrimSpace(r.FormValue("status")))
@@ -340,15 +354,26 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 	}
 
 	if h.services.Students != nil {
-		countFilter := ports.StudentFilter{
-			Query:    query,
-			Statuses: statuses,
+		if total, err := h.fetchStudentCount(r.Context(), nil); err != nil {
+			observability.Logger(r.Context()).Error("failed to count students", "err", err)
+		} else {
+			data.TotalStudents = total
 		}
-		total, err := h.services.Students.Count(r.Context(), countFilter)
+		if total, err := h.fetchStudentCount(r.Context(), []domain.StudentStatus{domain.StudentActive}); err == nil {
+			data.ActiveStudents = total
+		}
+		if total, err := h.fetchStudentCount(r.Context(), []domain.StudentStatus{domain.StudentInactive}); err == nil {
+			data.InactiveStudents = total
+		}
+		if total, err := h.fetchStudentCount(r.Context(), []domain.StudentStatus{domain.StudentSuspended}); err == nil {
+			data.SuspendedStudents = total
+		}
+
+		count, err := h.fetchStudentCount(r.Context(), statuses)
 		if err != nil {
 			observability.Logger(r.Context()).Error("failed to count students", "err", err)
 		} else {
-			data.TotalItems = total
+			data.TotalItems = count
 		}
 
 		totalPages := 1
@@ -382,16 +407,19 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 			for _, student := range students {
 				label, className := statusPresentation(student.Status)
 				item := view.StudentItem{
-					ID:          student.ID,
-					FullName:    student.FullName,
-					BirthDate:   formatDateBR(student.BirthDate),
-					Phone:       student.Phone,
-					Email:       student.Email,
-					PhotoURL:    h.photoURLForVariant(student.PhotoObjectKey, "list"),
-					Initials:    studentInitials(student.FullName),
-					Status:      string(student.Status),
-					StatusLabel: label,
-					StatusClass: className,
+					ID:              student.ID,
+					FullName:        student.FullName,
+					BirthDate:       formatDateBR(student.BirthDate),
+					Phone:           student.Phone,
+					Email:           student.Email,
+					PhotoURL:        h.photoURLForVariant(student.PhotoObjectKey, "list"),
+					Initials:        studentInitials(student.FullName),
+					Status:          string(student.Status),
+					StatusLabel:     label,
+					StatusClass:     className,
+					PlanName:        "",
+					LastPaymentDate: "",
+					LastPaymentInfo: "",
 				}
 				data.Items = append(data.Items, item)
 			}
