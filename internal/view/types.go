@@ -55,26 +55,27 @@ type StudentItem struct {
 	Initials        string
 	Status          string
 	StatusLabel     string
-	StatusClass     string
 	PlanName        string
 	LastPaymentDate string
 	LastPaymentInfo string
 }
 
 type StudentsPageData struct {
-	Query             string
-	Status            string
-	Page              int
-	PageSize          int
-	TotalItems        int
-	TotalPages        int
-	StartIndex        int
-	EndIndex          int
-	TotalStudents     int
-	ActiveStudents    int
-	InactiveStudents  int
-	SuspendedStudents int
-	Items             []StudentItem
+	Query                string
+	Status               string
+	Page                 int
+	PageSize             int
+	TotalItems           int
+	TotalPages           int
+	StartIndex           int
+	EndIndex             int
+	TotalStudents        int
+	ActiveStudents       int
+	InactiveStudents     int
+	SuspendedStudents    int
+	OverduePayments      int
+	NewStudentsThisMonth int
+	Items                []StudentItem
 }
 
 type StudentFormData struct {

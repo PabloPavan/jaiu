@@ -19,7 +19,7 @@ const studentsPageSize = 5
 
 func (h *Handler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
 	data := h.buildStudentsData(r)
-	h.renderHTMXOrPage(w, r, "Alunos", view.StudentsPage(data), view.StudentsList(data))
+	h.renderHTMXOrPage(w, r, "Alunos", view.StudentsPage(data), view.StudentsContent(data))
 }
 
 func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +38,6 @@ func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
 		} else {
 			data.Items = make([]view.StudentItem, 0, len(students))
 			for _, student := range students {
-				label, className := statusPresentation(student.Status)
 				item := view.StudentItem{
 					ID:          student.ID,
 					FullName:    student.FullName,
@@ -48,8 +47,7 @@ func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
 					PhotoURL:    h.photoURLForVariant(student.PhotoObjectKey, "list"),
 					Initials:    studentInitials(student.FullName),
 					Status:      string(student.Status),
-					StatusLabel: label,
-					StatusClass: className,
+					StatusLabel: statusPresentation(student.Status),
 				}
 				data.Items = append(data.Items, item)
 			}
@@ -299,23 +297,36 @@ func normalizeStudentStatusValue(value string) string {
 	switch strings.ToLower(value) {
 	case "all":
 		return "all"
+	case string(domain.StudentActive):
+		return string(domain.StudentActive)
 	case string(domain.StudentInactive):
 		return string(domain.StudentInactive)
 	case string(domain.StudentSuspended):
 		return string(domain.StudentSuspended)
 	default:
-		return string(domain.StudentActive)
+		return "all"
 	}
 }
 
-func statusPresentation(status domain.StudentStatus) (string, string) {
+// func statusPresentation(status domain.StudentStatus) (string, string) {
+// 	switch status {
+// 	case domain.StudentInactive:
+// 		return "Inativo", "inline-flex items-center rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1 text-[11px] font-semibold text-slate-400"
+// 	case domain.StudentSuspended:
+// 		return "Suspenso", "inline-flex items-center rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold text-amber-200"
+// 	default:
+// 		return "Ativo", "inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold text-emerald-200"
+// 	}
+// }
+
+func statusPresentation(status domain.StudentStatus) string {
 	switch status {
 	case domain.StudentInactive:
-		return "Inativo", "inline-flex items-center rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1 text-[11px] font-semibold text-slate-400"
+		return "Inativo"
 	case domain.StudentSuspended:
-		return "Suspenso", "inline-flex items-center rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold text-amber-200"
+		return "Suspenso"
 	default:
-		return "Ativo", "inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold text-emerald-200"
+		return "Ativo"
 	}
 }
 
@@ -405,7 +416,6 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 		} else {
 			data.Items = make([]view.StudentItem, 0, len(students))
 			for _, student := range students {
-				label, className := statusPresentation(student.Status)
 				item := view.StudentItem{
 					ID:              student.ID,
 					FullName:        student.FullName,
@@ -415,8 +425,7 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 					PhotoURL:        h.photoURLForVariant(student.PhotoObjectKey, "list"),
 					Initials:        studentInitials(student.FullName),
 					Status:          string(student.Status),
-					StatusLabel:     label,
-					StatusClass:     className,
+					StatusLabel:     statusPresentation(student.Status),
 					PlanName:        "",
 					LastPaymentDate: "",
 					LastPaymentInfo: "",

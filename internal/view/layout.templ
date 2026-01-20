@@ -64,7 +64,7 @@ templ BaseLayout(title string, currentUser *UserInfo, content templ.Component) {
 			<div class="app-shell flex min-h-screen flex-col bg-slate-950 text-slate-100 lg:flex-row">
 				@Nav(currentUser)
 				<div class="flex min-h-screen flex-1 flex-col">
-					<main id="page-content" class="mx-auto w-full max-w-7xl px-6 py-8">
+					<main id="page-content" class="mx-auto w-full max-w-7xl px-6 py-4">
 						if content != nil {
 							@content
 						}

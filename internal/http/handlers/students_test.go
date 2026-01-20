@@ -39,11 +39,11 @@ func TestNormalizeStudentStatusValue(t *testing.T) {
 
 // Testa apresentacao do status do aluno.
 func TestStatusPresentation(t *testing.T) {
-	label, _ := statusPresentation(domain.StudentSuspended)
+	label := statusPresentation(domain.StudentSuspended)
 	if label != "Suspenso" {
 		t.Fatalf("expected Suspenso, got %q", label)
 	}
-	label, _ = statusPresentation(domain.StudentActive)
+	label = statusPresentation(domain.StudentActive)
 	if label != "Ativo" {
 		t.Fatalf("expected Ativo, got %q", label)
 	}

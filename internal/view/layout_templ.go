@@ -50,7 +50,7 @@ func BaseLayout(title string, currentUser *UserInfo, content templ.Component) te
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"flex min-h-screen flex-1 flex-col\"><main id=\"page-content\" class=\"mx-auto w-full max-w-7xl px-6 py-8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"flex min-h-screen flex-1 flex-col\"><main id=\"page-content\" class=\"mx-auto w-full max-w-7xl px-6 py-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

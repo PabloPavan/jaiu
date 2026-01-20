@@ -3,109 +3,163 @@ package view
 import "strconv"
 
 templ StudentsPage(data StudentsPageData) {
-	<section class="space-y-6 reveal">
-		<div class="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-6 shadow-[0_0_0_1px_rgba(59,130,246,0.12)]">
-			<div class="flex flex-wrap items-center justify-between gap-4">
-				<div>
-					<p class="text-xs uppercase tracking-[0.35em] text-slate-400">Student Directory</p>
-					<h1 class="mt-2 text-3xl font-semibold text-white sm:text-4xl">Student Directory</h1>
-					<p class="mt-1 text-sm text-slate-400">Manage {data.TotalStudents} enrollments and billing status in real time.</p>
+	<section id="students-page" class="space-y-6">
+		<div class="sm:p-8">
+			<div class="flex flex-wrap items-start justify-between gap-4">
+				<div class="space-y-1">
+					<h1 class="text-3xl font-semibold text-white sm:text-4xl">Alunos</h1>
+					<p class="text-sm text-slate-400">Gerencie {data.TotalStudents} matrículas em tempo real.</p>
 				</div>
-				<div class="flex gap-3">
-					<button class="rounded-2xl border border-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500/60 hover:text-white" type="button">Export</button>
-					<a class="inline-flex items-center gap-2 rounded-2xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-400" href="/students/new">
-						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-base leading-none">+</span>
-						Add New Student
+				<div class="flex flex-wrap items-center gap-3">
+					<button class="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white" type="button">
+						Exportar
+					</button>
+					<a class="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-400" href="/students/new">
+						<span class="flex h-6 w-6 items-center justify-center rounded-lg bg-white/15 text-base leading-none">+</span>
+						Adicionar Aluno
 					</a>
 				</div>
 			</div>
+			@StudentsContent(data)
+		</div>
+	</section>
+}
 
-			<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				<div class="rounded-2xl border border-slate-800/70 bg-slate-950/50 p-4">
-					<p class="text-xs uppercase tracking-[0.35em] text-slate-400">Total Students</p>
-					<p class="mt-2 text-3xl font-semibold text-white">{data.TotalStudents}</p>
-				</div>
-				<div class="rounded-2xl border border-slate-800/70 bg-slate-950/50 p-4">
-					<p class="text-xs uppercase tracking-[0.35em] text-slate-400">Active Now</p>
-					<p class="mt-2 text-3xl font-semibold text-emerald-400">{data.ActiveStudents}</p>
-				</div>
-				<div class="rounded-2xl border border-slate-800/70 bg-slate-950/50 p-4">
-					<p class="text-xs uppercase tracking-[0.35em] text-slate-400">Inactive</p>
-					<p class="mt-2 text-3xl font-semibold text-slate-200">{data.InactiveStudents}</p>
-				</div>
-				<div class="rounded-2xl border border-slate-800/70 bg-slate-950/50 p-4">
-					<p class="text-xs uppercase tracking-[0.35em] text-slate-400">Suspended</p>
-					<p class="mt-2 text-3xl font-semibold text-amber-300">{data.SuspendedStudents}</p>
+templ StudentsContent(data StudentsPageData) {
+	<div id="students-content">
+		<div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+			<div class="bg-white dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+				<p class="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Total</p>
+				<div class="mt-2 flex items-center justify-between">
+					<p class="text-3xl font-semibold text-white">{data.TotalStudents}</p>
 				</div>
 			</div>
-
-			<div class="mt-6 flex flex-wrap items-center gap-3">
-				<span class="text-xs uppercase tracking-[0.5em] text-slate-500">Filters</span>
-				<div class="flex flex-wrap gap-2">
-					<span class="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-200">
-						All Students
-						<span class="rounded-full bg-blue-500/50 px-2 py-0.5 text-[10px] font-bold text-white">{data.TotalStudents}</span>
-					</span>
-					<span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
-						Active
-						<span class="rounded-full bg-emerald-500/50 px-2 py-0.5 text-[10px] font-bold text-white">{data.ActiveStudents}</span>
-					</span>
-					<span class="inline-flex items-center gap-2 rounded-full bg-slate-500/20 px-3 py-1 text-xs font-semibold text-slate-300">
-						Inactive
-						<span class="rounded-full bg-slate-600/70 px-2 py-0.5 text-[10px] font-bold text-white">{data.InactiveStudents}</span>
-					</span>
-					<span class="inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
-						Suspended
-						<span class="rounded-full bg-amber-500/60 px-2 py-0.5 text-[10px] font-bold text-white">{data.SuspendedStudents}</span>
-					</span>
+			<div class="bg-white dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+				<p class="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Ativos</p>
+				<div class="mt-2 flex items-center justify-between">
+					<p class="text-3xl font-semibold text-emerald-400">{data.ActiveStudents}</p>
 				</div>
 			</div>
+			<div class="bg-white dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+				<p class="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Pagamento Atrasado</p>
+				<div class="mt-2 flex items-center justify-between">
+					<p class="text-3xl font-semibold text-red-500">{data.OverduePayments}</p>
+				</div>
+			</div>
+			<div class="bg-white dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+				<p class="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Novos nesse mês</p>
+				<div class="mt-2 flex items-center justify-between">
+					<p class="text-3xl font-semibold text-blue-500">{data.NewStudentsThisMonth}</p>
+				</div>
+			</div>
+		</div>
 
-			<form class="mt-6 flex flex-wrap items-center gap-3" id="students-filter-form" method="get" action="/students" hx-get="/students" hx-target="#students-list" hx-swap="outerHTML" hx-push-url="true">
-				<label class="relative flex min-w-[220px] flex-1 items-center">
+		<form
+			id="students-filter-form"
+			method="get"
+			action="/students"
+			hx-get="/students"
+			hx-target="#students-content"
+			hx-swap="outerHTML"
+			hx-push-url="true"
+			hx-trigger="submit, keyup changed delay:250ms from:#student-search"
+			class="mt-6 space-y-4 mb-5"
+		>
+			<div class="flex flex-wrap items-center gap-3">
+				<label class="relative flex min-w-[260px] flex-1 items-center">
 					<span class="pointer-events-none absolute left-3 text-slate-500">
 						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
 							<circle cx="11" cy="11" r="7"></circle>
 							<path d="M20 20l-3.5-3.5"></path>
 						</svg>
 					</span>
-					<input class="w-full rounded-2xl border border-slate-800 bg-slate-950/70 px-10 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20" name="q" placeholder="Search students, email or cpf" type="search" value={data.Query}/>
+					<input
+						id="student-search"
+						class="w-full rounded-lg border border-slate-800 bg-slate-950/70 px-10 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+						name="q"
+						placeholder="Buscar estudantes, por nome, email ou CPF"
+						type="search"
+						value={data.Query}
+						hx-on="input: document.getElementById('students-filter-page').value='1'"
+					/>
 				</label>
-				<select class="rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20" name="status">
-					<option value="active" selected?={data.Status == "" || data.Status == "active"}>Active</option>
-					<option value="inactive" selected?={data.Status == "inactive"}>Inactive</option>
-					<option value="suspended" selected?={data.Status == "suspended"}>Suspended</option>
-					<option value="all" selected?={data.Status == "all"}>All</option>
-				</select>
-				<button class="rounded-2xl border border-slate-800 px-4 py-2 text-sm text-slate-200 transition hover:border-blue-500/60 hover:text-white" type="submit">Apply filters</button>
-			</form>
-		</div>
+			</div>
+
+			<input type="hidden" name="status" id="students-filter-status" value={data.Status}/>
+			<input type="hidden" name="page" id="students-filter-page" value={data.Page}/>
+
+			<div class="flex flex-wrap items-center gap-3">
+				<div class="flex flex-wrap gap-2">
+					<button
+						class={studentsFilterChipClass(data.Status, "all")}
+						type="button"
+						data-status="all"
+						hx-on="click: document.getElementById('students-filter-status').value='all'; document.getElementById('students-filter-page').value='1'; this.form.requestSubmit()"
+						aria-pressed={data.Status == "all"}
+					>
+						Todos os Estudantes
+						<span class="rounded-lg bg-blue-500/30 px-2 py-0.5 text-[10px] font-bold text-blue-50">{data.TotalStudents}</span>
+					</button>
+					<button
+						class={studentsFilterChipClass(data.Status, "active")}
+						type="button"
+						data-status="active"
+						hx-on="click: document.getElementById('students-filter-status').value='active'; document.getElementById('students-filter-page').value='1'; this.form.requestSubmit()"
+						aria-pressed={data.Status == "active"}
+					>
+						Ativos
+						<span class="rounded-lg bg-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-50">{data.ActiveStudents}</span>
+					</button>
+					<button
+						class={studentsFilterChipClass(data.Status, "inactive")}
+						type="button"
+						data-status="inactive"
+						hx-on="click: document.getElementById('students-filter-status').value='inactive'; document.getElementById('students-filter-page').value='1'; this.form.requestSubmit()"
+						aria-pressed={data.Status == "inactive"}
+					>
+						Inativos
+						<span class="rounded-lg bg-slate-500/40 px-2 py-0.5 text-[10px] font-bold text-slate-100">{data.InactiveStudents}</span>
+					</button>
+					<button
+						class={studentsFilterChipClass(data.Status, "suspended")}
+						type="button"
+						data-status="suspended"
+						hx-on="click: document.getElementById('students-filter-status').value='suspended'; document.getElementById('students-filter-page').value='1'; this.form.requestSubmit()"
+						aria-pressed={data.Status == "suspended"}
+					>
+						Suspensos
+						<span class="rounded-lg bg-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-50">{data.SuspendedStudents}</span>
+					</button>
+				</div>
+			</div>
+		</form>
+
 		@StudentsList(data)
-	</section>
+	</div>
 }
 
 templ StudentsList(data StudentsPageData) {
-	<div id="students-list" data-sse-topic="students" data-sse-url="/students" class="reveal-delayed rounded-2xl border border-slate-800/70 bg-slate-900/60 shadow-[0_0_0_1px_rgba(59,130,246,0.08)]">
+	<div id="students-list" data-sse-topic="students" data-sse-url="/students" class="overflow-hidden rounded-lg border border-slate-800/70 bg-slate-900/60 shadow-[0_0_0_1px_rgba(59,130,246,0.08)]">
 		if len(data.Items) == 0 {
 			<div class="flex flex-col items-center gap-3 px-6 py-12 text-center text-sm text-slate-400">
-				<div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10 text-blue-200 text-lg">+</div>
+				<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10 text-blue-200 text-lg">+</div>
 				<p>Nenhum aluno encontrado.</p>
-				<a class="rounded-full border border-blue-500/50 px-4 py-2 text-xs font-semibold text-blue-100 hover:bg-blue-500/10" href="/students/new">Cadastrar aluno</a>
+				<a class="rounded-lg border border-blue-500/50 px-4 py-2 text-xs font-semibold text-blue-100 hover:bg-blue-500/10" href="/students/new">Cadastrar aluno</a>
 			</div>
 		} else {
 			<table class="min-w-full divide-y divide-slate-800 text-sm">
-				<thead class="bg-slate-950/50 text-[11px] uppercase tracking-[0.24em] text-slate-500">
+				<thead class="bg-slate-950/70 text-[11px] uppercase tracking-[0.24em] text-slate-500">
 					<tr>
-						<th class="px-6 py-4 text-left font-semibold">Student Details</th>
-						<th class="px-6 py-4 text-left font-semibold">Plan Type</th>
-						<th class="px-6 py-4 text-left font-semibold">Status</th>
-						<th class="px-6 py-4 text-left font-semibold">Last Payment</th>
-						<th class="px-6 py-4 text-right font-semibold">Actions</th>
+						<th class="px-6 py-4 text-left font-semibold text-slate-400">Student Details</th>
+						<th class="px-6 py-4 text-left font-semibold text-slate-400">Plan Type</th>
+						<th class="px-6 py-4 text-left font-semibold text-slate-400">Status</th>
+						<th class="px-6 py-4 text-left font-semibold text-slate-400">Last Payment</th>
+						<th class="px-6 py-4 text-right font-semibold text-slate-400">Actions</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-slate-800/70">
 					for index, item := range data.Items {
-						<tr class="row-reveal transition-colors hover:bg-slate-900/60" style={"--row:" + strconv.Itoa(index) + ";"}>
+						<tr class="row-reveal transition-colors hover:bg-slate-900/60" style={"--row:" + strconv.Itoa(index)}>
 							<td class="px-6 py-4">
 								<div class="flex items-center gap-4">
 									<div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-slate-800 bg-slate-950 text-sm font-semibold text-slate-200">
@@ -126,7 +180,7 @@ templ StudentsList(data StudentsPageData) {
 								</div>
 							</td>
 							<td class="px-6 py-4 text-xs">
-								<span class="inline-flex items-center rounded-full bg-slate-800/70 px-3 py-1 text-slate-300">
+								<span class="inline-flex items-center rounded-lg bg-sky-500/10 px-3 py-1 text-sky-100 ring-1 ring-sky-500/30">
 									if item.PlanName != "" {
 										{item.PlanName}
 									} else {
@@ -135,15 +189,15 @@ templ StudentsList(data StudentsPageData) {
 								</span>
 							</td>
 							<td class="px-6 py-4">
-								<span class={item.StatusClass}>{item.StatusLabel}</span>
+								<span class={statusStyle(item.Status)}>{item.StatusLabel}</span>
 							</td>
 							<td class="px-6 py-4 text-xs text-slate-300">
 								if item.LastPaymentDate != "" {
-									<p class="font-semibold text-slate-100">{item.LastPaymentDate}</p>
+									<p class="text-sm font-semibold text-slate-100">{item.LastPaymentDate}</p>
 									if item.LastPaymentInfo != "" {
-										<p>{item.LastPaymentInfo}</p>
+										<p class="text-[11px] uppercase tracking-[0.08em] text-slate-500">{item.LastPaymentInfo}</p>
 									} else {
-										<p>—</p>
+										<p class="text-[11px] uppercase tracking-[0.08em] text-slate-500">—</p>
 									}
 								} else {
 									<p class="text-slate-500">Sem registro</p>
@@ -151,66 +205,73 @@ templ StudentsList(data StudentsPageData) {
 							</td>
 							<td class="px-6 py-4 text-right">
 								<div class="flex items-center justify-end gap-2">
-									<a class="rounded-full border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-200 transition hover:border-blue-500/60 hover:text-white" href={"/students/" + item.ID + "/edit"}>Edit</a>
-									<button class="h-10 w-10 rounded-full bg-slate-900/70 text-slate-300 transition hover:bg-slate-800" type="button">
-										<span class="material-symbols-outlined">open_in_new</span>
-									</button>
+									<a
+										class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700/70 text-slate-200 transition hover:border-blue-500/60 hover:text-white"
+										href={"/students/" + item.ID + "/edit"}
+										aria-label={"Editar " + item.FullName}
+									>
+										<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+											<path d="M12 20h9"></path>
+											<path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+										</svg>
+									</a>
 								</div>
 							</td>
 						</tr>
 					}
 				</tbody>
 			</table>
-			<div class="mt-4 flex flex-col gap-3 border-t border-slate-800/60 pt-4 text-xs text-slate-400 md:flex-row md:items-center md:justify-between">
-				<p>
-					Showing
-					<span class="text-slate-100">{data.StartIndex}</span>
-					- <span class="text-slate-100">{data.EndIndex}</span>
-					of <span class="text-blue-400">{data.TotalItems}</span>
-					entries
-				</p>
-				if data.TotalPages > 1 {
-					<nav class="flex flex-wrap items-center gap-2">
-						<button
-							class="inline-flex items-center justify-center rounded-full border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-blue-400 hover:text-white disabled:border-slate-800 disabled:text-slate-600"
-							type="submit"
-							form="students-filter-form"
-							name="page"
-							value={strconv.Itoa(data.Page - 1)}
-							disabled?={data.Page <= 1}
-						>Anterior</button>
-						for pageNumber := 1; pageNumber <= data.TotalPages; pageNumber++ {
-							if pageNumber == data.Page {
-								<button
-									class="min-w-[32px] rounded-full border border-blue-500/60 bg-blue-500/70 px-3 py-1 text-[11px] font-semibold text-white shadow-lg shadow-blue-500/30"
-									type="submit"
-									form="students-filter-form"
-									name="page"
-									value={strconv.Itoa(pageNumber)}
-								>{pageNumber}</button>
-							} else {
-								<button
-									class="min-w-[32px] rounded-full border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-400 transition hover:border-blue-500/60 hover:text-white"
-									type="submit"
-									form="students-filter-form"
-									name="page"
-									value={strconv.Itoa(pageNumber)}
-								>{pageNumber}</button>
-							}
-						}
-						<button
-							class="inline-flex items-center justify-center rounded-full border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-blue-400 hover:text-white disabled:border-slate-800 disabled:text-slate-600"
-							type="submit"
-							form="students-filter-form"
-							name="page"
-							value={strconv.Itoa(data.Page + 1)}
-							disabled?={data.Page >= data.TotalPages}
-						>Next</button>
-					</nav>
-				}
-			</div>
+
 		}
 	</div>
+	<div class="mt-4 flex flex-col gap-3 pt-4 text-xs text-slate-400 md:flex-row md:items-center md:justify-between">
+	<p>
+		Mostrando
+		<span class="text-slate-100">{data.StartIndex}</span>
+		- <span class="text-slate-100">{data.EndIndex}</span>
+		de <span class="text-blue-400">{data.TotalItems}</span>
+		alunos
+	</p>
+	if data.TotalPages > 1 {
+		<nav class="flex flex-wrap items-center gap-2">
+			<button
+				class="page-btn inline-flex items-center justify-center rounded-lg border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-blue-400 hover:text-white disabled:border-slate-800 disabled:text-slate-600"
+				type="submit"
+				form="students-filter-form"
+				name="page"
+				value={strconv.Itoa(data.Page - 1)}
+				disabled?={data.Page <= 1}
+			>Anterior</button>
+			for pageNumber := 1; pageNumber <= data.TotalPages; pageNumber++ {
+				if pageNumber == data.Page {
+					<button
+						class="page-btn min-w-[32px] rounded-lg border border-blue-500/60 bg-blue-500/70 px-3 py-1 text-[11px] font-semibold text-white shadow-lg shadow-blue-500/30"
+						type="submit"
+						form="students-filter-form"
+						name="page"
+						value={strconv.Itoa(pageNumber)}
+					>{pageNumber}</button>
+				} else {
+					<button
+						class="page-btn min-w-[32px] rounded-lg border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-400 transition hover:border-blue-500/60 hover:text-white"
+						type="submit"
+						form="students-filter-form"
+						name="page"
+						value={strconv.Itoa(pageNumber)}
+					>{pageNumber}</button>
+				}
+			}
+			<button
+				class="page-btn inline-flex items-center justify-center rounded-lg border border-slate-700/70 px-3 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-blue-400 hover:text-white disabled:border-slate-800 disabled:text-slate-600"
+				type="submit"
+				form="students-filter-form"
+				name="page"
+				value={strconv.Itoa(data.Page + 1)}
+				disabled?={data.Page >= data.TotalPages}
+			>Next</button>
+		</nav>
+	}
+</div>
 }
 
 templ StudentsPreview(data StudentsPreviewData) {
@@ -222,7 +283,7 @@ templ StudentsPreview(data StudentsPreviewData) {
 				<li class="rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-2">
 					<div class="flex items-center justify-between gap-2 text-sm">
 						<span>{item.FullName}</span>
-						<span class={item.StatusClass}>{item.StatusLabel}</span>
+						<span class={statusStyle(item.Status)}>{item.StatusLabel}</span>
 					</div>
 					if item.BirthDate != "" {
 						<p class="mt-1 text-xs text-slate-500">Nascimento: {item.BirthDate}</p>
