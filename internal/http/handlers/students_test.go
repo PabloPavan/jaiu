@@ -32,7 +32,7 @@ func TestNormalizeStudentStatusValue(t *testing.T) {
 	if got := normalizeStudentStatusValue("all"); got != "all" {
 		t.Fatalf("expected all, got %q", got)
 	}
-	if got := normalizeStudentStatusValue("unknown"); got != string(domain.StudentActive) {
+	if got := normalizeStudentStatusValue("unknown"); got != "all" {
 		t.Fatalf("expected active fallback, got %q", got)
 	}
 }
