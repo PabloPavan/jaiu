@@ -8,6 +8,7 @@
 
 #aux
 /stitch_gym_management_admin_dashboard/
+/sql_local
 
 # Environment
 .env

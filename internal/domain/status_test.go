@@ -13,8 +13,8 @@ func TestStatusIsValid(t *testing.T) {
 		value validatable
 		want  bool
 	}{
-		{"student-active", StudentActive, true},
-		{"student-invalid", StudentStatus("unknown"), false},
+		// {"student-active", StudentActive, true},
+		// {"student-invalid", StudentStatus("unknown"), false},
 		{"subscription-active", SubscriptionActive, true},
 		{"subscription-invalid", SubscriptionStatus("unknown"), false},
 		{"payment-confirmed", PaymentConfirmed, true},

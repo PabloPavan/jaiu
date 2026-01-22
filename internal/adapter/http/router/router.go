@@ -37,15 +37,7 @@ func New(h *handlers.Handler, sessions ports.SessionStore, cookieName string, no
 
 		r.Get("/", h.Home)
 
-		r.Route("/students", func(r chi.Router) {
-			r.Get("/", h.StudentsIndex)
-			r.Get("/new", h.StudentsNew)
-			r.Post("/", h.StudentsCreate)
-			r.Get("/{studentID}/edit", h.StudentsEdit)
-			r.Post("/{studentID}", h.StudentsUpdate)
-			r.Post("/{studentID}/delete", h.StudentsDelete)
-			r.With(httpmw.RequireHTMX).Get("/preview", h.StudentsPreview)
-		})
+		//	r.Mount("/students", student.Routes())
 
 		r.Route("/plans", func(r chi.Router) {
 			r.Get("/", h.PlansIndex)

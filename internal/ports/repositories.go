@@ -7,21 +7,6 @@ import (
 	"github.com/PabloPavan/jaiu/internal/domain"
 )
 
-type StudentRepository interface {
-	Create(ctx context.Context, student domain.Student) (domain.Student, error)
-	Update(ctx context.Context, student domain.Student) (domain.Student, error)
-	FindByID(ctx context.Context, id string) (domain.Student, error)
-	Search(ctx context.Context, filter StudentFilter) ([]domain.Student, error)
-	Count(ctx context.Context, filter StudentFilter) (int, error)
-}
-
-type StudentFilter struct {
-	Query    string
-	Statuses []domain.StudentStatus
-	Limit    int
-	Offset   int
-}
-
 type PlanRepository interface {
 	Create(ctx context.Context, plan domain.Plan) (domain.Plan, error)
 	Update(ctx context.Context, plan domain.Plan) (domain.Plan, error)

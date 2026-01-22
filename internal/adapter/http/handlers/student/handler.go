@@ -8,21 +8,32 @@ import (
 	"strings"
 	"time"
 
+	handler "github.com/PabloPavan/jaiu/internal/adapter/http/handlers"
+	view "github.com/PabloPavan/jaiu/internal/adapter/http/handlers/student/views"
 	"github.com/PabloPavan/jaiu/internal/domain"
 	"github.com/PabloPavan/jaiu/internal/observability"
 	"github.com/PabloPavan/jaiu/internal/ports"
-	"github.com/PabloPavan/jaiu/internal/view"
+	studentapp "github.com/PabloPavan/jaiu/internal/student/app"
 	"github.com/go-chi/chi/v5"
 )
 
-const studentsPageSize = 5
-
-func (h *Handler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
-	data := h.buildStudentsData(r)
-	h.renderHTMXOrPage(w, r, "Alunos", view.StudentsPage(data), view.StudentsContent(data))
+type StudentHandler struct {
+	app     *studentapp.StudentApp
+	handler *handler.Handler
 }
 
-func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
+func New(app *studentapp.StudentApp, handler *handler.Handler) *StudentHandler {
+	return &StudentHandler{app: app, handler: handler}
+}
+
+const studentsPageSize = 5
+
+func (h *StudentHandler) StudentsIndex(w http.ResponseWriter, r *http.Request) {
+	data := h.buildStudentsData(r)
+	h.handler.RenderHTMXOrPage(w, r, "Alunos", view.StudentsPage(data), view.StudentsContent(data))
+}
+
+func (h *StudentHandler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
 	query := strings.TrimSpace(r.URL.Query().Get("q"))
 	data := view.StudentsPreviewData{}
 
@@ -57,12 +68,12 @@ func (h *Handler) StudentsPreview(w http.ResponseWriter, r *http.Request) {
 	h.renderComponent(w, r, view.StudentsPreview(data))
 }
 
-func (h *Handler) StudentsNew(w http.ResponseWriter, r *http.Request) {
+func (h *StudentHandler) StudentsNew(w http.ResponseWriter, r *http.Request) {
 	data := studentFormCreateData()
 	h.renderPage(w, r, page("Novo aluno", view.StudentFormPage(data)))
 }
 
-func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
+func (h *StudentHandler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 	data := studentFormCreateData()
 	student, err := h.parseStudentForm(r, &data)
 	if err != nil {
@@ -87,7 +98,7 @@ func (h *Handler) StudentsCreate(w http.ResponseWriter, r *http.Request) {
 	h.redirectHTMXOrRedirect(w, r, "/students")
 }
 
-func (h *Handler) StudentsEdit(w http.ResponseWriter, r *http.Request) {
+func (h *StudentHandler) StudentsEdit(w http.ResponseWriter, r *http.Request) {
 	studentID := chi.URLParam(r, "studentID")
 	if h.services.Students == nil {
 		http.NotFound(w, r)
@@ -109,7 +120,7 @@ func (h *Handler) StudentsEdit(w http.ResponseWriter, r *http.Request) {
 	h.renderPage(w, r, page(data.Title, view.StudentFormPage(data)))
 }
 
-func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
+func (h *StudentHandler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 	studentID := chi.URLParam(r, "studentID")
 	data := studentFormEditData(domain.Student{ID: studentID}, "")
 	student, err := h.parseStudentForm(r, &data)
@@ -136,7 +147,7 @@ func (h *Handler) StudentsUpdate(w http.ResponseWriter, r *http.Request) {
 	h.redirectHTMXOrRedirect(w, r, "/students")
 }
 
-func (h *Handler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
+func (h *StudentHandler) StudentsDelete(w http.ResponseWriter, r *http.Request) {
 	studentID := chi.URLParam(r, "studentID")
 	if h.services.Students == nil {
 		http.NotFound(w, r)
@@ -190,7 +201,7 @@ func studentFormEditData(student domain.Student, photoURL string) view.StudentFo
 	}
 }
 
-func (h *Handler) parseStudentForm(r *http.Request, data *view.StudentFormData) (domain.Student, error) {
+func (h *StudentHandler) parseStudentForm(r *http.Request, data *view.StudentFormData) (domain.Student, error) {
 	maxMemory := h.images.MaxMemory
 	if maxMemory == 0 {
 		maxMemory = 32 << 20
@@ -267,17 +278,6 @@ func (h *Handler) parseStudentForm(r *http.Request, data *view.StudentFormData) 
 	}, nil
 }
 
-func parseStudentStatus(value string) (domain.StudentStatus, error) {
-	status := domain.StudentStatus(strings.ToLower(value))
-	if status == "" {
-		return domain.StudentActive, nil
-	}
-	if !status.IsValid() {
-		return "", errors.New("Status invalido.")
-	}
-	return status, nil
-}
-
 func statusFilter(value string) []domain.StudentStatus {
 	switch strings.ToLower(value) {
 	case "", string(domain.StudentActive):
@@ -319,7 +319,7 @@ func statusPresentation(status domain.StudentStatus) string {
 	}
 }
 
-func (h *Handler) fetchStudentCount(ctx context.Context, statuses []domain.StudentStatus) (int, error) {
+func (h *StudentHandler) fetchStudentCount(ctx context.Context, statuses []domain.StudentStatus) (int, error) {
 	if h.services.Students == nil {
 		return 0, nil
 	}
@@ -332,7 +332,7 @@ func (h *Handler) fetchStudentCount(ctx context.Context, statuses []domain.Stude
 	return count, nil
 }
 
-func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
+func (h *StudentHandler) buildStudentsData(r *http.Request) view.StudentsPageData {
 	query := strings.TrimSpace(r.FormValue("q"))
 	status := normalizeStudentStatusValue(strings.TrimSpace(r.FormValue("status")))
 
@@ -434,7 +434,7 @@ func (h *Handler) buildStudentsData(r *http.Request) view.StudentsPageData {
 	return data
 }
 
-func (h *Handler) photoURLForVariant(objectKey, variant string) string {
+func (h *StudentHandler) photoURLForVariant(objectKey, variant string) string {
 	if objectKey == "" || variant == "" {
 		return ""
 	}
